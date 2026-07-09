@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Money Manager · Jawa</title>
-<meta name="description" content="Dasbor pengelola keuangan pribadi — pemasukan, pengeluaran, saldo, dan anggaran per kategori.">
+<title>Money Manager</title>
+<meta name="description" content="Personal finance manager dashboard — income, expenses, balances, and budgets by category.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,13 +18,13 @@
       </div>
       <div class="brand-text">
         <h1>Money Manager</h1>
-        <p>Buku besar keuangan pribadi</p>
+        <p>Personal Finance Ledger</p>
       </div>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="btnExport" title="Ekspor data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
-      <button class="icon-btn" id="btnImport" title="Impor data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
-      <button class="icon-btn" id="btnReset" title="Reset ke data contoh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.36-6.36M21 12a9 9 0 01-15.36 6.36"/><path d="M3 4v5h5M21 20v-5h-5"/></svg></button>
+      <button class="icon-btn" id="btnExport" title="Export data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
+      <button class="icon-btn" id="btnImport" title="Import data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
+      <button class="icon-btn" id="btnReset" title="Reset to demo data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.36-6.36M21 12a9 9 0 01-15.36 6.36"/><path d="M3 4v5h5M21 20v-5h-5"/></svg></button>
       <input type="file" id="importFileInput" accept="application/json" hidden>
     </div>
   </header>
@@ -39,66 +39,64 @@
     <section class="view" id="view-accounts"></section>
   </main>
 
-  <footer>Money Manager · data tersimpan lokal di perangkatmu · dibuat untuk pelacakan keuangan pribadi</footer>
+  <footer>Money Manager · data saved locally on your device</footer>
 </div>
 
-<!-- Transaction Modal -->
 <div class="modal-overlay" id="txnModalOverlay">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="txnModalTitle">Tambah Transaksi</h3>
+      <h3 id="txnModalTitle">Add Transaction</h3>
       <button class="icon-btn" id="btnTxnClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="type-toggle">
-        <button type="button" data-type="expense" class="active">Pengeluaran</button>
-        <button type="button" data-type="income">Pemasukan</button>
+        <button type="button" data-type="expense" class="active">Expense</button>
+        <button type="button" data-type="income">Income</button>
         <button type="button" data-type="transfer">Transfer</button>
       </div>
       <div class="form-row">
-        <div class="field"><label>Tanggal</label><input type="date" class="input" id="txnDate"></div>
-        <div class="field"><label>Akun</label><select class="input" id="txnAccount"></select></div>
+        <div class="field"><label>Date</label><input type="date" class="input" id="txnDate"></div>
+        <div class="field"><label>Account</label><select class="input" id="txnAccount"></select></div>
       </div>
       <div class="form-row" id="rowCategory">
-        <div class="field"><label>Kategori</label><select class="input" id="txnCategory"></select></div>
-        <div class="field"><label>Subkategori</label><select class="input" id="txnSubcategory"></select></div>
+        <div class="field"><label>Category</label><select class="input" id="txnCategory"></select></div>
+        <div class="field"><label>Subcategory</label><select class="input" id="txnSubcategory"></select></div>
       </div>
       <div class="form-row" id="rowTransfer" style="display:none">
-        <div class="field"><label>Transfer ke Akun</label><select class="input" id="txnTransferTo"></select></div>
+        <div class="field"><label>Transfer To</label><select class="input" id="txnTransferTo"></select></div>
       </div>
-      <div class="field"><label>Catatan</label><input type="text" class="input" id="txnNote" placeholder="cth. Nasi Ayam - TO"></div>
-      <div class="field"><label id="amountLabel">Jumlah Pengeluaran</label><input type="number" class="input" id="txnAmount" placeholder="0" min="0"></div>
+      <div class="field"><label>Note</label><input type="text" class="input" id="txnNote" placeholder="e.g. Lunch with friends"></div>
+      <div class="field"><label id="amountLabel">Amount</label><input type="number" class="input" id="txnAmount" placeholder="0" min="0"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn" id="btnTxnCancel">Batal</button>
-      <button class="btn btn-primary" id="btnTxnSave">Simpan</button>
+      <button class="btn" id="btnTxnCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnTxnSave">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Account Modal -->
 <div class="modal-overlay" id="acctModalOverlay">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="acctModalTitle">Tambah Akun</h3>
+      <h3 id="acctModalTitle">Add Account</h3>
       <button class="icon-btn" id="btnAcctClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="field"><label>Nama Akun</label><input type="text" class="input" id="acctName" placeholder="cth. Bank Jago"></div>
+      <div class="field"><label>Account Name</label><input type="text" class="input" id="acctName" placeholder="e.g. Bank Account"></div>
       <div class="form-row">
-        <div class="field"><label>Jenis</label>
+        <div class="field"><label>Type</label>
           <select class="input" id="acctType">
             <option value="bank">Bank</option>
             <option value="ewallet">E-Wallet</option>
-            <option value="cash">Tunai</option>
+            <option value="cash">Cash</option>
           </select>
         </div>
-        <div class="field"><label>Saldo Awal</label><input type="number" class="input" id="acctOpening" placeholder="0"></div>
+        <div class="field"><label>Opening Balance</label><input type="number" class="input" id="acctOpening" placeholder="0"></div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn" id="btnAcctCancel">Batal</button>
-      <button class="btn btn-primary" id="btnAcctSave">Simpan</button>
+      <button class="btn" id="btnAcctCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnAcctSave">Save</button>
     </div>
   </div>
 </div>
