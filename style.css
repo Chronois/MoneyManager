@@ -342,3 +342,16 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 /* Focus visibility */
 :focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
 
+/* ---------- Micro Buttons for Category Actions ---------- */
+.icon-btn-micro {
+  background: transparent; border: none; padding: 3px; margin-left: 4px;
+  color: var(--ink-faint); cursor: pointer; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: .15s ease;
+}
+.icon-btn-micro:hover { color: var(--primary-dark); background: var(--border); }
+.icon-btn-micro.del:hover { color: var(--expense); background: var(--expense-light); }
+.icon-btn-micro svg { width: 13px; height: 13px; }
+
+.cat-actions { display: inline-flex; margin-left: 10px; opacity: 0.3; transition: opacity .2s; }
+.cat-section:hover .cat-actions { opacity: 1; }
