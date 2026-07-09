@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Saku — Pencatat Keuangan Harian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">📒</span>
+      <div class="brand-text">
+        <h1>Buku Saku</h1>
+        <p>Pencatat keuangan harian</p>
+      </div>
+    </div>
+
+    <div class="stamp" id="totalStamp" title="Saldo seluruh akun saat ini">
+      <span class="stamp-label">Saldo Total</span>
+      <span class="stamp-amount" id="totalStampAmount">Rp0</span>
+      <span class="stamp-ring">SALDO • PER HARI INI • SALDO • PER HARI INI •</span>
+    </div>
+
+    <button class="btn-icon" id="addTxnBtn" title="Tambah transaksi">
+      <span>＋</span> Transaksi
+    </button>
+  </header>
+
+  <!-- ===== NAV TABS ===== -->
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="transaksi"><span class="tab-ic">📒</span>Transaksi</button>
+    <button class="tab" data-tab="saldo"><span class="tab-ic">🏦</span>Saldo</button>
+    <button class="tab" data-tab="rincian"><span class="tab-ic">📊</span>Rincian</button>
+    <button class="tab" data-tab="grafik"><span class="tab-ic">📈</span>Grafik</button>
+    <button class="tab" data-tab="pengaturan"><span class="tab-ic">⚙️</span>Pengaturan</button>
+  </nav>
+
+  <div class="perforation"></div>
+
+  <!-- ===== MAIN ===== -->
+  <main class="content">
+
+    <!-- ---- TAB: TRANSAKSI ---- -->
+    <section class="panel active" id="panel-transaksi">
+      <div class="panel-toolbar">
+        <input type="text" id="txnSearch" placeholder="Cari catatan / keterangan...">
+        <select id="txnFilterAccount"><option value="">Semua Akun</option></select>
+        <select id="txnFilterCategory"><option value="">Semua Kategori</option></select>
+        <input type="month" id="txnFilterMonth">
+        <button class="btn-ghost" id="txnFilterReset">Reset</button>
+      </div>
+
+      <div class="ledger-table-wrap">
+        <table class="ledger-table" id="txnTable">
+          <thead>
+            <tr>
+              <th class="col-date">Tanggal</th>
+              <th class="col-account">Akun</th>
+              <th class="col-cat">Kategori</th>
+              <th class="col-note">Keterangan</th>
+              <th class="col-amount">Pengeluaran</th>
+              <th class="col-amount">Pemasukan</th>
+              <th class="col-amount">Saldo Akun</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="txnTableBody"></tbody>
+        </table>
+      </div>
+      <div class="panel-footer">
+        <span id="txnCountInfo"></span>
+        <button class="btn-ghost" id="txnLoadMore">Muat lebih banyak</button>
+      </div>
+    </section>
+
+    <!-- ---- TAB: SALDO ---- -->
+    <section class="panel" id="panel-saldo">
+      <div class="account-cards" id="accountCards"></div>
+
+      <h2 class="section-title">Ringkasan Bulanan per Akun</h2>
+      <div class="ledger-table-wrap">
+        <table class="ledger-table balance-table" id="balanceTable">
+          <thead><tr id="balanceTableHead"></tr></thead>
+          <tbody id="balanceTableBody"></tbody>
+          <tfoot id="balanceTableFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---- TAB: RINCIAN (PIVOT) ---- -->
+    <section class="panel" id="panel-rincian">
+      <div class="panel-toolbar">
+        <select id="pivotMonth"><option value="">Semua Waktu</option></select>
+        <select id="pivotMode">
+          <option value="category">Per Kategori</option>
+          <option value="account">Per Akun</option>
+        </select>
+      </div>
+
+      <div class="pivot-layout">
+        <div class="pivot-bars" id="pivotBars"></div>
+        <div class="ledger-table-wrap">
+          <table class="ledger-table" id="pivotTable">
+            <thead><tr><th>Kategori</th><th>Subkategori</th><th class="col-amount">Total</th><th class="col-amount">%</th></tr></thead>
+            <tbody id="pivotTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: GRAFIK ---- -->
+    <section class="panel" id="panel-grafik">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Pemasukan vs Pengeluaran per Bulan</h3>
+          <canvas id="chartIncomeExpense"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Komposisi Pengeluaran per Kategori</h3>
+          <canvas id="chartCategoryPie"></canvas>
+        </div>
+        <div class="chart-card chart-card-wide">
+          <h3>Kekayaan Bersih (Saldo Total) dari Waktu ke Waktu</h3>
+          <canvas id="chartNetWorth"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: PENGATURAN ---- -->
+    <section class="panel" id="panel-pengaturan">
+
+      <div class="settings-grid">
+
+        <div class="settings-card">
+          <h3>Data (JSON)</h3>
+          <p class="hint">Ekspor untuk mencadangkan datamu, atau impor untuk memuat data dari file lain / perangkat lain.</p>
+          <div class="settings-actions">
+            <button class="btn-primary" id="exportBtn">⬇ Ekspor JSON</button>
+            <label class="btn-ghost file-label">⬆ Impor JSON<input type="file" id="importInput" accept=".json" hidden></label>
+          </div>
+          <p class="hint danger" id="importMsg"></p>
+        </div>
+
+        <div class="settings-card">
+          <h3>Batas Anggaran Harian</h3>
+          <p class="hint">Dipakai untuk menghitung "Variansi Anggaran" (akumulasi jatah harian dikurangi pengeluaran).</p>
+          <div class="settings-actions">
+            <input type="number" id="dailyBudgetInput" min="0" step="1000">
+            <button class="btn-primary" id="dailyBudgetSave">Simpan</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Akun</h3>
+          <ul class="settings-list" id="accountList"></ul>
+          <div class="settings-actions">
+            <input type="text" id="newAccountName" placeholder="Nama akun baru">
+            <input type="number" id="newAccountBase" placeholder="Saldo awal" step="1">
+            <button class="btn-ghost" id="addAccountBtn">Tambah</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Kategori &amp; Subkategori</h3>
+          <ul class="settings-list" id="categoryList"></ul>
+          <div class="settings-actions">
+            <input type="text" id="newCategoryName" placeholder="Kategori (baru atau yang sudah ada)">
+            <input type="text" id="newSubcategoryName" placeholder="Subkategori baru">
+            <button class="btn-ghost" id="addSubcategoryBtn">Tambah</button>
+          </div>
+        </div>
+
+        <div class="settings-card danger-card">
+          <h3>Reset</h3>
+          <p class="hint">Mengembalikan semua data ke data awal dari Money_Manager.xlsx. Data yang sudah diubah akan hilang.</p>
+          <button class="btn-danger" id="resetBtn">Reset ke Data Awal</button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== MODAL: TAMBAH / EDIT TRANSAKSI ===== -->
+<div class="modal-overlay" id="txnModalOverlay">
+  <div class="modal">
+    <h2 id="txnModalTitle">Tambah Transaksi</h2>
+    <form id="txnForm">
+      <input type="hidden" id="txnId">
+
+      <div class="form-row">
+        <label>Tanggal</label>
+        <input type="date" id="fDate" required>
+      </div>
+
+      <div class="form-row">
+        <label>Jenis</label>
+        <div class="segmented" id="fType">
+          <button type="button" class="seg active" data-type="expense">Pengeluaran</button>
+          <button type="button" class="seg" data-type="income">Pemasukan</button>
+          <button type="button" class="seg" data-type="transfer">Transfer</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Akun</label>
+        <select id="fAccount" required></select>
+      </div>
+
+      <div class="form-row" id="rowTransferTo">
+        <label>Ke Akun</label>
+        <select id="fTransferTo"></select>
+      </div>
+
+      <div class="form-row" id="rowCategory">
+        <label>Kategori</label>
+        <select id="fCategory"></select>
+      </div>
+
+      <div class="form-row" id="rowSubcategory">
+        <label>Subkategori</label>
+        <select id="fSubcategory"></select>
+      </div>
+
+      <div class="form-row">
+        <label>Keterangan</label>
+        <input type="text" id="fNote" placeholder="Contoh: Nasi Ayam - TO">
+      </div>
+
+      <div class="form-row">
+        <label>Jumlah</label>
+        <input type="number" id="fAmount" min="0" step="1" required>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="txnDeleteBtn">Hapus</button>
+        <div class="modal-actions-right">
+          <button type="button" class="btn-ghost" id="txnCancelBtn">Batal</button>
+          <button type="submit" class="btn-primary">Simpan</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="js/seed-data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

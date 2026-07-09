@@ -1,0 +1,564 @@
+/* =====================================================================
+   BUKU SAKU — design system
+   Concept: the green columnar ledger pad + bank passbook (buku tabungan)
+   used by Indonesian bookkeepers — ruled paper, ink stamps, tabbed
+   binder dividers, monospace figures set in neat columns.
+   ===================================================================== */
+
+:root{
+  /* --- paper & ink --- */
+  --paper:        #EAF0E2;
+  --paper-alt:    #E1EAD6;
+  --paper-card:   #F5F8EF;
+  --rule:         #B9CCA6;
+  --rule-strong:  #9AB283;
+  --ink:          #1E2A1B;
+  --ink-soft:     #4B5C45;
+  --ink-faint:    #7C8C73;
+
+  /* --- ink stamp accents --- */
+  --stamp-blue:   #274472;
+  --stamp-blue-soft: #3A5C93;
+  --stamp-red:    #A9382F;
+  --stamp-green:  #2E6B4F;
+  --stamp-gold:   #B6842A;
+
+  --shadow-card: 0 1px 2px rgba(30,42,27,0.06), 0 4px 14px rgba(30,42,27,0.07);
+  --shadow-modal: 0 12px 40px rgba(20,28,18,0.28);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --font-display: 'IBM Plex Serif', Georgia, serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin:0; padding:0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body{
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 30px,
+      var(--rule) 30px, var(--rule) 31px
+    );
+  background-attachment: local;
+}
+
+h1,h2,h3{ font-family: var(--font-display); margin:0; }
+
+button, input, select{ font-family: inherit; }
+
+::selection{ background: var(--stamp-gold); color: var(--ink); }
+
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+.app{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 20px 60px;
+}
+
+/* --- Header --- */
+.app-header{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding: 6px 4px 20px;
+  flex-wrap: wrap;
+}
+
+.brand{ display:flex; align-items:center; gap:12px; margin-right:auto; }
+.brand-mark{ font-size: 2.1rem; line-height:1; filter: drop-shadow(0 2px 1px rgba(0,0,0,0.12)); }
+.brand-text h1{
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.brand-text p{
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* --- signature element: the ink stamp --- */
+.stamp{
+  position: relative;
+  width: 148px; height: 148px;
+  border-radius: 50%;
+  border: 3px double var(--stamp-blue);
+  color: var(--stamp-blue);
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  transform: rotate(-6deg);
+  flex-shrink:0;
+  mix-blend-mode: multiply;
+  opacity: 0.92;
+}
+.stamp-label{
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.stamp-amount{
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 2px;
+  text-align:center;
+  padding: 0 8px;
+}
+.stamp-ring{
+  position:absolute;
+  inset:0;
+  font-size: 8.6px;
+  animation: none;
+}
+.stamp-ring{ display:none; } /* subtle: keep stamp clean, ring text omitted for legibility at small size */
+
+.btn-icon{
+  background: var(--stamp-blue);
+  color: var(--paper-card);
+  border:none;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-weight:600;
+  font-size:0.92rem;
+  cursor:pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.btn-icon:hover{ background: var(--stamp-blue-soft); transform: translateY(-1px); }
+.btn-icon span{ font-weight:700; margin-right:2px; }
+
+/* =========================================================
+   TABS — binder index dividers
+   ========================================================= */
+.tabs{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:0;
+}
+.tab{
+  font-family: var(--font-body);
+  background: var(--paper-alt);
+  border: 1px solid var(--rule-strong);
+  border-bottom: none;
+  color: var(--ink-soft);
+  padding: 10px 18px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  border-radius: 10px 10px 0 0;
+  cursor:pointer;
+  white-space:nowrap;
+  transform: translateY(3px);
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.tab .tab-ic{ margin-right:6px; }
+.tab:hover{ color: var(--ink); background: var(--paper-card); }
+.tab.active{
+  background: var(--paper-card);
+  color: var(--stamp-blue);
+  transform: translateY(0);
+  border-color: var(--rule-strong);
+  box-shadow: 0 -2px 6px rgba(30,42,27,0.05);
+}
+
+.perforation{
+  height: 12px;
+  border-top: 1px solid var(--rule-strong);
+  background-image: radial-gradient(circle, var(--paper) 2.6px, transparent 2.7px);
+  background-size: 16px 16px;
+  background-position: 6px -6px;
+  margin-bottom: 18px;
+}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+.content{ position:relative; }
+.panel{ display:none; }
+.panel.active{ display:block; animation: fadeIn 0.18s ease; }
+@keyframes fadeIn{ from{ opacity:0; transform: translateY(3px);} to{opacity:1; transform:none;} }
+
+.panel-toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.panel-toolbar input,
+.panel-toolbar select{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size:0.85rem;
+  color: var(--ink);
+}
+#txnSearch{ flex: 1 1 220px; }
+
+.section-title{
+  font-size: 1.05rem;
+  margin: 28px 0 14px;
+  color: var(--ink);
+  border-bottom: 2px solid var(--rule-strong);
+  padding-bottom:8px;
+}
+
+/* =========================================================
+   LEDGER TABLE
+   ========================================================= */
+.ledger-table-wrap{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  overflow: auto;
+  box-shadow: var(--shadow-card);
+  max-height: 62vh;
+}
+.ledger-table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.ledger-table thead th{
+  position: sticky; top:0;
+  background: var(--paper-alt);
+  color: var(--ink-soft);
+  text-align:left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight:700;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--rule-strong);
+  z-index:1;
+}
+.ledger-table td{
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.ledger-table tbody tr:hover{ background: var(--paper-alt); cursor:pointer; }
+.col-amount{ text-align:right; font-family: var(--font-mono); }
+.col-actions{ width:36px; text-align:center; }
+.cat-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:0.8rem;
+}
+.cat-badge .dot{
+  width:7px; height:7px; border-radius:50%;
+  background: var(--stamp-blue);
+  flex-shrink:0;
+}
+.amount-expense{ color: var(--stamp-red); }
+.amount-income{ color: var(--stamp-green); }
+.muted{ color: var(--ink-faint); }
+
+.panel-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:12px;
+  font-size:0.8rem;
+  color: var(--ink-soft);
+}
+
+/* =========================================================
+   BUTTONS (generic)
+   ========================================================= */
+.btn-primary{
+  background: var(--stamp-blue);
+  color: var(--paper-card);
+  border:none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight:600;
+  font-size:0.85rem;
+  cursor:pointer;
+}
+.btn-primary:hover{ background: var(--stamp-blue-soft); }
+.btn-ghost{
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-soft);
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size:0.82rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-ghost:hover{ background: var(--paper-alt); color:var(--ink); }
+.btn-danger{
+  background: var(--stamp-red);
+  color: var(--paper-card);
+  border:none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight:600;
+  font-size:0.85rem;
+  cursor:pointer;
+}
+.file-label{ display:inline-flex; align-items:center; cursor:pointer; }
+
+/* =========================================================
+   ACCOUNT CARDS (Saldo tab)
+   ========================================================= */
+.account-cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.acc-card{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-left: 4px solid var(--stamp-blue);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+}
+.acc-card .acc-name{
+  font-size: 0.78rem;
+  font-weight:700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+.acc-card .acc-balance{
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight:600;
+  margin-top:6px;
+  color: var(--ink);
+}
+
+.balance-table th, .balance-table td{ text-align:right; }
+.balance-table th:first-child, .balance-table td:first-child{ text-align:left; }
+.balance-table tfoot td{
+  font-weight:700;
+  border-top: 2px solid var(--rule-strong);
+  background: var(--paper-alt);
+}
+
+/* =========================================================
+   PIVOT
+   ========================================================= */
+.pivot-layout{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:18px;
+}
+@media (max-width: 820px){ .pivot-layout{ grid-template-columns: 1fr; } }
+
+.pivot-bars{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  height: fit-content;
+}
+.pivot-bar-row{ margin-bottom: 12px; }
+.pivot-bar-row .lbl{
+  display:flex; justify-content:space-between;
+  font-size: 0.78rem;
+  margin-bottom:4px;
+  color: var(--ink-soft);
+}
+.pivot-bar-row .lbl b{ color:var(--ink); font-family: var(--font-mono); font-weight:600; }
+.pivot-bar-track{
+  height: 8px;
+  background: var(--paper-alt);
+  border-radius: 4px;
+  overflow:hidden;
+}
+.pivot-bar-fill{
+  height:100%;
+  background: var(--stamp-blue);
+  border-radius: 4px;
+}
+
+/* =========================================================
+   CHARTS
+   ========================================================= */
+.chart-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+}
+.chart-card-wide{ grid-column: 1 / -1; }
+@media (max-width: 820px){ .chart-grid{ grid-template-columns: 1fr; } }
+.chart-card{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+.chart-card h3{
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  color: var(--ink-soft);
+  font-weight:600;
+  font-family: var(--font-body);
+}
+.chart-card canvas{ max-height: 280px; }
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+.settings-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+  gap:16px;
+}
+.settings-card{
+  background: var(--paper-card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+}
+.settings-card h3{ font-size: 1rem; margin-bottom:8px; }
+.settings-card .hint{ font-size:0.8rem; color: var(--ink-soft); margin: 0 0 12px; line-height:1.5; }
+.settings-card .hint.danger{ color: var(--stamp-red); font-weight:600; min-height: 1em; }
+.settings-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.settings-actions input, .settings-actions select{
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size:0.85rem;
+  flex: 1 1 100px;
+}
+.settings-list{
+  list-style:none; margin:0 0 14px; padding:0;
+  max-height: 220px; overflow:auto;
+}
+.settings-list li{
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+}
+.settings-list li b{ font-family: var(--font-mono); font-weight:600; }
+.settings-list .remove-x{
+  cursor:pointer; color: var(--stamp-red); font-weight:700; padding: 2px 6px;
+}
+.danger-card{ border-color: var(--stamp-red); }
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+.modal-overlay{
+  display:none;
+  position:fixed; inset:0;
+  background: rgba(20,28,18,0.45);
+  align-items:center; justify-content:center;
+  z-index: 50;
+  padding: 20px;
+}
+.modal-overlay.active{ display:flex; }
+.modal{
+  background: var(--paper-card);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-modal);
+  max-height: 90vh;
+  overflow:auto;
+}
+.modal h2{ font-size:1.15rem; margin-bottom:16px; }
+.form-row{ margin-bottom:12px; display:flex; flex-direction:column; gap:5px; }
+.form-row label{ font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color: var(--ink-soft); }
+.form-row input, .form-row select{
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  font-size:0.9rem;
+  color: var(--ink);
+}
+.segmented{ display:flex; border: 1px solid var(--rule-strong); border-radius: var(--radius-sm); overflow:hidden; }
+.seg{
+  flex:1; background: var(--paper); border:none; padding:9px 6px;
+  font-size:0.8rem; font-weight:600; color: var(--ink-soft); cursor:pointer;
+  border-right: 1px solid var(--rule-strong);
+}
+.seg:last-child{ border-right:none; }
+.seg.active{ background: var(--stamp-blue); color: var(--paper-card); }
+
+.modal-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; }
+.modal-actions-right{ display:flex; gap:8px; }
+#txnDeleteBtn{ color: var(--stamp-red); border-color: var(--stamp-red); }
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+.toast{
+  position:fixed;
+  bottom:20px; left:50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size:0.85rem;
+  opacity:0;
+  pointer-events:none;
+  transition: all 0.25s ease;
+  z-index: 60;
+  box-shadow: var(--shadow-modal);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 640px){
+  .app-header{ gap:12px; }
+  .stamp{ width:110px; height:110px; }
+  .stamp-amount{ font-size:0.82rem; }
+  .stamp-label{ font-size:0.55rem; }
+  .brand-text h1{ font-size:1.2rem; }
+  .btn-icon{ padding:10px 14px; font-size:0.82rem; }
+
+  /* trim the ledger table to its essentials; full detail is a horizontal swipe away */
+  #txnTable th:nth-child(7), #txnTable td:nth-child(7){ display:none; }
+  .ledger-table th, .ledger-table td{ padding: 8px 9px; font-size:0.8rem; }
+}
+
+/* focus visibility for a11y */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+  outline: 2px solid var(--stamp-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
