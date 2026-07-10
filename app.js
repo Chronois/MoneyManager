@@ -291,7 +291,7 @@
           <p class="panel-title">Recent Transactions</p>
           <p class="panel-sub">10 most recent transactions</p>
           <div>
-            ${enriched.slice(-10).reverse().map(t=> recentItemHtml(t)).join('') || emptyHtml('No transactions yet')}
+            ${enriched.slice(-10).reverse().map(t=> recentItemHtmlDash(t)).join('') || emptyHtml('No transactions yet')}
           </div>
         </div>
       </div>
@@ -299,7 +299,7 @@
     document.getElementById('btnAddTxnDash').addEventListener('click', ()=> openTxnModal());
   }
   
-  function recentItemHtml(t){
+  function recentItemHtmlDash(t){
     const isIncome = !t.transferTo && t.income>0;
     const isTransfer = !!t.transferTo;
     const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
@@ -375,7 +375,7 @@
             <tr>
               <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
               <th style="text-align:right">Type</th><th style="text-align:right">Amount</th>
-              <th>Transfer To</th><th style="text-align:right">Balance</th><th style="text-align:right">Acct Bal</th><th></th>
+              <th></th>
             </tr>
             <tr class="table-filter-row">
               <td><input type="date" class="input" id="fDate" value="${filters.date}" title="Filter by Date"></td>
@@ -401,12 +401,12 @@
                   <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
                 </select>
               </td>
-              <td colspan="4"></td>
+              <td></td>
               <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Clear</button></td>
             </tr>
           </thead>
           <tbody>
-            ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="11"><div class="empty">${icon('wallet')}<div>No matching transactions</div></div></td></tr>`}
+            ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="8"><div class="empty">${icon('wallet')}<div>No matching transactions</div></div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -441,17 +441,19 @@
     const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
     const typeLabel = isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense');
     
+    let displayNote = esc(t.note) || esc(t.subcategory) || '—';
+    if (isTransfer) {
+      displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+    }
+    
     return `<tr>
       <td>${fmtDateShort(t.date)}</td>
       <td>${dayName(t.date)}</td>
       <td>${esc(t.account)}</td>
       <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
-      <td class="note-cell" title="${esc(t.note)} ${esc(t.subcategory)}">${esc(t.note) || esc(t.subcategory) || '—'}</td>
+      <td class="note-cell" title="${displayNote}">${displayNote}</td>
       <td style="text-align:right"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
       <td class="num ${color}">${fmtCurrency(amt)}</td>
-      <td>${isTransfer? esc(t.transferTo) : '—'}</td>
-      <td class="num">${fmtCurrency(t.runningBalance)}</td>
-      <td class="num">${fmtCurrency(t.runningAccountBalance)}</td>
       <td><div class="row-actions">
         <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
         <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
@@ -653,10 +655,11 @@
         ${state.categories.map(c=>`
           <div class="cat-section">
             <h4>
-              ${catIcon(c.category)} ${esc(c.category)}
+              <span class="cat-icon-edit" data-editicon="${esc(c.category)}" title="Click to change icon">${catIcon(c.category)}</span>
+              ${esc(c.category)}
               <div class="cat-actions">
                 <button class="icon-btn-micro" data-addsub="${esc(c.category)}" title="Add Subcategory">${icon('plus')}</button>
-                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category">${icon('edit')}</button>
+                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category Name">${icon('edit')}</button>
                 <button class="icon-btn-micro" data-dupcat="${esc(c.category)}" title="Duplicate Category">${icon('copy')}</button>
                 <button class="icon-btn-micro del" data-delcat="${esc(c.category)}" title="Delete Category">${icon('trash')}</button>
               </div>
@@ -698,7 +701,8 @@
       saveState(); renderCategories(); toast('Category added');
     });
   
-    // Edit, Duplicate, Delete Categories
+    // Edit Icon, Edit Name, Duplicate, Delete Categories
+    el.querySelectorAll('[data-editicon]').forEach(b=> b.addEventListener('click', ()=> editCategoryIcon(b.dataset.editicon)));
     el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> editCategory(b.dataset.editcat)));
     el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> duplicateCategory(b.dataset.dupcat)));
     el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
@@ -719,31 +723,36 @@
   }
   
   // Category Actions
+  function editCategoryIcon(name) {
+    const cat = state.categories.find(c => c.category === name);
+    if (!cat) return;
+    const newIcon = prompt(`Enter new emoji icon for "${name}":`, cat.icon || '📁');
+    if (newIcon && newIcon.trim() !== '') {
+        cat.icon = newIcon.trim();
+        saveState(); renderCategories(); toast('Icon updated');
+    }
+  }
+
   function editCategory(oldName) {
     const cat = state.categories.find(c => c.category === oldName);
     if (!cat) return;
     
     const newName = prompt('Enter new category name:', oldName);
-    if (!newName || newName.trim() === '') return;
+    if (!newName || newName.trim() === '' || newName === oldName) return;
     
-    const newIcon = prompt('Enter new emoji icon:', cat.icon || '📁');
-    
-    if (newName.trim() !== oldName && state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
+    if (state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
         toast('Category name already exists'); return;
     }
     
     cat.category = newName.trim();
-    cat.icon = newIcon || cat.icon;
 
-    if (state.budgets && state.budgets[oldName] !== undefined && newName.trim() !== oldName) {
+    if (state.budgets && state.budgets[oldName] !== undefined) {
         state.budgets[newName.trim()] = state.budgets[oldName];
         delete state.budgets[oldName];
     }
-    if (newName.trim() !== oldName) {
-        state.transactions.forEach(t => { if (t.category === oldName) t.category = newName.trim(); });
-    }
+    state.transactions.forEach(t => { if (t.category === oldName) t.category = newName.trim(); });
     
-    saveState(); renderCategories(); toast('Category updated');
+    saveState(); renderCategories(); toast('Category name updated');
   }
   
   function duplicateCategory(name) {
