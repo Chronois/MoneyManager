@@ -656,3 +656,23 @@ html[data-theme="dark"] em-emoji-picker {
 .dp-day.today { color: var(--primary); font-weight: 700; border: 1px dashed var(--border); }
 .dp-day.today.active { border-style: solid; }
 .dp-day.empty { cursor: default; pointer-events: none; }
+
+/* ---------- Custom Select Dropdown (Filters) ---------- */
+.select-popover {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: var(--shadow-md);
+  padding: 6px; z-index: 2000; width: 100%; min-width: 160px;
+  max-height: 250px; overflow-y: auto;
+  display: none; flex-direction: column; gap: 2px;
+  animation: fadeIn .2s ease;
+}
+.select-popover.show { display: flex; }
+
+.select-item {
+  padding: 8px 12px; font-size: 13px; color: var(--ink); font-family: var(--font-body);
+  border-radius: 6px; cursor: pointer; text-align: left;
+  border: none; background: transparent; transition: .15s ease;
+}
+.select-item:hover { background: var(--paper-2); color: var(--primary-dark); }
+.select-item.active { background: var(--primary-pale); color: var(--primary-dark); font-weight: 600; }
