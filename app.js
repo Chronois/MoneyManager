@@ -5,16 +5,6 @@
    const SEED = {"transactions": [{"id": 1, "date": "2026-03-02", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Ayam - TO", "expense": 13000, "transferTo": "", "income": 0}, {"id": 2, "date": "2026-03-02", "account": "GoPay", "category": "Lifestyle", "subcategory": "💸Game", "note": "Top Up HSR", "expense": 176490, "transferTo": "", "income": 0}, {"id": 3, "date": "2026-03-03", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Padang - Ibra", "expense": 13000, "transferTo": "", "income": 0}, {"id": 4, "date": "2026-03-04", "account": "BNI", "category": "Daily Necessities", "subcategory": "🫙Food & Drink Container(s)", "note": "Ecentio Kotak Makan", "expense": 37050, "transferTo": "", "income": 0}], "categories": [{"category": "Food & Beverages", "subcategories": ["🍽️Main Meal", "🥛Drink", "🥯Snack", "🍌Fruits", "🍅Vegetables", "👨‍🍳Cooking ingredients", "🛵 Dining Out"]}, {"category": "Transportation", "subcategories": ["🏍️Motorcycle", "🚕Car", "🚌Bus", "🚐 Angkot", "🚅Train", "🚐 Travel", "⛽ Gasoline", "🛣️ Toll", "🅿️ Parking", "💳E-Money Card"]}, {"category": "Lifestyle", "subcategories": ["📈Trend", "💸Game", "🎲 Toys", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription", "💻 Laptop Maintenance"]}, {"category": "Daily Necessities", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🫖 Water Gallon", "🪙Electricity Token", "🫙Food & Drink Container(s)", "🌐 Internet"]}, {"category": "Clothes", "subcategories": ["👕Shirt", "👖Pants", "🧥Jacket", "🥼Functional Clothing"]}, {"category": "Accessory", "subcategories": ["🧢Hat", "⌚Watch", "🗝️Keychain"]}, {"category": "Beauty", "subcategories": ["🧴Skincare", "✂️ Haircut"]}, {"category": "Health", "subcategories": ["💆Massage", "🏥 Pharmacy", "🩺 Medical Service"]}, {"category": "Education", "subcategories": ["📚Book"]}, {"category": "Present", "subcategories": ["👨‍👩‍👦‍👦For Family", "🎁 Gift"]}, {"category": "Accounts Receivable", "subcategories": ["🧾Receivable"]}, {"category": "Accounts Payable", "subcategories": ["💰Debt"]}, {"category": "Allowance", "subcategories": ["💵Allowance"]}, {"category": "Salary", "subcategories": ["💎Salary"]}, {"category": "Bonus", "subcategories": ["👛Bonus", "🪙THR"]}, {"category": "Adjustment", "subcategories": ["✏️ Error Correction"]}], "accounts": [{"name": "BNI", "type": "bank", "opening": 2359114}, {"name": "BNI 2", "type": "bank", "opening": 4232269}, {"name": "GoPay", "type": "ewallet", "opening": 210320}, {"name": "SeaBank", "type": "digital", "opening": 25293}, {"name": "ShopeePay", "type": "ewallet", "opening": 16000}, {"name": "Cash", "type": "cash", "opening": 12000}, {"name": "Dana", "type": "ewallet", "opening": 4274}, {"name": "Steam Wallet", "type": "ewallet", "opening": 0}, {"name": "Taplus", "type": "bank", "opening": 0}], "budgets": {"Food & Beverages": 1500000, "Transportation": 500000, "Lifestyle": 400000, "Daily Necessities": 300000, "Clothes": 200000}};
   const STORAGE_KEY = 'mm_money_manager_v1';
   
-  // Expanded Emojis for categories & subcategories
-  const EMOJI_PRESETS = [
-    '🍽️','🚗','🎯','🧺','👕','💍','💄','🩺','📚','🎁','🧾','💳','💵','💎','🪙','✏️',
-    '🍔','🍕','🍜','🍣','🍎','☕','🍺','🍿',
-    '🏠','🔌','💧','🔥','🧹','🧴','🐶','🐱',
-    '✈️','🚆','🚌','🚕','⛽','🅿️','🔧',
-    '🎮','🎬','🎸','⚽','🛍️','🪴','👶','🎓',
-    '🏥','💊','🩹','💼','💰','💸','📈','📉','📁'
-  ];
-
   // Fallback if category has no icon saved in state
   const CATEGORY_ICONS_FALLBACK = {
     'Food & Beverages':'🍽️','Transportation':'🚗','Lifestyle':'🎯','Daily Necessities':'🧺',
@@ -64,7 +54,6 @@
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
     
-    // Migration: ensure every category has an icon
     if(parsed.categories){
       parsed.categories.forEach(c => {
         if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '📁';
@@ -98,9 +87,6 @@
   }
 
   function splitSub(str) {
-    for (let e of EMOJI_PRESETS) {
-      if (str.startsWith(e)) return { icon: e, name: str.slice(e.length).trim() };
-    }
     const m = str.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)\s*(.*)/u);
     if (m) return { icon: m[1], name: m[2].trim() };
     return { icon: '📁', name: str.trim() };
@@ -734,35 +720,10 @@
   }
 
   // --- Category & Subcategory Modals Logic ---
-  
-  function initEmojiPicker() {
-    const catPicker = document.getElementById('catIconPicker');
-    catPicker.innerHTML = EMOJI_PRESETS.map(e => `<button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>`).join('');
-    catPicker.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        catPicker.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        document.getElementById('catIconValue').value = btn.dataset.emoji;
-      });
-    });
 
-    const subPicker = document.getElementById('subIconPicker');
-    subPicker.innerHTML = EMOJI_PRESETS.map(e => `<button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>`).join('');
-    subPicker.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        subPicker.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        document.getElementById('subIconValue').value = btn.dataset.emoji;
-      });
-    });
-  }
-
-  function setEmojiPicker(pickerId, inputId, emoji) {
+  function setEmojiPicker(btnId, inputId, emoji) {
     document.getElementById(inputId).value = emoji;
-    const picker = document.getElementById(pickerId);
-    picker.querySelectorAll('.emoji-btn').forEach(b => {
-      b.classList.toggle('selected', b.dataset.emoji === emoji);
-    });
+    document.getElementById(btnId).textContent = emoji;
   }
 
   function openCatModal(name = null, isDuplicate = false) {
@@ -777,7 +738,7 @@
     if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
     document.getElementById('catName').value = defaultName;
     
-    setEmojiPicker('catIconPicker', 'catIconValue', c ? c.icon : EMOJI_PRESETS[0]);
+    setEmojiPicker('btnCatIcon', 'catIconValue', c ? c.icon : '📁');
 
     document.getElementById('catModalOverlay').classList.add('open');
     document.getElementById('catName').focus();
@@ -828,7 +789,7 @@
 
     document.getElementById('subModalTitle').textContent = subName ? 'Edit Subcategory' : 'Add Subcategory';
     
-    let icon = EMOJI_PRESETS[0];
+    let icon = '📁';
     let name = '';
     
     if (subName) {
@@ -838,7 +799,7 @@
     }
 
     document.getElementById('subName').value = name;
-    setEmojiPicker('subIconPicker', 'subIconValue', icon);
+    setEmojiPicker('btnSubIcon', 'subIconValue', icon);
     
     document.getElementById('subModalOverlay').classList.add('open');
     document.getElementById('subName').focus();
@@ -1046,8 +1007,30 @@
     document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
     renderCurrentTab();
     
-    initEmojiPicker();
-  
+    // Emoji Popover Toggles
+    document.getElementById('btnCatIcon').addEventListener('click', () => {
+      document.getElementById('catEmojiPopover').classList.toggle('show');
+    });
+    document.querySelector('#catEmojiPopover emoji-picker').addEventListener('emoji-click', e => {
+      setEmojiPicker('btnCatIcon', 'catIconValue', e.detail.unicode);
+      document.getElementById('catEmojiPopover').classList.remove('show');
+    });
+    
+    document.getElementById('btnSubIcon').addEventListener('click', () => {
+      document.getElementById('subEmojiPopover').classList.toggle('show');
+    });
+    document.querySelector('#subEmojiPopover emoji-picker').addEventListener('emoji-click', e => {
+      setEmojiPicker('btnSubIcon', 'subIconValue', e.detail.unicode);
+      document.getElementById('subEmojiPopover').classList.remove('show');
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.emoji-dropdown-wrap')) {
+        document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
+      }
+    });
+
+    // Export/Import/Reset
     document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
     document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
@@ -1080,7 +1063,10 @@
     document.getElementById('subModalOverlay').addEventListener('click', e=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
   
     document.addEventListener('keydown', e=>{
-      if(e.key==='Escape'){ closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); }
+      if(e.key==='Escape'){ 
+        closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); 
+        document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
+      }
     });
   }
   document.addEventListener('DOMContentLoaded', init);
