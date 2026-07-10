@@ -73,12 +73,16 @@
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
     
-    // Migration: ensure every category has an icon
+    // Migration: ensure every category has an icon and recent emojis exist
     if(parsed.categories){
       parsed.categories.forEach(c => {
         if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '📁';
       });
     }
+    if(!parsed.recentEmojis) {
+      parsed.recentEmojis = ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
+    }
+
     return parsed;
   }
   function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -661,46 +665,150 @@
   function renderBudgets() {
     const { enriched } = computeLedger();
     const nowKey = todayStr().slice(0,7);
-    const spendByCat = {};
-    enriched.filter(t=>t.date.slice(0,7)===nowKey && !t.transferTo).forEach(t=>{
-      spendByCat[t.category] = (spendByCat[t.category]||0) + (t.expense||0);
+    
+    const budgetKeys = Object.keys(state.budgets || {});
+    const spendTracker = {};
+    budgetKeys.forEach(k => spendTracker[k] = 0);
+
+    enriched.filter(t=>t.date.slice(0,7)===nowKey && !t.transferTo && t.expense > 0).forEach(t=>{
+      if (spendTracker[t.category] !== undefined) spendTracker[t.category] += t.expense;
+      const subKey = t.category + '|' + t.subcategory;
+      if (spendTracker[subKey] !== undefined) spendTracker[subKey] += t.expense;
     });
   
     const el = document.getElementById('view-budgets');
     el.innerHTML = `
       <div class="section-head">
         <div><h2>Budgets</h2><p class="sub">Monitor monthly spending limits · ${fmtMonthLabel(nowKey)}</p></div>
+        <div class="section-head-actions">
+          <button class="btn btn-primary" id="btnAddBudget">${icon('plus')}Add Budget</button>
+        </div>
       </div>
   
       <div class="card card-pad" style="margin-bottom:20px;">
-        <p class="panel-title">Monthly Budgets</p>
-        <p class="panel-sub">Set spending limits per category — set to 0 to disable tracking for that category.</p>
+        <p class="panel-title">Active Budgets</p>
+        <p class="panel-sub">You can track overall category spending or specifically target a subcategory.</p>
         <div class="budget-list">
-          ${state.categories.map(c=>{
-            const budget = (state.budgets && state.budgets[c.category]) || 0;
-            const spend = spendByCat[c.category] || 0;
+          ${budgetKeys.length > 0 ? budgetKeys.map(k=>{
+            const budget = state.budgets[k];
+            const spend = spendTracker[k] || 0;
             const pct = budget>0 ? Math.min(100, Math.round(spend/budget*100)) : 0;
             const over = budget>0 && spend>budget;
-            if(budget<=0 && spend<=0) return ''; // Hide unbudgeted unused categories
+            
+            let label = k;
+            let cIcon = '📁';
+            if(k.includes('|')) {
+                const [c, s] = k.split('|');
+                cIcon = catIcon(c);
+                label = `${c} ➔ ${s}`;
+            } else {
+                cIcon = catIcon(k);
+            }
+
             return `<div class="budget-row">
-              <div class="budget-top">
-                <span class="cat-label">${catIcon(c.category)} ${esc(c.category)}</span>
-                <span class="amounts">${fmtCurrency(spend)} <input type="number" class="input" data-budget="${esc(c.category)}" value="${budget}" style="width:110px; display:inline-block; padding:4px 8px; margin-left:6px;"></span>
+              <div class="budget-top" style="align-items: center;">
+                <span class="cat-label">${cIcon} ${esc(label)}</span>
+                <div style="display:flex; align-items:center;">
+                  <span class="amounts">${fmtCurrency(spend)} / ${fmtCurrency(budget)}</span>
+                  <div class="row-actions">
+                    <button data-editbudget="${esc(k)}" title="Edit Limit">${icon('edit')}</button>
+                    <button data-delbudget="${esc(k)}" class="del" title="Delete Budget">${icon('trash')}</button>
+                  </div>
+                </div>
               </div>
-              <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${budget>0?pct:0}%"></div></div>
+              <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
             </div>`;
-          }).join('') || emptyHtml('No active budgets')}
+          }).join('') : emptyHtml('No active budgets. Click "Add Budget" to get started.')}
         </div>
       </div>
     `;
     
-    el.querySelectorAll('[data-budget]').forEach(inp=>{
-      inp.addEventListener('change', ()=>{
-        state.budgets = state.budgets || {};
-        state.budgets[inp.dataset.budget] = Number(inp.value)||0;
-        saveState(); renderBudgets(); toast('Budget saved');
-      });
-    });
+    document.getElementById('btnAddBudget').addEventListener('click', () => openBudgetModal());
+    el.querySelectorAll('[data-editbudget]').forEach(b => b.addEventListener('click', () => openBudgetModal(b.dataset.editbudget)));
+    el.querySelectorAll('[data-delbudget]').forEach(b => b.addEventListener('click', () => deleteBudget(b.dataset.delbudget)));
+  }
+
+  function openBudgetModal(key = null) {
+    if(state.categories.length === 0) { toast('Please create a category first'); return; }
+
+    document.getElementById('budgetModalTitle').textContent = key ? 'Edit Budget' : 'Add Budget';
+    document.getElementById('budgetOldKey').value = key || '';
+    
+    const selCat = document.getElementById('budgetCategory');
+    selCat.innerHTML = state.categories.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
+    
+    let targetCat = state.categories[0] ? state.categories[0].category : '';
+    let targetSub = '';
+    let amount = '';
+    
+    if (key) {
+      if (key.includes('|')) {
+          const parts = key.split('|');
+          targetCat = parts[0];
+          targetSub = parts.slice(1).join('|');
+      } else {
+          targetCat = key;
+      }
+      amount = state.budgets[key];
+    }
+    
+    if (targetCat) selCat.value = targetCat;
+    
+    const popSub = (cat) => {
+      const catObj = state.categories.find(c=>c.category===cat);
+      const selSub = document.getElementById('budgetSubcategory');
+      const subs = catObj ? catObj.subcategories : [];
+      selSub.innerHTML = `<option value="">-- All Subcategories --</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    };
+    
+    popSub(targetCat);
+    if (targetSub) document.getElementById('budgetSubcategory').value = targetSub;
+    
+    selCat.onchange = (e) => popSub(e.target.value);
+    
+    document.getElementById('budgetAmount').value = amount;
+    document.getElementById('budgetModalOverlay').classList.add('open');
+  }
+
+  function closeBudgetModal() {
+    document.getElementById('budgetModalOverlay').classList.remove('open');
+  }
+
+  function saveBudgetForm() {
+    const oldKey = document.getElementById('budgetOldKey').value;
+    const cat = document.getElementById('budgetCategory').value;
+    const sub = document.getElementById('budgetSubcategory').value;
+    const amount = Number(document.getElementById('budgetAmount').value);
+    
+    if (amount <= 0) { toast('Amount must be greater than 0'); return; }
+    
+    const newKey = sub ? `${cat}|${sub}` : cat;
+    if (!state.budgets) state.budgets = {};
+    
+    if (oldKey && oldKey !== newKey) {
+        if (state.budgets[newKey] !== undefined) {
+            toast('Budget for this target already exists');
+            return;
+        }
+        delete state.budgets[oldKey];
+    } else if (!oldKey && state.budgets[newKey] !== undefined) {
+        toast('Budget for this target already exists');
+        return;
+    }
+    
+    state.budgets[newKey] = amount;
+    saveState();
+    closeBudgetModal();
+    renderBudgets();
+    toast('Budget saved');
+  }
+
+  function deleteBudget(key) {
+    if(!confirm('Delete this budget tracker?')) return;
+    delete state.budgets[key];
+    saveState();
+    renderBudgets();
+    toast('Budget deleted');
   }
 
   /* ============ CATEGORIES ============ */
@@ -744,11 +852,13 @@
       </div>
     `;
   
+    // Add / Edit / Duplicate Categories -> Uses Modal
     document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
     el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
     el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.dupcat, true)));
     el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
     
+    // Add / Edit / Delete Subcategories -> Uses Modal
     el.querySelectorAll('[data-addsub]').forEach(b=> b.addEventListener('click', ()=> openSubModal(b.dataset.addsub)));
     el.querySelectorAll('[data-editsub]').forEach(b=> {
       b.addEventListener('click', ()=> {
@@ -765,11 +875,6 @@
   }
 
   // --- Category & Subcategory Modals Logic ---
-
-  function setEmojiPicker(btnId, inputId, emoji) {
-    document.getElementById(inputId).value = emoji;
-    document.getElementById(btnId).textContent = emoji;
-  }
 
   function renderRecentEmojis() {
     const recents = state.recentEmojis || ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
@@ -792,7 +897,8 @@
   };
 
   function handleEmojiSelect(btnId, inputId, emoji) {
-    setEmojiPicker(btnId, inputId, emoji);
+    document.getElementById(inputId).value = emoji;
+    document.getElementById(btnId).textContent = emoji;
     
     // Manage Custom Recent Array
     if (!state.recentEmojis) state.recentEmojis = [];
@@ -803,6 +909,9 @@
 
   function initEmojiPicker() {
     if(window.EmojiMart) {
+      // Sembunyikan Kategori 'frequent' bawaan karena kita membuat 'recent' custom
+      const categoriesNoFrequent = ['people', 'nature', 'foods', 'activity', 'places', 'objects', 'symbols', 'flags'];
+      
       const catPickerOptions = {
         onEmojiSelect: (e) => {
           handleEmojiSelect('btnCatIcon', 'catIconValue', e.native);
@@ -810,7 +919,8 @@
         },
         theme: 'light',
         previewPosition: 'none',
-        skinTonePosition: 'none'
+        skinTonePosition: 'none',
+        categories: categoriesNoFrequent
       };
       const catPicker = new EmojiMart.Picker(catPickerOptions);
       document.getElementById('catPickerContainer').appendChild(catPicker);
@@ -822,7 +932,8 @@
         },
         theme: 'light',
         previewPosition: 'none',
-        skinTonePosition: 'none'
+        skinTonePosition: 'none',
+        categories: categoriesNoFrequent
       };
       const subPicker = new EmojiMart.Picker(subPickerOptions);
       document.getElementById('subPickerContainer').appendChild(subPicker);
@@ -843,7 +954,9 @@
     if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
     document.getElementById('catName').value = defaultName;
     
-    setEmojiPicker('btnCatIcon', 'catIconValue', c ? c.icon : '📁');
+    const icon = c ? c.icon : '📁';
+    document.getElementById('catIconValue').value = icon;
+    document.getElementById('btnCatIcon').textContent = icon;
 
     document.getElementById('catModalOverlay').classList.add('open');
     document.getElementById('catName').focus();
@@ -865,9 +978,16 @@
       cat.category = newName;
       cat.icon = newIcon;
 
-      if (state.budgets && state.budgets[editingCatOldName] !== undefined && newName !== editingCatOldName) {
-          state.budgets[newName] = state.budgets[editingCatOldName];
-          delete state.budgets[editingCatOldName];
+      if (state.budgets && editingCatOldName !== newName) {
+          const oldKeys = Object.keys(state.budgets).filter(k => k === editingCatOldName || k.startsWith(editingCatOldName + '|'));
+          oldKeys.forEach(k => {
+              let newKey = newName;
+              if (k.includes('|')) {
+                  newKey = newName + '|' + k.split('|')[1];
+              }
+              state.budgets[newKey] = state.budgets[k];
+              delete state.budgets[k];
+          });
       }
       if (newName !== editingCatOldName) {
           state.transactions.forEach(t => { if (t.category === editingCatOldName) t.category = newName; });
@@ -905,7 +1025,8 @@
     }
 
     document.getElementById('subName').value = name;
-    setEmojiPicker('btnSubIcon', 'subIconValue', icon);
+    document.getElementById('subIconValue').value = icon;
+    document.getElementById('btnSubIcon').textContent = icon;
     
     document.getElementById('subModalOverlay').classList.add('open');
     document.getElementById('subName').focus();
@@ -927,6 +1048,14 @@
         toast('Subcategory already exists'); return; 
       }
       cat.subcategories = cat.subcategories.map(s => s === editingSubOldName ? newSub : s);
+      
+      const oldKey = targetCatForSub + '|' + editingSubOldName;
+      const newKey = targetCatForSub + '|' + newSub;
+      if (state.budgets && state.budgets[oldKey] !== undefined) {
+          state.budgets[newKey] = state.budgets[oldKey];
+          delete state.budgets[oldKey];
+      }
+
       state.transactions.forEach(t => {
           if (t.category === targetCatForSub && t.subcategory === editingSubOldName) t.subcategory = newSub;
       });
@@ -944,8 +1073,15 @@
     const used = state.transactions.some(t => t.category === name);
     if (used) { toast('Cannot delete: Category is currently used in transactions'); return; }
     if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
+    
     state.categories = state.categories.filter(c => c.category !== name);
-    if (state.budgets) delete state.budgets[name];
+    if (state.budgets) {
+        delete state.budgets[name];
+        Object.keys(state.budgets).forEach(k => {
+            if (k.startsWith(name + '|')) delete state.budgets[k];
+        });
+    }
+    
     saveState(); renderCategories(); toast('Category deleted');
   }
 
@@ -953,8 +1089,13 @@
     const used = state.transactions.some(t => t.category === catName && t.subcategory === subName);
     if (used) { toast('Cannot delete: Subcategory is currently used in transactions'); return; }
     if (!confirm(`Are you sure you want to delete subcategory "${subName}"?`)) return;
+    
     const cat = state.categories.find(c => c.category === catName);
     if (cat) cat.subcategories = cat.subcategories.filter(s => s !== subName);
+    
+    const key = catName + '|' + subName;
+    if (state.budgets) delete state.budgets[key];
+
     saveState(); renderCategories(); toast('Subcategory deleted');
   }
   
@@ -1067,6 +1208,7 @@
     document.getElementById('acctModalTitle').textContent = name ? 'Edit Account' : 'Add Account';
     document.getElementById('acctName').value = a ? a.name : '';
     document.getElementById('acctType').value = a ? a.type : 'bank';
+    
     document.getElementById('acctBalance').value = a ? (accBal[a.name] || 0) : 0;
     
     document.getElementById('acctModalOverlay').classList.add('open');
@@ -1195,6 +1337,12 @@
     document.getElementById('btnAcctClose').addEventListener('click', closeAcctModal);
     document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
 
+    // Budgets
+    document.getElementById('btnBudgetSave').addEventListener('click', saveBudgetForm);
+    document.getElementById('btnBudgetCancel').addEventListener('click', closeBudgetModal);
+    document.getElementById('btnBudgetClose').addEventListener('click', closeBudgetModal);
+    document.getElementById('budgetModalOverlay').addEventListener('click', e=>{ if(e.target.id==='budgetModalOverlay') closeBudgetModal(); });
+
     // Categories
     document.getElementById('btnCatSave').addEventListener('click', saveCatForm);
     document.getElementById('btnCatCancel').addEventListener('click', closeCatModal);
@@ -1209,7 +1357,7 @@
   
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){ 
-        closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); 
+        closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); closeBudgetModal();
         document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
       }
     });
