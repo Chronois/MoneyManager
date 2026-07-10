@@ -7,6 +7,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA55-zN6AE4jP8JaARRPVtNA9Xdk4PVSQA",
   authDomain: "money-manager-7777.firebaseapp.com",
@@ -836,34 +837,33 @@ function renderTransactions(){
       </div>
     </div>
 
-    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
+    <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:130px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Start Date</label>
-          <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 8px 11px; box-shadow: none;">
-              <span id="lblFilterDateFrom">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'All Dates'}</span>
-            </button>
-            <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
-            <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+        <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="date-picker-wrap" style="flex:1;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+                <span id="lblFilterDateFrom">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
+              </button>
+              <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
+              <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+            </div>
+            <span style="color:var(--ink-muted); font-size:12px; font-weight:500;">to</span>
+            <div class="date-picker-wrap" style="flex:1;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+                <span id="lblFilterDateTo">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
+              </button>
+              <input type="hidden" id="fDateTo" value="${filters.dateTo}">
+              <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+            </div>
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:130px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">End Date</label>
-          <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 8px 11px; box-shadow: none;">
-              <span id="lblFilterDateTo">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'All Dates'}</span>
-            </button>
-            <input type="hidden" id="fDateTo" value="${filters.dateTo}">
-            <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
-          </div>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:140px;">
+        <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 8px 11px; box-shadow: none;">
+            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
               <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All Accounts'}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
@@ -874,10 +874,10 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1.5; min-width:160px;">
+        <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 8px 11px; box-shadow: none;">
+            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
               <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
@@ -888,10 +888,15 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:120px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Type</label>
+        <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
+           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
+           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
+        </div>
+
+        <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 8px 11px; box-shadow: none; justify-content: center;">
+            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: center;">
               <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All Types'))}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
@@ -904,28 +909,25 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; flex:1.5; min-width:160px;">
-           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
-           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 8px 11px; border-radius: 9px; height: 36px; box-shadow: none; font-family:var(--font-body);">
-        </div>
-        
-        <div style="display:flex; align-items:flex-end; padding-bottom: 1px;">
-           <button class="btn btn-ghost" id="fClear" style="height:36px; padding:0 14px;">Reset</button>
+        <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
+
+        <div style="width: 70px; padding: 0 14px; flex-shrink:0; display:flex; align-items:flex-end;">
+           <button class="btn btn-ghost" id="fClear" style="padding: 6px 12px; font-size:12px; height: 32px; margin-bottom: 1px; color: var(--ink-faint);" title="Reset Filters">Reset</button>
         </div>
     </div>
 
     <div class="table-wrap">
-      <table>
+      <table style="table-layout: fixed; width: 100%; min-width: 1060px;">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Day</th>
-            <th>Account</th>
-            <th>Category</th>
-            <th>Note</th>
-            <th style="text-align:center">Type</th>
-            <th style="text-align:right">Amount</th>
-            <th></th>
+            <th style="width: 130px; padding-left: 14px;">Date</th>
+            <th style="width: 120px;">Day</th>
+            <th style="width: 160px;">Account</th>
+            <th style="width: 190px;">Category</th>
+            <th style="width: auto;">Note</th>
+            <th style="width: 130px; text-align:center;">Type</th>
+            <th style="width: 130px; text-align:right;">Amount</th>
+            <th style="width: 70px; padding-right: 14px;"></th>
           </tr>
         </thead>
         <tbody>
