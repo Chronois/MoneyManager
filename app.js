@@ -2,10 +2,27 @@
    MONEY MANAGER — app logic
    ============================================================ */
 
-   const SEED = {"transactions": [{"id": 1, "date": "2026-03-02", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Ayam - TO", "expense": 13000, "transferTo": "", "income": 0}, {"id": 2, "date": "2026-03-02", "account": "GoPay", "category": "Lifestyle", "subcategory": "💸Game", "note": "Top Up HSR", "expense": 176490, "transferTo": "", "income": 0}, {"id": 3, "date": "2026-03-03", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Padang - Ibra", "expense": 13000, "transferTo": "", "income": 0}, {"id": 4, "date": "2026-03-04", "account": "BNI", "category": "Daily Necessities", "subcategory": "🫙Food & Drink Container(s)", "note": "Ecentio Kotak Makan", "expense": 37050, "transferTo": "", "income": 0}], "categories": [{"category": "Food & Beverages", "subcategories": ["🍽️Main Meal", "🥛Drink", "🥯Snack", "🍌Fruits", "🍅Vegetables", "👨‍🍳Cooking ingredients", "🛵 Dining Out"]}, {"category": "Transportation", "subcategories": ["🏍️Motorcycle", "🚕Car", "🚌Bus", "🚐 Angkot", "🚅Train", "🚐 Travel", "⛽ Gasoline", "🛣️ Toll", "🅿️ Parking", "💳E-Money Card"]}, {"category": "Lifestyle", "subcategories": ["📈Trend", "💸Game", "🎲 Toys", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription", "💻 Laptop Maintenance"]}, {"category": "Daily Necessities", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🫖 Water Gallon", "🪙Electricity Token", "🫙Food & Drink Container(s)", "🌐 Internet"]}, {"category": "Clothes", "subcategories": ["👕Shirt", "👖Pants", "🧥Jacket", "🥼Functional Clothing"]}, {"category": "Accessory", "subcategories": ["🧢Hat", "⌚Watch", "🗝️Keychain"]}, {"category": "Beauty", "subcategories": ["🧴Skincare", "✂️ Haircut"]}, {"category": "Health", "subcategories": ["💆Massage", "🏥 Pharmacy", "🩺 Medical Service"]}, {"category": "Education", "subcategories": ["📚Book"]}, {"category": "Present", "subcategories": ["👨‍👩‍👦‍👦For Family", "🎁 Gift"]}, {"category": "Accounts Receivable", "subcategories": ["🧾Receivable"]}, {"category": "Accounts Payable", "subcategories": ["💰Debt"]}, {"category": "Allowance", "subcategories": ["💵Allowance"]}, {"category": "Salary", "subcategories": ["💎Salary"]}, {"category": "Bonus", "subcategories": ["👛Bonus", "🪙THR"]}, {"category": "Adjustment", "subcategories": ["✏️ Error Correction"]}], "accounts": [{"name": "BNI", "type": "bank", "opening": 2359114}, {"name": "BNI 2", "type": "bank", "opening": 4232269}, {"name": "GoPay", "type": "ewallet", "opening": 210320}, {"name": "SeaBank", "type": "digital", "opening": 25293}, {"name": "ShopeePay", "type": "ewallet", "opening": 16000}, {"name": "Cash", "type": "cash", "opening": 12000}, {"name": "Dana", "type": "ewallet", "opening": 4274}, {"name": "Steam Wallet", "type": "ewallet", "opening": 0}, {"name": "Taplus", "type": "bank", "opening": 0}], "budgets": {"Food & Beverages": 1500000, "Transportation": 500000, "Lifestyle": 400000, "Daily Necessities": 300000, "Clothes": 200000}};
+   // Default SEED with 0 Transactions and 0 Accounts
+   const SEED = {
+    "transactions": [], 
+    "categories": [
+      {"category": "Food & Beverages", "icon": "🍽️", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
+      {"category": "Transportation", "icon": "🚗", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
+      {"category": "Lifestyle", "icon": "🎯", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
+      {"category": "Daily Necessities", "icon": "🧺", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
+      {"category": "Accounts Receivable", "icon": "🧾", "subcategories": ["🧾 Receivable"]},
+      {"category": "Accounts Payable", "icon": "💳", "subcategories": ["💰 Debt"]},
+      {"category": "Allowance", "icon": "💵", "subcategories": ["💵 Allowance"]},
+      {"category": "Salary", "icon": "💎", "subcategories": ["💎 Salary"]},
+      {"category": "Adjustment", "icon": "✏️", "subcategories": ["✏️ Error Correction"]}
+    ], 
+    "accounts": [], 
+    "budgets": {},
+    "recentEmojis": ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️']
+  };
+  
   const STORAGE_KEY = 'mm_money_manager_v1';
   
-  // Fallback if category has no icon saved in state
   const CATEGORY_ICONS_FALLBACK = {
     'Food & Beverages':'🍽️','Transportation':'🚗','Lifestyle':'🎯','Daily Necessities':'🧺',
     'Clothes':'👕','Accessory':'💍','Beauty':'💄','Health':'🩺','Education':'📚','Present':'🎁',
@@ -25,7 +42,9 @@
     trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v14a1 1 0 01-1 1H7a1 1 0 01-1-1V6h12z"/>',
     close:'<path d="M18 6L6 18M6 6l12 12"/>',
     wallet:'<path d="M3 7a2 2 0 012-2h13a1 1 0 011 1v2M3 7v10a2 2 0 002 2h14a1 1 0 001-1V9a1 1 0 00-1-1H5a2 2 0 01-2-2z"/><circle cx="16" cy="14" r="1.4"/>',
-    copy:'<path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>'
+    copy:'<path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
+    sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
+    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
   };
   function icon(name, cls){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls||''}">${ICONS[name]}</svg>`; }
   
@@ -91,6 +110,30 @@
     const m = str.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)\s*(.*)/u);
     if (m) return { icon: m[1], name: m[2].trim() };
     return { icon: '📁', name: str.trim() };
+  }
+
+  /* ============ THEME ENGINE ============ */
+  function initTheme() {
+    const saved = localStorage.getItem('mm_theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    updateThemeIcon();
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const target = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', target);
+    localStorage.setItem('mm_theme', target);
+    updateThemeIcon();
+  }
+  function updateThemeIcon() {
+    const btn = document.getElementById('btnThemeToggle');
+    if(!btn) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.innerHTML = isDark ? icon('sun') : icon('moon');
   }
   
   /* ============ LEDGER ENGINE ============ */
@@ -296,6 +339,7 @@
                 <div class="acct-name">${esc(a.name)}</div>
                 <div class="acct-balance" style="font-size:15px;">${fmtCurrency(accBal[a.name]||0)}</div>
               </div>`).join('')}
+            ${state.accounts.length === 0 ? emptyHtml('No accounts yet.') : ''}
           </div>
         </div>
         <div class="card card-pad">
@@ -489,6 +533,8 @@
   
   /* ============ TRANSACTION MODAL ============ */
   function openTxnModal(id, isDuplicate = false){
+    if(state.accounts.length === 0) { toast('Please create an account first'); return; }
+
     editingTxnId = isDuplicate ? null : (id || null);
     const t = id ? state.transactions.find(x=>x.id===id) : null;
     txnType = t ? (t.transferTo ? 'transfer' : (t.income>0 ? 'income' : 'expense')) : 'expense';
@@ -496,7 +542,7 @@
     document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplicate Transaction' : (id ? 'Edit Transaction' : 'Add Transaction');
     document.getElementById('txnDate').value = t ? t.date : todayStr();
     document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
-    document.getElementById('txnAccount').value = t ? t.account : state.accounts[0].name;
+    document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
     document.getElementById('txnNote').value = t ? (t.note||'') : '';
     document.getElementById('txnAmount').value = t ? (t.transferTo? t.expense : (t.income||t.expense||'')) : '';
   
@@ -698,13 +744,11 @@
       </div>
     `;
   
-    // Add / Edit / Duplicate Categories -> Uses Modal
     document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
     el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
     el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.dupcat, true)));
     el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
     
-    // Add / Edit / Delete Subcategories -> Uses Modal
     el.querySelectorAll('[data-addsub]').forEach(b=> b.addEventListener('click', ()=> openSubModal(b.dataset.addsub)));
     el.querySelectorAll('[data-editsub]').forEach(b=> {
       b.addEventListener('click', ()=> {
@@ -727,12 +771,41 @@
     document.getElementById(btnId).textContent = emoji;
   }
 
+  function renderRecentEmojis() {
+    const recents = state.recentEmojis || ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
+    const html = recents.map(e => `<button type="button" class="recent-btn" onclick="window.selectRecentEmoji('${e}')">${e}</button>`).join('');
+    
+    const catList = document.getElementById('catRecentList');
+    const subList = document.getElementById('subRecentList');
+    if (catList) catList.innerHTML = html;
+    if (subList) subList.innerHTML = html;
+  }
+
+  window.selectRecentEmoji = function(emoji) {
+    if (document.getElementById('catEmojiPopover').classList.contains('show')) {
+      handleEmojiSelect('btnCatIcon', 'catIconValue', emoji);
+      document.getElementById('catEmojiPopover').classList.remove('show');
+    } else if (document.getElementById('subEmojiPopover').classList.contains('show')) {
+      handleEmojiSelect('btnSubIcon', 'subIconValue', emoji);
+      document.getElementById('subEmojiPopover').classList.remove('show');
+    }
+  };
+
+  function handleEmojiSelect(btnId, inputId, emoji) {
+    setEmojiPicker(btnId, inputId, emoji);
+    
+    // Manage Custom Recent Array
+    if (!state.recentEmojis) state.recentEmojis = [];
+    state.recentEmojis = [emoji, ...state.recentEmojis.filter(e => e !== emoji)].slice(0, 15);
+    saveState();
+    renderRecentEmojis();
+  }
+
   function initEmojiPicker() {
-    // Instantiate EmojiMart pickers for both modals
     if(window.EmojiMart) {
       const catPickerOptions = {
         onEmojiSelect: (e) => {
-          setEmojiPicker('btnCatIcon', 'catIconValue', e.native);
+          handleEmojiSelect('btnCatIcon', 'catIconValue', e.native);
           document.getElementById('catEmojiPopover').classList.remove('show');
         },
         theme: 'light',
@@ -740,11 +813,11 @@
         skinTonePosition: 'none'
       };
       const catPicker = new EmojiMart.Picker(catPickerOptions);
-      document.getElementById('catEmojiPopover').appendChild(catPicker);
+      document.getElementById('catPickerContainer').appendChild(catPicker);
 
       const subPickerOptions = {
         onEmojiSelect: (e) => {
-          setEmojiPicker('btnSubIcon', 'subIconValue', e.native);
+          handleEmojiSelect('btnSubIcon', 'subIconValue', e.native);
           document.getElementById('subEmojiPopover').classList.remove('show');
         },
         theme: 'light',
@@ -752,7 +825,9 @@
         skinTonePosition: 'none'
       };
       const subPicker = new EmojiMart.Picker(subPickerOptions);
-      document.getElementById('subEmojiPopover').appendChild(subPicker);
+      document.getElementById('subPickerContainer').appendChild(subPicker);
+
+      renderRecentEmojis();
     }
   }
 
@@ -772,6 +847,7 @@
 
     document.getElementById('catModalOverlay').classList.add('open');
     document.getElementById('catName').focus();
+    renderRecentEmojis();
   }
   function closeCatModal() { document.getElementById('catModalOverlay').classList.remove('open'); }
 
@@ -833,6 +909,7 @@
     
     document.getElementById('subModalOverlay').classList.add('open');
     document.getElementById('subName').focus();
+    renderRecentEmojis();
   }
   function closeSubModal() { document.getElementById('subModalOverlay').classList.remove('open'); }
 
@@ -841,7 +918,7 @@
     const icon = document.getElementById('subIconValue').value;
     if (!name) { toast('Subcategory name is required'); return; }
 
-    const newSub = icon + name;
+    const newSub = icon + ' ' + name;
     const cat = state.categories.find(c => c.category === targetCatForSub);
     if (!cat) return;
 
@@ -893,8 +970,8 @@
         </div>
       </div>
       <div class="acct-grid">
-        ${state.accounts.map(a=>`
-          <div class="acct-card" data-acct="${esc(a.name)}">
+        ${state.accounts.map((a, i)=>`
+          <div class="acct-card" data-acct="${esc(a.name)}" data-idx="${i}" draggable="true">
             <div class="acct-top">
               <div class="acct-icon">${ACCOUNT_ICONS[a.type]||'💳'}</div>
               <span class="acct-type-tag">${a.type}</span>
@@ -908,12 +985,55 @@
             </div>
           </div>
         `).join('')}
+        ${state.accounts.length === 0 ? emptyHtml('No accounts yet. Click "Add Account" to get started.') : ''}
       </div>
     `;
+    
     document.getElementById('btnAddAcct').addEventListener('click', ()=> openAcctModal());
     el.querySelectorAll('[data-editacct]').forEach(b=> b.addEventListener('click', ()=> openAcctModal(b.dataset.editacct)));
     el.querySelectorAll('[data-dupacct]').forEach(b=> b.addEventListener('click', ()=> duplicateAcct(b.dataset.dupacct)));
     el.querySelectorAll('[data-delacct]').forEach(b=> b.addEventListener('click', ()=> deleteAcct(b.dataset.delacct)));
+
+    // Drag and Drop Logic
+    const cards = el.querySelectorAll('.acct-card');
+    let dragSrcIdx = null;
+
+    cards.forEach(card => {
+      card.addEventListener('dragstart', (e) => {
+        dragSrcIdx = Number(card.dataset.idx);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragSrcIdx);
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        cards.forEach(c => c.classList.remove('drag-over'));
+      });
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        return false;
+      });
+      card.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        if (Number(card.dataset.idx) !== dragSrcIdx) {
+          card.classList.add('drag-over');
+        }
+      });
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('drag-over');
+      });
+      card.addEventListener('drop', (e) => {
+        e.stopPropagation();
+        const targetIdx = Number(card.dataset.idx);
+        if (dragSrcIdx !== null && dragSrcIdx !== targetIdx) {
+          const draggedAcct = state.accounts.splice(dragSrcIdx, 1)[0];
+          state.accounts.splice(targetIdx, 0, draggedAcct);
+          saveState();
+          renderAccounts();
+        }
+        return false;
+      });
+    });
   }
   
   function deleteAcct(name){
@@ -947,8 +1067,6 @@
     document.getElementById('acctModalTitle').textContent = name ? 'Edit Account' : 'Add Account';
     document.getElementById('acctName').value = a ? a.name : '';
     document.getElementById('acctType').value = a ? a.type : 'bank';
-    
-    // Bind to current balance visually instead of purely opening logic
     document.getElementById('acctBalance').value = a ? (accBal[a.name] || 0) : 0;
     
     document.getElementById('acctModalOverlay').classList.add('open');
@@ -1033,12 +1151,15 @@
   
   /* ============ INIT ============ */
   function init(){
+    initTheme();
     renderNav();
     document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
     renderCurrentTab();
     
-    // Setup EmojiMart instances once the library is loaded
     setTimeout(initEmojiPicker, 500); 
+
+    // Theme Toggle
+    document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
 
     // Emoji Popover Toggles
     document.getElementById('btnCatIcon').addEventListener('click', () => {
