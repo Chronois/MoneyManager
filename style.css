@@ -566,3 +566,45 @@ html[data-theme="dark"] em-emoji-picker {
 }
 .mp-month:hover { background: var(--paper-2); color: var(--primary-dark); }
 .mp-month.active { background: var(--primary); color: #fff; border-color: var(--primary-dark); }
+
+/* ---------- Add Transaction Modern UI ---------- */
+.modern-toggle {
+  display: flex;
+  background: var(--paper-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+.modern-toggle button {
+  flex: 1; border: none; background: transparent;
+  padding: 8px 12px; border-radius: 7px;
+  font-weight: 600; font-size: 13px;
+  color: var(--ink-muted); transition: 0.2s ease;
+}
+.modern-toggle button.active { background: var(--surface); box-shadow: var(--shadow-sm); }
+.modern-toggle button.active[data-type="expense"] { color: var(--expense); }
+.modern-toggle button.active[data-type="income"] { color: var(--income); }
+.modern-toggle button.active[data-type="transfer"] { color: var(--primary-dark); }
+
+.amount-field-container {
+  display: flex; flex-direction: column; align-items: center; margin: 10px 0 16px;
+}
+.amount-wrapper {
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 2px solid var(--border); padding-bottom: 6px;
+  transition: border-color 0.2s ease; width: max-content; min-width: 200px; justify-content: center;
+}
+.amount-wrapper:focus-within { border-bottom-color: var(--primary); }
+.amount-prefix { font-size: 22px; font-weight: 700; color: var(--ink-faint); }
+.amount-input-huge {
+  border: none !important; background: transparent !important;
+  font-size: 36px !important; font-weight: 700 !important;
+  font-family: var(--font-mono) !important; color: var(--ink) !important;
+  padding: 0 !important; width: 100%; max-width: 220px;
+  text-align: left; box-shadow: none !important; outline: none !important;
+}
+.amount-input-huge::placeholder { color: var(--border); }
+.amount-input-huge::-webkit-outer-spin-button, .amount-input-huge::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
