@@ -100,7 +100,8 @@ let editingCatOldName = null;
 let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
-let selectedDashMonth = null;
+let selectedCatMonth = null;
+let selectedSubCatMonth = null;
 
 function shiftMonth(yyyyMM, offset) {
   let [y, m] = yyyyMM.split('-').map(Number);
@@ -410,33 +411,28 @@ function renderCurrentTab(){
 
 /* ============ DASHBOARD ============ */
 function renderDashboard(){
-  // Jika bulan belum dipilih, gunakan bulan saat ini
-  if (!selectedDashMonth) selectedDashMonth = todayStr().slice(0,7);
-
   const { enriched, accBal, total } = computeLedger();
+  const nowKey = todayStr().slice(0,7);
   
-  // Filter transaksi KHUSUS untuk bulan yang sedang dipilih
-  const monthTx = enriched.filter(t=> t.date.slice(0,7) === selectedDashMonth);
+  // Set default bulan ke bulan saat ini jika belum dipilih
+  if (!selectedCatMonth) selectedCatMonth = nowKey;
+  if (!selectedSubCatMonth) selectedSubCatMonth = nowKey;
+
+  // Filter transaksi untuk ringkasan atas (selalu bulan saat ini)
+  const monthTx = enriched.filter(t=> t.date.slice(0,7)===nowKey);
   const income = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.income||0),0);
   const expense = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.expense||0),0);
   const net = income-expense;
 
+  // Filter transaksi khusus untuk grafik
+  const catMonthTx = enriched.filter(t=> t.date.slice(0,7)===selectedCatMonth);
+  const subCatMonthTx = enriched.filter(t=> t.date.slice(0,7)===selectedSubCatMonth);
+
   const el = document.getElementById('view-dashboard');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Dashboard</h2><p class="sub">Financial summary · ${fmtMonthLabel(selectedDashMonth)}</p></div>
-      <div class="section-head-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        
-        <div style="display:flex; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-sm);">
-            <button class="icon-btn" id="btnDashPrev" style="border:none; border-radius:0; border-right:1px solid var(--border); height:36px; width:36px; background:transparent; cursor:pointer;" title="Previous Month">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-            <input type="month" class="input" id="dashMonthPicker" value="${selectedDashMonth}" style="border:none; border-radius:0; height:36px; padding:0 8px; background:transparent; font-weight:600; cursor:pointer; outline:none; color:var(--ink);">
-            <button class="icon-btn" id="btnDashNext" style="border:none; border-radius:0; border-left:1px solid var(--border); height:36px; width:36px; background:transparent; cursor:pointer;" title="Next Month">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
-        </div>
-
+      <div><h2>Dashboard</h2><p class="sub">Financial summary · ${fmtMonthLabel(nowKey)}</p></div>
+      <div class="section-head-actions">
         <button class="btn btn-primary" id="btnAddTxnDash">${icon('plus')}Add Transaction</button>
       </div>
     </div>
@@ -447,19 +443,19 @@ function renderDashboard(){
         <div class="delta">in ${state.accounts.length} accounts</div>
       </div>
       <div class="stat-card"><span class="swatch"></span>
-        <div class="label">Income</div>
+        <div class="label">This Month's Income</div>
         <div class="value pos">${fmtCurrency(income)}</div>
         <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.income>0).length} transactions</div>
       </div>
       <div class="stat-card"><span class="swatch"></span>
-        <div class="label">Expense</div>
+        <div class="label">This Month's Expense</div>
         <div class="value neg">${fmtCurrency(expense)}</div>
         <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.expense>0).length} transactions</div>
       </div>
       <div class="stat-card"><span class="swatch"></span>
         <div class="label">Net Cash Flow</div>
         <div class="value ${net>=0?'pos':'neg'}">${fmtCurrency(net)}</div>
-        <div class="delta">${fmtMonthLabel(selectedDashMonth)}</div>
+        <div class="delta">current month</div>
       </div>
     </div>
 
@@ -474,18 +470,28 @@ function renderDashboard(){
         </div>
       </div>
       <div class="card card-pad">
-        <p class="panel-title">Expenses by Category</p>
-        <p class="panel-sub">Month ${fmtMonthLabel(selectedDashMonth)}</p>
-        ${renderCategoryDonutBlock(monthTx)}
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+          <div>
+            <p class="panel-title">Expenses by Category</p>
+            <p class="panel-sub">Month ${fmtMonthLabel(selectedCatMonth)}</p>
+          </div>
+          <input type="month" id="catMonthPicker" class="month-picker-btn" value="${selectedCatMonth}" title="Select Month">
+        </div>
+        ${renderCategoryDonutBlock(catMonthTx)}
       </div>
     </div>
 
     <div class="dash-grid">
       <div class="card card-pad">
-        <p class="panel-title">Expenses by Subcategory</p>
-        <p class="panel-sub">Extra details for ${fmtMonthLabel(selectedDashMonth)}</p>
-        ${renderSubcategoryDonutBlock(monthTx)}
-        ${renderSubcategoryBarBlock(monthTx)}
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+          <div>
+            <p class="panel-title">Expenses by Subcategory</p>
+            <p class="panel-sub">Extra details for ${fmtMonthLabel(selectedSubCatMonth)}</p>
+          </div>
+          <input type="month" id="subCatMonthPicker" class="month-picker-btn" value="${selectedSubCatMonth}" title="Select Month">
+        </div>
+        ${renderSubcategoryDonutBlock(subCatMonthTx)}
+        ${renderSubcategoryBarBlock(subCatMonthTx)}
       </div>
       <div class="card card-pad">
         <p class="panel-title">Balance per Account</p>
@@ -519,33 +525,34 @@ function renderDashboard(){
     <div class="dash-grid" style="grid-template-columns: 1fr;">
       <div class="card card-pad">
         <p class="panel-title">Recent Transactions</p>
-        <p class="panel-sub">Transactions in ${fmtMonthLabel(selectedDashMonth)}</p>
+        <p class="panel-sub">Latest 10 transactions overall</p>
         <div>
-          ${monthTx.slice(-10).reverse().map(t=> recentItemHtmlDash(t)).join('') || emptyHtml('No transactions in this month')}
+          ${enriched.slice(-10).reverse().map(t=> recentItemHtmlDash(t)).join('') || emptyHtml('No transactions yet')}
         </div>
       </div>
     </div>
   `;
   
-  // Interaktivitas untuk Tombol Navigasi Bulan
-  document.getElementById('btnDashPrev').addEventListener('click', () => {
-    selectedDashMonth = shiftMonth(selectedDashMonth, -1);
-    renderDashboard();
-  });
-  document.getElementById('btnDashNext').addEventListener('click', () => {
-    selectedDashMonth = shiftMonth(selectedDashMonth, 1);
-    renderDashboard();
-  });
-  document.getElementById('dashMonthPicker').addEventListener('change', (e) => {
+  // Event Listeners untuk Kalender Kategori & Subkategori
+  document.getElementById('catMonthPicker').addEventListener('change', (e) => {
     if(e.target.value) {
-      selectedDashMonth = e.target.value;
+      selectedCatMonth = e.target.value;
       renderDashboard();
     }
   });
 
+  document.getElementById('subCatMonthPicker').addEventListener('change', (e) => {
+    if(e.target.value) {
+      selectedSubCatMonth = e.target.value;
+      renderDashboard();
+    }
+  });
+
+  // Event listener untuk menuju page Accounts
   el.querySelectorAll('.dash-acct-card').forEach(card => {
     card.addEventListener('click', () => switchTab('accounts'));
   });
+
   document.getElementById('btnAddTxnDash').addEventListener('click', ()=> openTxnModal());
 }
 
