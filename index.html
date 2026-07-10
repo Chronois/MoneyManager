@@ -25,6 +25,16 @@
       </button>
     </div>
     <div class="topbar-actions">
+      <!-- CURRENCY SELECTOR -->
+      <select id="currencySelect" title="Select Currency" style="background: var(--surface); border: 1px solid var(--border); color: var(--ink); border-radius: 8px; padding: 6px 8px; font-size: 13.5px; font-family: var(--font-body); font-weight: 600; cursor: pointer; outline: none; margin-right: 4px;">
+        <option value="IDR">IDR</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="JPY">JPY</option>
+        <option value="KRW">KRW</option>
+        <option value="CNY">CNY</option>
+      </select>
+
       <button class="icon-btn" id="btnAuthOpen" title="Account & Cloud Sync" style="color: var(--primary);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
       </button>
@@ -109,7 +119,7 @@
         <div class="field"><label>Transfer To</label><select class="input" id="txnTransferTo"></select></div>
       </div>
       <div class="field"><label>Note</label><input type="text" class="input" id="txnNote" placeholder="e.g. Lunch"></div>
-      <div class="field"><label id="amountLabel">Amount</label><input type="number" class="input" id="txnAmount" placeholder="0" min="0"></div>
+      <div class="field"><label id="amountLabel">Amount</label><input type="number" step="any" class="input" id="txnAmount" placeholder="0" min="0"></div>
     </div>
     <div class="modal-foot">
       <button class="btn" id="btnTxnCancel">Cancel</button>
@@ -135,7 +145,7 @@
             <option value="cash">Cash</option>
           </select>
         </div>
-        <div class="field"><label>Current Balance</label><input type="number" class="input" id="acctBalance" placeholder="0"></div>
+        <div class="field"><label>Current Balance</label><input type="number" step="any" class="input" id="acctBalance" placeholder="0"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -159,7 +169,7 @@
         <div class="field"><label>Subcategory</label><select class="input" id="budgetSubcategory"></select></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>Monthly Budget Limit</label><input type="number" class="input" id="budgetAmount" placeholder="e.g. 500" min="0"></div>
+        <div class="field"><label>Monthly Budget Limit</label><input type="number" step="any" class="input" id="budgetAmount" placeholder="e.g. 500" min="0"></div>
       </div>
       <input type="hidden" id="budgetOldKey">
     </div>
