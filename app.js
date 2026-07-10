@@ -466,16 +466,28 @@ function renderDashboard(){
       <div class="card card-pad">
         <p class="panel-title">Balance per Account</p>
         <p class="panel-sub">Manage accounts in the 'Accounts' menu</p>
-        <div class="acct-grid" style="grid-template-columns:repeat(2,1fr)">
-          ${state.accounts.slice(0,6).map(a=>`
-            <div class="acct-card dash-acct-card" style="padding:12px 14px; cursor:pointer;" title="Go to Accounts">
-              <div class="acct-top">
-                <div class="acct-icon">${ACCOUNT_ICONS[a.type]||'💳'}</div>
-                <span class="acct-type-tag">${a.type}</span>
-              </div>
-              <div class="acct-name">${esc(a.name)}</div>
-              <div class="acct-balance" style="font-size:15px;">${fmtCurrency(accBal[a.name]||0)}</div>
-            </div>`).join('')}
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+          ${state.accounts.slice(0, 7).map((a, i) => {
+            const bal = accBal[a.name] || 0;
+            // Menghitung persentase saldo dari total kekayaan (diambil max 100%)
+            const pct = (total > 0 && bal > 0) ? Math.min(100, Math.round((bal/total)*100)) : 0;
+            const color = CHART_PALETTE[i % CHART_PALETTE.length];
+            return '<div class="acct-card dash-acct-card" style="padding:14px 16px; cursor:pointer;" title="Go to Accounts">' +
+              '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">' +
+                '<div style="display:flex; align-items:center; gap:12px;">' +
+                  '<div class="acct-icon" style="width:36px; height:36px; font-size:16px;">' + (ACCOUNT_ICONS[a.type]||'💳') + '</div>' +
+                  '<div style="display:flex; flex-direction:column; gap:3px;">' +
+                    '<div class="acct-name" style="font-size:14.5px; line-height:1;">' + esc(a.name) + '</div>' +
+                    '<div style="font-size:10.5px; color:var(--ink-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; line-height:1;">' + a.type + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="acct-balance" style="font-size:15px; font-weight:600;">' + fmtCurrency(bal) + '</div>' +
+              '</div>' +
+              '<div class="bar-track" style="height:6px; background:var(--paper-2); border-radius:3px; overflow:hidden;">' +
+                '<div style="height:100%; width:' + pct + '%; background:' + color + '; border-radius:3px; transition: width 0.4s ease;"></div>' +
+              '</div>' +
+            '</div>';
+          }).join('')}
           ${state.accounts.length === 0 ? emptyHtml('No accounts yet.') : ''}
         </div>
       </div>
@@ -492,7 +504,7 @@ function renderDashboard(){
     </div>
   `;
   
-  // Attach event listener for the new clickable account cards
+  // Event listener untuk menavigasi ke page Accounts saat kartu di klik
   el.querySelectorAll('.dash-acct-card').forEach(card => {
     card.addEventListener('click', () => switchTab('accounts'));
   });
