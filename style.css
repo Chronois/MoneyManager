@@ -608,3 +608,51 @@ html[data-theme="dark"] em-emoji-picker {
 .amount-input-huge::-webkit-outer-spin-button, .amount-input-huge::-webkit-inner-spin-button {
   -webkit-appearance: none; margin: 0;
 }
+
+/* ---------- Custom Date Picker (Modal) ---------- */
+.date-picker-wrap { position: relative; width: 100%; }
+.date-picker-btn {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink); border-radius: 9px; padding: 8px 11px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; transition: .15s ease;
+  font-family: var(--font-body);
+}
+.date-picker-btn:hover { border-color: var(--primary); }
+.date-picker-btn svg { width: 16px; height: 16px; color: var(--ink-faint); }
+
+.date-popover {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-lg);
+  padding: 16px; z-index: 2000; width: 280px;
+  display: none; flex-direction: column; gap: 12px;
+  animation: fadeIn .2s ease;
+}
+.date-popover.show { display: flex; }
+
+.dp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.dp-month-year { font-weight: 700; font-size: 14.5px; font-family: var(--font-body); color: var(--ink); }
+.dp-nav-btn {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink-muted); transition: .15s;
+}
+.dp-nav-btn:hover { background: var(--primary-pale); color: var(--primary-dark); border-color: var(--primary); }
+
+.dp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dp-day-name { text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; }
+
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dp-day {
+  background: transparent; border: 1px solid transparent;
+  border-radius: 6px; padding: 6px 0; font-size: 13px;
+  color: var(--ink); cursor: pointer; transition: .15s;
+  text-align: center; font-family: var(--font-mono);
+}
+.dp-day:hover:not(.empty) { background: var(--paper-2); color: var(--primary-dark); }
+.dp-day.active { background: var(--primary); color: #fff; border-color: var(--primary-dark); font-weight: 700; }
+.dp-day.today { color: var(--primary); font-weight: 700; border: 1px dashed var(--border); }
+.dp-day.today.active { border-style: solid; }
+.dp-day.empty { cursor: default; pointer-events: none; }
