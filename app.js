@@ -101,11 +101,13 @@ let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
 
-// State untuk Dashboard Month Pickers
+// State untuk Dashboard Month Pickers & Modal Date Picker
 let selectedCatMonth = null;
 let selectedSubCatMonth = null;
 let catPickerYear = null;
 let subPickerYear = null;
+let dpViewYear = null;
+let dpViewMonth = null;
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
@@ -243,6 +245,71 @@ function splitSub(str) {
   return { icon: '📁', name: s };
 }
 
+/* ============ CUSTOM DATE PICKER LOGIC ============ */
+function getDatePickerHTML(year, month, selectedDateStr) {
+  const firstDay = new Date(year, month - 1, 1).getDay(); // 0 (Sun) to 6 (Sat)
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  let gridHtml = '';
+  // Ruang kosong untuk hari sebelum tanggal 1
+  for (let i = 0; i < firstDay; i++) gridHtml += `<div class="dp-day empty"></div>`;
+  
+  // Tanggal 1 sampai akhir bulan
+  for (let i = 1; i <= daysInMonth; i++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const isActive = (dateStr === selectedDateStr);
+      const isToday = (dateStr === todayStr);
+      let classes = 'dp-day';
+      if (isActive) classes += ' active';
+      if (isToday) classes += ' today';
+      gridHtml += `<button type="button" class="${classes}" data-date="${dateStr}">${i}</button>`;
+  }
+
+  const daysHeader = DAYS_EN.map(d => `<div class="dp-day-name">${d.slice(0,2)}</div>`).join('');
+
+  return `
+      <div class="dp-header">
+          <button type="button" class="dp-nav-btn" id="dpPrevMonth"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="dp-month-year">${MONTHS_EN[month - 1]} ${year}</span>
+          <button type="button" class="dp-nav-btn" id="dpNextMonth"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+      <div class="dp-days">${daysHeader}</div>
+      <div class="dp-grid">${gridHtml}</div>
+  `;
+}
+
+function renderDatePickerPopover() {
+  const popover = document.getElementById('datePopover');
+  if(!popover) return;
+  const selectedDate = document.getElementById('txnDate').value;
+  popover.innerHTML = getDatePickerHTML(dpViewYear, dpViewMonth, selectedDate);
+
+  document.getElementById('dpPrevMonth').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dpViewMonth--;
+      if(dpViewMonth < 1) { dpViewMonth = 12; dpViewYear--; }
+      renderDatePickerPopover();
+  });
+  document.getElementById('dpNextMonth').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dpViewMonth++;
+      if(dpViewMonth > 12) { dpViewMonth = 1; dpViewYear++; }
+      renderDatePickerPopover();
+  });
+
+  popover.querySelectorAll('.dp-day:not(.empty)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const selDate = btn.dataset.date;
+          document.getElementById('txnDate').value = selDate;
+          document.getElementById('lblTxnDate').textContent = fmtDateShort(selDate);
+          popover.classList.remove('show');
+      });
+  });
+}
+
 /* ============ CUSTOM MONTH PICKER LOGIC ============ */
 function getPickerHTML(targetId, selectedMonth, viewYear) {
   const [selY, selM] = selectedMonth.split('-').map(Number);
@@ -266,7 +333,6 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
   const popover = document.getElementById(popoverId);
   if(!popover) return;
   
-  // Navigate Year
   popover.querySelectorAll('.mp-nav-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -276,20 +342,19 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
 
           const newYear = targetId === 'cat' ? catPickerYear : subPickerYear;
           popover.innerHTML = getPickerHTML(targetId, selectedMonth, newYear);
-          bindPopoverEvents(popoverId, targetId, selectedMonth); // Re-bind after DOM update
+          bindPopoverEvents(popoverId, targetId, selectedMonth);
       });
   });
 
-  // Select Month
   popover.querySelectorAll('.mp-month').forEach(btn => {
       btn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (targetId === 'cat') {
               selectedCatMonth = btn.dataset.val;
-              catPickerYear = parseInt(selectedCatMonth.split('-')[0]); // Sync year
+              catPickerYear = parseInt(selectedCatMonth.split('-')[0]); 
           } else {
               selectedSubCatMonth = btn.dataset.val;
-              subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); // Sync year
+              subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); 
           }
           renderDashboard();
       });
@@ -591,21 +656,18 @@ function renderDashboard(){
     </div>
   `;
   
-  // Event Listener: Buka Popover Kategori
   document.getElementById('catBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('catPopover').classList.toggle('show');
     document.getElementById('subCatPopover').classList.remove('show');
   });
 
-  // Event Listener: Buka Popover Subkategori
   document.getElementById('subCatBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('subCatPopover').classList.toggle('show');
     document.getElementById('catPopover').classList.remove('show');
   });
 
-  // Memasang Event Listener untuk isi dari kedua kalender
   bindPopoverEvents('catPopover', 'cat', selectedCatMonth);
   bindPopoverEvents('subCatPopover', 'sub', selectedSubCatMonth);
 
@@ -856,12 +918,20 @@ function openTxnModal(id, isDuplicate = false){
   txnType = t ? (t.transferTo ? 'transfer' : (t.income>0 ? 'income' : 'expense')) : 'expense';
 
   document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplicate Transaction' : (id ? 'Edit Transaction' : 'Add Transaction');
-  document.getElementById('txnDate').value = t ? t.date : todayStr();
+  
+  // Date Picker Initialization
+  const targetDate = t ? t.date : todayStr();
+  document.getElementById('txnDate').value = targetDate;
+  document.getElementById('lblTxnDate').textContent = fmtDateShort(targetDate);
+  const [y, m] = targetDate.split('-').map(Number);
+  dpViewYear = y;
+  dpViewMonth = m;
+  renderDatePickerPopover();
+
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
 
-  // Dinamis mengatur simbol mata uang di sebelah kolom input raksasa
   document.getElementById('amountCurrencyPrefix').textContent = state.currency || 'IDR';
 
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
@@ -885,7 +955,6 @@ function openTxnModal(id, isDuplicate = false){
 
   document.getElementById('txnModalOverlay').classList.add('open');
   
-  // Fokus otomatis ke input nominal uang saat dibuka
   setTimeout(() => document.getElementById('txnAmount').focus(), 50);
 }
 
@@ -1701,7 +1770,7 @@ function init(){
     document.getElementById('subEmojiPopover').classList.toggle('show');
   });
 
-  // Listener Global agar semua popover otomatis tertutup saat klik diluar area
+  // Global listener for closing custom popovers
   document.addEventListener('click', e => {
     if (!e.target.closest('.emoji-dropdown-wrap')) {
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
@@ -1709,6 +1778,16 @@ function init(){
     if (!e.target.closest('.month-picker-wrap')) {
       document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
     }
+    if (!e.target.closest('.date-picker-wrap')) {
+      const dp = document.getElementById('datePopover');
+      if (dp) dp.classList.remove('show');
+    }
+  });
+
+  // Listener Date Picker Button (Memunculkan kalender harian)
+  document.getElementById('btnTxnDate').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('datePopover').classList.toggle('show');
   });
 
   document.getElementById('btnExport').addEventListener('click', exportData);
@@ -1748,6 +1827,7 @@ function init(){
       closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); closeBudgetModal(); closeAuthModal();
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
       document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
+      document.querySelectorAll('.date-popover').forEach(p => p.classList.remove('show'));
     }
   });
 }
