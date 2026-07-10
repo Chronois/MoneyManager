@@ -652,7 +652,7 @@ html[data-theme="dark"] em-emoji-picker {
   text-align: center; font-family: var(--font-mono);
 }
 .dp-day:hover:not(.empty) { background: var(--paper-2); color: var(--primary-dark); }
-.dp-day.active { background: var(--primary); color: #fff; border-color: var(--primary-dark); font-weight: 700; }
+..dp-day.active { background: var(--primary) !important; color: #ffffff !important; border-color: var(--primary-dark) !important; font-weight: 700 !important; }
 .dp-day.today { color: var(--primary); font-weight: 700; border: 1px dashed var(--border); }
 .dp-day.today.active { border-style: solid; }
 .dp-day.empty { cursor: default; pointer-events: none; }
