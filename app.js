@@ -599,7 +599,7 @@ function renderDashboard(){
     <div class="dash-grid">
       <div class="card card-pad">
         <p class="panel-title">Monthly Trend</p>
-        <p class="panel-sub">Income vs expense, last 6 months</p>
+        <p class="panel-sub">Income vs expense in last 6 months</p>
         ${renderMonthlyBars(monthlyAggregate(enriched).slice(-6))}
         <div class="chart-legend">
           <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Income</div>
@@ -1096,7 +1096,7 @@ function renderBalance(){
   const el = document.getElementById('view-balance');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Monthly Balance</h2><p class="sub">Cash flow summary per month, automatically calculated</p></div>
+      <div><h2>Monthly Balance</h2><p class="sub">Automatically Calculated Monthly Cash Flow Summary</p></div>
     </div>
     <div class="card card-pad" style="margin-bottom:18px;">
       <p class="panel-title">End of Month Balance Trend</p>
