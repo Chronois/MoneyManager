@@ -380,7 +380,7 @@ const TABS = [
 ];
 function renderNav(){
   const nav = document.getElementById('tabNav');
-  nav.innerHTML = TABS.map(t=> `<button class="tab-btn ${t.id===currentTab?'active':''}" data-tab="${t.id}"><span class="tab-dot"></span>${t.label}</button>`).join('');
+  nav.innerHTML = TABS.map(t=> `<button class="tab-btn ${t.id===currentTab?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('');
   nav.querySelectorAll('.tab-btn').forEach(b=> b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
 }
 function switchTab(tab){
