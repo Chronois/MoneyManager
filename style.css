@@ -70,31 +70,31 @@ a{ color:var(--primary-dark); }
 
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:12px clamp(16px,4vw,40px) 12px;
+  padding:10px 16px; /* <-- Dibuat lebih padat dan rata margin kiri */
   gap:16px; flex-wrap:wrap;
 }
 .brand{ display:flex; align-items:center; gap:12px; }
 .brand-mark{
-  width:38px; height:38px; border-radius:10px;
+  width:34px; height:34px; border-radius:9px; /* Sedikit dikecilkan agar compact */
   background:linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 100%);
   display:flex; align-items:center; justify-content:center;
   box-shadow:var(--shadow-sm);
   flex-shrink:0;
 }
-.brand-mark svg{ width:20px; height:20px; }
+.brand-mark svg{ width:18px; height:18px; }
 .brand-text h1{
-  font-family:var(--font-display); font-weight:600; font-size:20px; margin:0; letter-spacing:.2px;
+  font-family:var(--font-display); font-weight:600; font-size:18px; margin:0; letter-spacing:.2px;
 }
-.brand-text p{ margin:1px 0 0; font-size:12px; color:var(--ink-muted); }
+.brand-text p{ margin:0; font-size:11.5px; color:var(--ink-muted); }
 
-.topbar-actions{ display:flex; align-items:center; gap:8px; }
+.topbar-actions{ display:flex; align-items:center; gap:6px; }
 .icon-btn{
-  width:36px; height:36px; border-radius:10px; border:1px solid var(--border);
+  width:34px; height:34px; border-radius:9px; border:1px solid var(--border);
   background:var(--surface); display:flex; align-items:center; justify-content:center;
   color:var(--ink-muted); transition:.15s ease;
 }
 .icon-btn:hover{ color:var(--primary-dark); border-color:var(--primary); background:var(--primary-pale); }
-.icon-btn svg{ width:17px; height:17px; }
+.icon-btn svg{ width:16px; height:16px; }
 
 /* ---------- Sheet-tab navigation (signature element) ---------- */
 .tab-nav-wrap{
@@ -105,22 +105,25 @@ a{ color:var(--primary-dark); }
   scrollbar-width:thin;
 }
 .tab-nav{
-  display:flex; gap:2px; padding:0 clamp(16px,4vw,40px);
+  display:flex; gap:2px; 
+  padding:0 16px; /* <-- Menghilangkan space kosong panjang di kiri */
   min-width:max-content;
 }
 .tab-btn{
   position:relative;
   border:1px solid transparent; border-bottom:none;
   background:transparent;
-  padding:11px 20px 10px;
-  font-size:13.5px; font-weight:600; color:var(--ink-muted);
-  border-radius:10px 10px 0 0;
+  padding:8px 16px; /* <-- Padding dikecilkan agar tab lebih compact */
+  font-size:13px; font-weight:600; color:var(--ink-muted);
+  border-radius:8px 8px 0 0;
   top:1px;
   transition:.15s ease;
-  display:flex; align-items:center; gap:7px;
+  display:flex; align-items:center;
   white-space:nowrap;
 }
-.tab-btn .tab-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; }
+.tab-btn .tab-dot{ 
+  display:none; /* <-- Menyembunyikan bulatan di CSS */
+}
 .tab-btn:hover{ color:var(--primary-darker); }
 .tab-btn.active{
   background:var(--paper);
@@ -128,7 +131,6 @@ a{ color:var(--primary-dark); }
   border-color:var(--border);
   border-bottom:1px solid var(--paper);
 }
-.tab-btn.active .tab-dot{ background:var(--primary); opacity:1; }
 
 /* ---------- Main content ---------- */
 main{ flex:1; padding:26px clamp(16px,4vw,40px) 60px; max-width:1280px; width:100%; margin:0 auto; }
