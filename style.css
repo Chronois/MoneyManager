@@ -355,6 +355,8 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 
 .cat-actions { display: inline-flex; margin-left: 10px; opacity: 0.3; transition: opacity .2s; }
 .cat-section:hover .cat-actions { opacity: 1; }
+.cat-icon-edit { cursor: pointer; transition: opacity .15s ease; display: inline-block; }
+.cat-icon-edit:hover { opacity: 0.6; transform: scale(1.1); }
 
 /* ---------- Table Filters ---------- */
 .table-filter-row td { padding: 8px 10px; background: var(--paper-2); border-bottom: 2px solid var(--border); }
@@ -362,7 +364,12 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .table-filter-row .input:focus { border-color: var(--primary); outline: none; }
 
 /* ---------- Emoji Picker ---------- */
-.emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.emoji-picker { 
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; 
+  max-height: 190px; overflow-y: auto; padding-right: 6px; 
+}
+.emoji-picker::-webkit-scrollbar { width: 6px; }
+.emoji-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 .emoji-btn { 
   font-size: 20px; width: 36px; height: 36px; border-radius: 8px;
   border: 2px solid transparent; background: transparent; cursor: pointer;
