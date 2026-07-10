@@ -900,7 +900,6 @@ function setTxnType(type){
     populateSubcategorySelect(document.getElementById('txnCategory').value);
   }
 }
-function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.remove('open'); }
 
 function populateCategorySelect(selected, type = txnType){
   const sel = document.getElementById('txnCategory');
