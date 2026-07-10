@@ -100,16 +100,12 @@ let editingCatOldName = null;
 let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
+
+// State untuk Dashboard Month Pickers
 let selectedCatMonth = null;
 let selectedSubCatMonth = null;
-
-function shiftMonth(yyyyMM, offset) {
-  let [y, m] = yyyyMM.split('-').map(Number);
-  m += offset;
-  if (m < 1) { m = 12; y -= 1; }
-  if (m > 12) { m = 1; y += 1; }
-  return `${y}-${String(m).padStart(2, '0')}`;
-}
+let catPickerYear = null;
+let subPickerYear = null;
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
@@ -202,10 +198,7 @@ function fmtCurrency(n){
   n = Number(n) || 0;
   const curr = state.currency || 'IDR';
   const config = CURRENCIES[curr] || CURRENCIES['IDR'];
-  
-  // Calculate converted amount
   const converted = n / config.rate;
-  
   return new Intl.NumberFormat(config.locale, {
     style: 'currency',
     currency: curr,
@@ -234,14 +227,12 @@ function catIcon(cat){
 function splitSub(str) {
   const s = str.trim();
   const spaceIdx = s.indexOf(' ');
-  
   if (spaceIdx > 0 && spaceIdx <= 7) {
     const possibleIcon = s.slice(0, spaceIdx);
     if (!/[a-zA-Z0-9]/.test(possibleIcon)) {
       return { icon: possibleIcon, name: s.slice(spaceIdx).trim() };
     }
   }
-  
   const firstCharArr = Array.from(s);
   if (firstCharArr.length > 0) {
      const firstChar = firstCharArr[0];
@@ -249,8 +240,60 @@ function splitSub(str) {
          return { icon: firstChar, name: s.slice(firstChar.length).trim() };
      }
   }
-  
   return { icon: '📁', name: s };
+}
+
+/* ============ CUSTOM MONTH PICKER LOGIC ============ */
+function getPickerHTML(targetId, selectedMonth, viewYear) {
+  const [selY, selM] = selectedMonth.split('-').map(Number);
+  let gridHtml = '';
+  for(let i=1; i<=12; i++) {
+      const isActive = (viewYear === selY && i === selM);
+      const val = `${viewYear}-${String(i).padStart(2, '0')}`;
+      gridHtml += `<button class="mp-month ${isActive ? 'active' : ''}" data-val="${val}">${MONTHS_EN[i-1]}</button>`;
+  }
+  return `
+       <div class="mp-header">
+         <button class="mp-nav-btn" data-dir="-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+         <span class="mp-year">${viewYear}</span>
+         <button class="mp-nav-btn" data-dir="1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+       </div>
+       <div class="mp-grid">${gridHtml}</div>
+  `;
+}
+
+function bindPopoverEvents(popoverId, targetId, selectedMonth) {
+  const popover = document.getElementById(popoverId);
+  if(!popover) return;
+  
+  // Navigate Year
+  popover.querySelectorAll('.mp-nav-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dir = parseInt(btn.dataset.dir);
+          if (targetId === 'cat') catPickerYear += dir;
+          else subPickerYear += dir;
+
+          const newYear = targetId === 'cat' ? catPickerYear : subPickerYear;
+          popover.innerHTML = getPickerHTML(targetId, selectedMonth, newYear);
+          bindPopoverEvents(popoverId, targetId, selectedMonth); // Re-bind after DOM update
+      });
+  });
+
+  // Select Month
+  popover.querySelectorAll('.mp-month').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (targetId === 'cat') {
+              selectedCatMonth = btn.dataset.val;
+              catPickerYear = parseInt(selectedCatMonth.split('-')[0]); // Sync year
+          } else {
+              selectedSubCatMonth = btn.dataset.val;
+              subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); // Sync year
+          }
+          renderDashboard();
+      });
+  });
 }
 
 /* ============ THEME ENGINE ============ */
@@ -414,17 +457,16 @@ function renderDashboard(){
   const { enriched, accBal, total } = computeLedger();
   const nowKey = todayStr().slice(0,7);
   
-  // Set default bulan ke bulan saat ini jika belum dipilih
   if (!selectedCatMonth) selectedCatMonth = nowKey;
   if (!selectedSubCatMonth) selectedSubCatMonth = nowKey;
+  if (!catPickerYear) catPickerYear = parseInt(selectedCatMonth.split('-')[0]);
+  if (!subPickerYear) subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]);
 
-  // Filter transaksi untuk ringkasan atas (selalu bulan saat ini)
   const monthTx = enriched.filter(t=> t.date.slice(0,7)===nowKey);
   const income = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.income||0),0);
   const expense = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.expense||0),0);
   const net = income-expense;
 
-  // Filter transaksi khusus untuk grafik
   const catMonthTx = enriched.filter(t=> t.date.slice(0,7)===selectedCatMonth);
   const subCatMonthTx = enriched.filter(t=> t.date.slice(0,7)===selectedSubCatMonth);
 
@@ -473,9 +515,17 @@ function renderDashboard(){
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
           <div>
             <p class="panel-title">Expenses by Category</p>
-            <p class="panel-sub">Month ${fmtMonthLabel(selectedCatMonth)}</p>
+            <p class="panel-sub">Select month to view details</p>
           </div>
-          <input type="month" id="catMonthPicker" class="month-picker-btn" value="${selectedCatMonth}" title="Select Month">
+          <div class="month-picker-wrap">
+            <button class="month-picker-btn" id="catBtn">
+              ${fmtMonthLabel(selectedCatMonth)}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="month-popover" id="catPopover">
+              ${getPickerHTML('cat', selectedCatMonth, catPickerYear)}
+            </div>
+          </div>
         </div>
         ${renderCategoryDonutBlock(catMonthTx)}
       </div>
@@ -486,9 +536,17 @@ function renderDashboard(){
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
           <div>
             <p class="panel-title">Expenses by Subcategory</p>
-            <p class="panel-sub">Extra details for ${fmtMonthLabel(selectedSubCatMonth)}</p>
+            <p class="panel-sub">Select month to view details</p>
           </div>
-          <input type="month" id="subCatMonthPicker" class="month-picker-btn" value="${selectedSubCatMonth}" title="Select Month">
+          <div class="month-picker-wrap">
+            <button class="month-picker-btn" id="subCatBtn">
+              ${fmtMonthLabel(selectedSubCatMonth)}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="month-popover" id="subCatPopover">
+              ${getPickerHTML('sub', selectedSubCatMonth, subPickerYear)}
+            </div>
+          </div>
         </div>
         ${renderSubcategoryDonutBlock(subCatMonthTx)}
         ${renderSubcategoryBarBlock(subCatMonthTx)}
@@ -533,26 +591,27 @@ function renderDashboard(){
     </div>
   `;
   
-  // Event Listeners untuk Kalender Kategori & Subkategori
-  document.getElementById('catMonthPicker').addEventListener('change', (e) => {
-    if(e.target.value) {
-      selectedCatMonth = e.target.value;
-      renderDashboard();
-    }
+  // Event Listener: Buka Popover Kategori
+  document.getElementById('catBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('catPopover').classList.toggle('show');
+    document.getElementById('subCatPopover').classList.remove('show');
   });
 
-  document.getElementById('subCatMonthPicker').addEventListener('change', (e) => {
-    if(e.target.value) {
-      selectedSubCatMonth = e.target.value;
-      renderDashboard();
-    }
+  // Event Listener: Buka Popover Subkategori
+  document.getElementById('subCatBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('subCatPopover').classList.toggle('show');
+    document.getElementById('catPopover').classList.remove('show');
   });
 
-  // Event listener untuk menuju page Accounts
+  // Memasang Event Listener untuk isi dari kedua kalender
+  bindPopoverEvents('catPopover', 'cat', selectedCatMonth);
+  bindPopoverEvents('subCatPopover', 'sub', selectedSubCatMonth);
+
   el.querySelectorAll('.dash-acct-card').forEach(card => {
     card.addEventListener('click', () => switchTab('accounts'));
   });
-
   document.getElementById('btnAddTxnDash').addEventListener('click', ()=> openTxnModal());
 }
 
@@ -562,11 +621,8 @@ function recentItemHtmlDash(t){
   const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
   const sign = isTransfer ? '' : (isIncome ? '+' : '-');
   const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
-  
   let displayNote = esc(t.note) || esc(t.subcategory) || '—';
-  if (isTransfer) {
-    displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
-  }
+  if (isTransfer) displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
 
   return `<div class="recent-item">
     <div class="recent-icon">${(t.subcategory||'').trim().slice(0,2) || catIcon(t.category)}</div>
@@ -587,7 +643,7 @@ function renderCategoryDonutBlock(monthTx){
     byCat[t.category] = (byCat[t.category]||0) + t.expense;
   });
   const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-  if(entries.length===0) return emptyHtml('No expenses yet');
+  if(entries.length===0) return emptyHtml('No expenses in this month');
   const top = entries.slice(0,7);
   const data = top.map(([cat,val],i)=> ({label:cat, value:val, color:CHART_PALETTE[i%CHART_PALETTE.length]}));
   const total = entries.reduce((s,[,v])=>s+v,0);
@@ -609,7 +665,7 @@ function renderSubcategoryDonutBlock(monthTx){
     bySubCat[key] = (bySubCat[key]||0) + t.expense;
   });
   const entries = Object.entries(bySubCat).sort((a,b)=>b[1]-a[1]);
-  if(entries.length===0) return emptyHtml('No expenses yet');
+  if(entries.length===0) return emptyHtml('No expenses in this month');
   const top = entries.slice(0,7);
   const data = top.map(([sub,val],i)=> ({label:sub, value:val, color:CHART_PALETTE[(i+5)%CHART_PALETTE.length]}));
   const total = entries.reduce((s,[,v])=>s+v,0);
@@ -751,7 +807,6 @@ function renderTransactions(){
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
   
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
-  // KESALAHAN SEBELUMNYA ADA DI BARIS BAWAH INI (Kelebihan 1 tutup kurung)
   el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
@@ -806,7 +861,6 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
 
-  // Get active currency rate
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
   if(t) {
     const rawAmt = t.transferTo ? t.expense : (t.income || t.expense || 0);
@@ -876,7 +930,6 @@ function saveTxnForm(){
   const account = document.getElementById('txnAccount').value;
   const note = document.getElementById('txnNote').value.trim();
   
-  // Calculate value back to IDR to store in database
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
   const amount = (Number(document.getElementById('txnAmount').value) || 0) * rate;
 
@@ -1045,7 +1098,6 @@ function openBudgetModal(key = null) {
         targetCat = key;
     }
     
-    // Convert back from IDR to active currency for editing
     const rawAmt = state.budgets[key] || 0;
     const val = rawAmt / rate;
     amount = val % 1 === 0 ? val : val.toFixed(2);
@@ -1175,8 +1227,6 @@ function renderCategories(){
   });
 }
 
-// --- Category & Subcategory Modals Logic ---
-
 function setEmojiPicker(btnId, inputId, emoji) {
   document.getElementById(inputId).value = emoji;
   document.getElementById(btnId).textContent = emoji;
@@ -1204,7 +1254,6 @@ window.selectRecentEmoji = function(emoji) {
 
 function handleEmojiSelect(btnId, inputId, emoji) {
   setEmojiPicker(btnId, inputId, emoji);
-  
   if (!state.recentEmojis) state.recentEmojis = [];
   state.recentEmojis = [emoji, ...state.recentEmojis.filter(e => e !== emoji)].slice(0, 15);
   saveState();
@@ -1214,7 +1263,6 @@ function handleEmojiSelect(btnId, inputId, emoji) {
 function initEmojiPicker() {
   if(window.EmojiMart) {
     const categoriesNoFrequentAndFlags = ['people', 'nature', 'foods', 'activity', 'places', 'objects', 'symbols'];
-    
     const catPickerOptions = {
       onEmojiSelect: (e) => {
         handleEmojiSelect('btnCatIcon', 'catIconValue', e.native);
@@ -1250,7 +1298,6 @@ function openCatModal(name = null, isDuplicate = false) {
   duplicatingCatName = isDuplicate ? name : null;
 
   const c = name ? state.categories.find(x => x.category === name) : null;
-  
   document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplicate Category' : (name ? 'Edit Category' : 'Add Category');
   
   let defaultName = '';
@@ -1441,7 +1488,6 @@ function renderAccounts(){
   el.querySelectorAll('[data-dupacct]').forEach(b=> b.addEventListener('click', ()=> duplicateAcct(b.dataset.dupacct)));
   el.querySelectorAll('[data-delacct]').forEach(b=> b.addEventListener('click', ()=> deleteAcct(b.dataset.delacct)));
 
-  // Drag and Drop Logic
   const cards = el.querySelectorAll('.acct-card');
   let dragSrcIdx = null;
 
@@ -1456,27 +1502,19 @@ function renderAccounts(){
       card.classList.remove('dragging');
       cards.forEach(c => c.classList.remove('drag-over'));
     });
-    card.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      return false;
-    });
+    card.addEventListener('dragover', (e) => { e.preventDefault(); return false; });
     card.addEventListener('dragenter', (e) => {
       e.preventDefault();
-      if (Number(card.dataset.idx) !== dragSrcIdx) {
-        card.classList.add('drag-over');
-      }
+      if (Number(card.dataset.idx) !== dragSrcIdx) card.classList.add('drag-over');
     });
-    card.addEventListener('dragleave', () => {
-      card.classList.remove('drag-over');
-    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
     card.addEventListener('drop', (e) => {
       e.stopPropagation();
       const targetIdx = Number(card.dataset.idx);
       if (dragSrcIdx !== null && dragSrcIdx !== targetIdx) {
         const draggedAcct = state.accounts.splice(dragSrcIdx, 1)[0];
         state.accounts.splice(targetIdx, 0, draggedAcct);
-        saveState();
-        renderAccounts();
+        saveState(); renderAccounts();
       }
       return false;
     });
@@ -1488,9 +1526,7 @@ function deleteAcct(name){
   if(used){ toast('Failed: Account is currently used in transactions'); return; }
   if(!confirm(`Delete account "${name}"?`)) return;
   state.accounts = state.accounts.filter(a=>a.name!==name);
-  saveState();
-  renderAccounts();
-  toast('Account deleted');
+  saveState(); renderAccounts(); toast('Account deleted');
 }
 
 function duplicateAcct(name){
@@ -1532,7 +1568,6 @@ function closeAcctModal(){ document.getElementById('acctModalOverlay').classList
 function saveAcctForm(){
   const name = document.getElementById('acctName').value.trim();
   const type = document.getElementById('acctType').value;
-  
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
   const currentBalanceTarget = (Number(document.getElementById('acctBalance').value) || 0) * rate;
   
@@ -1559,7 +1594,6 @@ function saveAcctForm(){
     state.accounts[idx].name = name;
     state.accounts[idx].type = type;
     state.accounts[idx].opening = (Number(state.accounts[idx].opening) || 0) + difference;
-    
     toast('Account updated');
   } else {
     if(state.accounts.some(a=>a.name===name)){ toast('Account name already exists'); return; }
@@ -1567,9 +1601,7 @@ function saveAcctForm(){
     toast('Account added');
   }
   
-  saveState();
-  closeAcctModal();
-  renderCurrentTab();
+  saveState(); closeAcctModal(); renderCurrentTab();
 }
 
 /* ============ IMPORT / EXPORT / RESET ============ */
@@ -1591,12 +1623,8 @@ function importData(file){
       state = parsed;
       if(!state.currency) state.currency = 'IDR';
       document.getElementById('currencySelect').value = state.currency;
-      saveState();
-      renderCurrentTab();
-      toast('Data successfully imported');
-    }catch(e){
-      toast('Failed to import: invalid file');
-    }
+      saveState(); renderCurrentTab(); toast('Data successfully imported');
+    }catch(e){ toast('Failed to import: invalid file'); }
   };
   reader.readAsText(file);
 }
@@ -1604,65 +1632,33 @@ function resetData(){
   if(!confirm('Reset this data? Transactions and accounts will be deleted.')) return;
   state = JSON.parse(JSON.stringify(SEED));
   document.getElementById('currencySelect').value = state.currency;
-  saveState();
-  renderCurrentTab();
-  toast('Data reset');
+  saveState(); renderCurrentTab(); toast('Data reset');
 }
 
 /* ============ AUTH UI ACTIONS ============ */
-function openAuthModal() {
-  document.getElementById('authModalOverlay').classList.add('open');
-}
-function closeAuthModal() {
-  document.getElementById('authModalOverlay').classList.remove('open');
-}
+function openAuthModal() { document.getElementById('authModalOverlay').classList.add('open'); }
+function closeAuthModal() { document.getElementById('authModalOverlay').classList.remove('open'); }
 
 async function handleLoginEmail() {
   const email = document.getElementById('authEmail').value;
   const pass = document.getElementById('authPassword').value;
   if(!email || !pass) return toast('Please fill in Email & Password');
-  
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    closeAuthModal();
-  } catch(e) {
-    console.error(e);
-    toast('Login Failed: ' + e.message);
-  }
+  try { await signInWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Login Failed: ' + e.message); }
 }
 
 async function handleRegisterEmail() {
   const email = document.getElementById('authEmail').value;
   const pass = document.getElementById('authPassword').value;
   if(!email || !pass) return toast('Please fill in Email & Password');
-
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-    closeAuthModal();
-  } catch(e) {
-    console.error(e);
-    toast('Signup Failed: ' + e.message);
-  }
+  try { await createUserWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Signup Failed: ' + e.message); }
 }
 
 async function handleLoginGoogle() {
-  try {
-    await signInWithPopup(auth, googleProvider);
-    closeAuthModal();
-  } catch(e) {
-    console.error(e);
-    toast('Google Login Failed: ' + e.message);
-  }
+  try { await signInWithPopup(auth, googleProvider); closeAuthModal(); } catch(e) { toast('Google Login Failed: ' + e.message); }
 }
 
 async function handleLogout() {
-  try {
-    await signOut(auth);
-    toast('Logged out successfully');
-    closeAuthModal();
-  } catch(e) {
-    console.error(e);
-  }
+  try { await signOut(auth); toast('Logged out successfully'); closeAuthModal(); } catch(e) { console.error(e); }
 }
 
 /* ============ INIT ============ */
@@ -1671,26 +1667,19 @@ function init(){
   renderNav();
   document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
   
-  // Set up Currency Selector
   const currSelect = document.getElementById('currencySelect');
   if(currSelect) {
     currSelect.value = state.currency || 'IDR';
     currSelect.addEventListener('change', (e) => {
       state.currency = e.target.value;
-      saveState();
-      renderCurrentTab();
-      toast(`Currency changed to ${state.currency}`);
+      saveState(); renderCurrentTab(); toast(`Currency changed to ${state.currency}`);
     });
   }
 
   renderCurrentTab();
-  
   setTimeout(initEmojiPicker, 500); 
 
-  // Theme Toggle
   document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
-
-  // Auth Toggles
   document.getElementById('btnAuthOpen').addEventListener('click', openAuthModal);
   document.getElementById('btnAuthClose').addEventListener('click', closeAuthModal);
   document.getElementById('authModalOverlay').addEventListener('click', e=>{ if(e.target.id==='authModalOverlay') closeAuthModal(); });
@@ -1700,7 +1689,6 @@ function init(){
   document.getElementById('btnLoginGoogle').addEventListener('click', handleLoginGoogle);
   document.getElementById('btnLogout').addEventListener('click', handleLogout);
 
-  // Emoji Popover Toggles
   document.getElementById('btnCatIcon').addEventListener('click', () => {
     document.getElementById('catEmojiPopover').classList.toggle('show');
   });
@@ -1708,19 +1696,21 @@ function init(){
     document.getElementById('subEmojiPopover').classList.toggle('show');
   });
 
+  // Listener Global agar semua popover otomatis tertutup saat klik diluar area
   document.addEventListener('click', e => {
     if (!e.target.closest('.emoji-dropdown-wrap')) {
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
     }
+    if (!e.target.closest('.month-picker-wrap')) {
+      document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
+    }
   });
 
-  // Export/Import/Reset
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
   document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
   document.getElementById('btnReset').addEventListener('click', resetData);
 
-  // Transactions
   document.getElementById('txnCategory').addEventListener('change', e=> populateSubcategorySelect(e.target.value));
   document.querySelectorAll('.type-toggle button').forEach(b=> b.addEventListener('click', ()=> setTxnType(b.dataset.type)));
   document.getElementById('btnTxnSave').addEventListener('click', saveTxnForm);
@@ -1728,25 +1718,21 @@ function init(){
   document.getElementById('btnTxnClose').addEventListener('click', closeTxnModal);
   document.getElementById('txnModalOverlay').addEventListener('click', e=>{ if(e.target.id==='txnModalOverlay') closeTxnModal(); });
 
-  // Accounts
   document.getElementById('btnAcctSave').addEventListener('click', saveAcctForm);
   document.getElementById('btnAcctCancel').addEventListener('click', closeAcctModal);
   document.getElementById('btnAcctClose').addEventListener('click', closeAcctModal);
   document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
 
-  // Budgets
   document.getElementById('btnBudgetSave').addEventListener('click', saveBudgetForm);
   document.getElementById('btnBudgetCancel').addEventListener('click', closeBudgetModal);
   document.getElementById('btnBudgetClose').addEventListener('click', closeBudgetModal);
   document.getElementById('budgetModalOverlay').addEventListener('click', e=>{ if(e.target.id==='budgetModalOverlay') closeBudgetModal(); });
 
-  // Categories
   document.getElementById('btnCatSave').addEventListener('click', saveCatForm);
   document.getElementById('btnCatCancel').addEventListener('click', closeCatModal);
   document.getElementById('btnCatClose').addEventListener('click', closeCatModal);
   document.getElementById('catModalOverlay').addEventListener('click', e=>{ if(e.target.id==='catModalOverlay') closeCatModal(); });
 
-  // Subcategories
   document.getElementById('btnSubSave').addEventListener('click', saveSubForm);
   document.getElementById('btnSubCancel').addEventListener('click', closeSubModal);
   document.getElementById('btnSubClose').addEventListener('click', closeSubModal);
@@ -1756,6 +1742,7 @@ function init(){
     if(e.key==='Escape'){ 
       closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); closeBudgetModal(); closeAuthModal();
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
+      document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
     }
   });
 }
