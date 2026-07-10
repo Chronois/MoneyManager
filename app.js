@@ -101,13 +101,14 @@ let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
 
-// State untuk Dashboard Month Pickers & Modal Date Picker
+// State for Dashboard Month Pickers & Modal Date Pickers (Multi-instance)
 let selectedCatMonth = null;
 let selectedSubCatMonth = null;
 let catPickerYear = null;
 let subPickerYear = null;
-let dpViewYear = null;
-let dpViewMonth = null;
+
+let dpViewYear = { txn: null, filter: null };
+let dpViewMonth = { txn: null, filter: null };
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
@@ -162,7 +163,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('authUserName').textContent = user.displayName || 'User';
     document.getElementById('authUserEmail').textContent = user.email;
     btnAuth.style.color = '#fff';
-    btnAuth.style.background = 'var(--primary)';
+    btnAuth.style.background = 'var(--primary)'; 
     
     try {
       const docRef = doc(db, 'users', user.uid);
@@ -246,17 +247,15 @@ function splitSub(str) {
 }
 
 /* ============ CUSTOM DATE PICKER LOGIC ============ */
-function getDatePickerHTML(year, month, selectedDateStr) {
-  const firstDay = new Date(year, month - 1, 1).getDay(); // 0 (Sun) to 6 (Sat)
+function getDatePickerHTML(year, month, selectedDateStr, targetPrefix) {
+  const firstDay = new Date(year, month - 1, 1).getDay(); 
   const daysInMonth = new Date(year, month, 0).getDate();
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
   let gridHtml = '';
-  // Ruang kosong untuk hari sebelum tanggal 1
   for (let i = 0; i < firstDay; i++) gridHtml += `<div class="dp-day empty"></div>`;
   
-  // Tanggal 1 sampai akhir bulan
   for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       const isActive = (dateStr === selectedDateStr);
@@ -268,45 +267,76 @@ function getDatePickerHTML(year, month, selectedDateStr) {
   }
 
   const daysHeader = DAYS_EN.map(d => `<div class="dp-day-name">${d.slice(0,2)}</div>`).join('');
+  const clearBtnTxt = targetPrefix === 'filter' ? 'All' : 'Clear';
 
   return `
       <div class="dp-header">
-          <button type="button" class="dp-nav-btn" id="dpPrevMonth"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button type="button" class="dp-nav-btn dp-prev-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <span class="dp-month-year">${MONTHS_EN[month - 1]} ${year}</span>
-          <button type="button" class="dp-nav-btn" id="dpNextMonth"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          <button type="button" class="dp-nav-btn dp-next-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
       <div class="dp-days">${daysHeader}</div>
       <div class="dp-grid">${gridHtml}</div>
+      <div style="display:flex; justify-content:space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);">
+         <button type="button" class="dp-clear-btn" style="background:transparent; border:none; color:var(--expense); font-size:12px; font-weight:600; cursor:pointer;">${clearBtnTxt}</button>
+         <button type="button" class="dp-today-btn" style="background:transparent; border:none; color:var(--primary); font-size:12px; font-weight:600; cursor:pointer;">Today</button>
+      </div>
   `;
 }
 
-function renderDatePickerPopover() {
-  const popover = document.getElementById('datePopover');
+function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback = null) {
+  const popover = document.getElementById(popoverId);
   if(!popover) return;
-  const selectedDate = document.getElementById('txnDate').value;
-  popover.innerHTML = getDatePickerHTML(dpViewYear, dpViewMonth, selectedDate);
+  const selectedDate = document.getElementById(inputId).value;
 
-  document.getElementById('dpPrevMonth').addEventListener('click', (e) => {
+  if (!dpViewYear[targetPrefix]) {
+      const d = selectedDate ? new Date(selectedDate) : new Date();
+      dpViewYear[targetPrefix] = d.getFullYear();
+      dpViewMonth[targetPrefix] = d.getMonth() + 1;
+  }
+
+  popover.innerHTML = getDatePickerHTML(dpViewYear[targetPrefix], dpViewMonth[targetPrefix], selectedDate, targetPrefix);
+
+  popover.querySelector('.dp-prev-month').addEventListener('click', (e) => {
       e.stopPropagation();
-      dpViewMonth--;
-      if(dpViewMonth < 1) { dpViewMonth = 12; dpViewYear--; }
-      renderDatePickerPopover();
+      dpViewMonth[targetPrefix]--;
+      if(dpViewMonth[targetPrefix] < 1) { dpViewMonth[targetPrefix] = 12; dpViewYear[targetPrefix]--; }
+      renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
   });
-  document.getElementById('dpNextMonth').addEventListener('click', (e) => {
+  
+  popover.querySelector('.dp-next-month').addEventListener('click', (e) => {
       e.stopPropagation();
-      dpViewMonth++;
-      if(dpViewMonth > 12) { dpViewMonth = 1; dpViewYear++; }
-      renderDatePickerPopover();
+      dpViewMonth[targetPrefix]++;
+      if(dpViewMonth[targetPrefix] > 12) { dpViewMonth[targetPrefix] = 1; dpViewYear[targetPrefix]++; }
+      renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
   });
 
   popover.querySelectorAll('.dp-day:not(.empty)').forEach(btn => {
       btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const selDate = btn.dataset.date;
-          document.getElementById('txnDate').value = selDate;
-          document.getElementById('lblTxnDate').textContent = fmtDateShort(selDate);
+          document.getElementById(inputId).value = selDate;
+          document.getElementById(labelId).textContent = fmtDateShort(selDate);
           popover.classList.remove('show');
+          if (onChangeCallback) onChangeCallback(selDate);
       });
+  });
+
+  popover.querySelector('.dp-clear-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById(inputId).value = '';
+      document.getElementById(labelId).textContent = targetPrefix === 'filter' ? 'All Dates' : 'Select Date';
+      popover.classList.remove('show');
+      if (onChangeCallback) onChangeCallback('');
+  });
+
+  popover.querySelector('.dp-today-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const todayStr = new Date().toISOString().slice(0,10);
+      document.getElementById(inputId).value = todayStr;
+      document.getElementById(labelId).textContent = fmtDateShort(todayStr);
+      popover.classList.remove('show');
+      if (onChangeCallback) onChangeCallback(todayStr);
   });
 }
 
@@ -817,7 +847,15 @@ function renderTransactions(){
             <th></th>
           </tr>
           <tr class="table-filter-row">
-            <td><input type="date" class="input" id="fDate" value="${filters.date}" title="Filter by Date"></td>
+            <td>
+              <div class="date-picker-wrap" style="min-width: 140px;">
+                <button type="button" class="input date-picker-btn" id="btnFilterDate" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+                  <span id="lblFilterDate">${filters.date ? fmtDateShort(filters.date) : 'All Dates'}</span>
+                </button>
+                <input type="hidden" id="fDate" value="${filters.date}">
+                <div class="date-popover" id="filterDatePopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              </div>
+            </td>
             <td></td>
             <td>
               <select class="input" id="fAccount">
@@ -862,12 +900,22 @@ function renderTransactions(){
   document.getElementById('fType').addEventListener('change', e=>{ filters.type=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fAccount').addEventListener('change', e=>{ filters.account=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fCategory').addEventListener('change', e=>{ filters.category=e.target.value; txnPage=0; renderTransactions(); });
-  document.getElementById('fDate').addEventListener('change', e=>{ filters.date=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',date:''}; txnPage=0; renderTransactions(); });
   document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
   
+  // Custom Filter Date Picker Listener
+  document.getElementById('btnFilterDate').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('filterDatePopover').classList.toggle('show');
+    renderDatePickerPopover('filterDatePopover', 'fDate', 'lblFilterDate', 'filter', (newDate) => {
+        filters.date = newDate;
+        txnPage = 0;
+        renderTransactions();
+    });
+  });
+
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
   el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
@@ -924,9 +972,9 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnDate').value = targetDate;
   document.getElementById('lblTxnDate').textContent = fmtDateShort(targetDate);
   const [y, m] = targetDate.split('-').map(Number);
-  dpViewYear = y;
-  dpViewMonth = m;
-  renderDatePickerPopover();
+  dpViewYear.txn = y;
+  dpViewMonth.txn = m;
+  renderDatePickerPopover('datePopover', 'txnDate', 'lblTxnDate', 'txn');
 
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
@@ -1779,12 +1827,11 @@ function init(){
       document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
     }
     if (!e.target.closest('.date-picker-wrap')) {
-      const dp = document.getElementById('datePopover');
-      if (dp) dp.classList.remove('show');
+      document.querySelectorAll('.date-popover').forEach(p => p.classList.remove('show'));
     }
   });
 
-  // Listener Date Picker Button (Memunculkan kalender harian)
+  // Listener Date Picker Button (Memunculkan kalender harian di Add Transaction)
   document.getElementById('btnTxnDate').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('datePopover').classList.toggle('show');
