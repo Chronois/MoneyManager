@@ -374,3 +374,7 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .table-filter-row td { padding: 8px 10px; background: var(--paper-2); border-bottom: 2px solid var(--border); }
 .table-filter-row .input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; background: var(--surface); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); }
 .table-filter-row .input:focus { border-color: var(--primary); outline: none; }
+
+/* ---------- Category Icon Edit ---------- */
+.cat-icon-edit { cursor: pointer; transition: opacity .15s ease; display: inline-block; }
+.cat-icon-edit:hover { opacity: 0.6; transform: scale(1.1); }
