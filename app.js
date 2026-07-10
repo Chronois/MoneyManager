@@ -80,7 +80,6 @@
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
     
-    // Migration: ensure every category has an icon and type for backward compatibility
     if(parsed.categories){
       parsed.categories.forEach(c => {
         if(!c.icon) c.icon = '📁';
@@ -124,10 +123,27 @@
     return c && c.icon ? c.icon : '📁'; 
   }
 
+  // Penguraian Subkategori (Ikon & Nama) yang sangat aman dari Syntax Error
   function splitSub(str) {
-    const m = str.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)\s*(.*)/u);
-    if (m) return { icon: m[1], name: m[2].trim() };
-    return { icon: '📁', name: str.trim() };
+    const s = str.trim();
+    const spaceIdx = s.indexOf(' ');
+    
+    if (spaceIdx > 0 && spaceIdx <= 7) {
+      const possibleIcon = s.slice(0, spaceIdx);
+      if (!/[a-zA-Z0-9]/.test(possibleIcon)) {
+        return { icon: possibleIcon, name: s.slice(spaceIdx).trim() };
+      }
+    }
+    
+    const firstCharArr = Array.from(s);
+    if (firstCharArr.length > 0) {
+       const firstChar = firstCharArr[0];
+       if (!/[a-zA-Z0-9]/.test(firstChar)) {
+           return { icon: firstChar, name: s.slice(firstChar.length).trim() };
+       }
+    }
+    
+    return { icon: '📁', name: s };
   }
 
   /* ============ THEME ENGINE ============ */
@@ -337,13 +353,18 @@
           </div>
         </div>
         <div class="card card-pad">
-          <p class="panel-title">Expenses by Subcategory</p>
+          <p class="panel-title">Expenses by Category</p>
           <p class="panel-sub">Month of ${fmtMonthLabel(nowKey)}</p>
           ${renderCategoryDonutBlock(monthTx)}
         </div>
       </div>
-  
+
       <div class="dash-grid">
+        <div class="card card-pad">
+          <p class="panel-title">Expenses by Subcategory</p>
+          <p class="panel-sub">Month of ${fmtMonthLabel(nowKey)}</p>
+          ${renderSubcategoryDonutBlock(monthTx)}
+        </div>
         <div class="card card-pad">
           <p class="panel-title">Account Balances</p>
           <p class="panel-sub">Manage accounts in the 'Accounts' tab</p>
@@ -357,9 +378,12 @@
                 <div class="acct-name">${esc(a.name)}</div>
                 <div class="acct-balance" style="font-size:15px;">${fmtCurrency(accBal[a.name]||0)}</div>
               </div>`).join('')}
-            ${state.accounts.length === 0 ? emptyHtml('No accounts yet. Click "Add Account" to get started.') : ''}
+            ${state.accounts.length === 0 ? emptyHtml('No accounts yet.') : ''}
           </div>
         </div>
+      </div>
+  
+      <div class="dash-grid" style="grid-template-columns: 1fr;">
         <div class="card card-pad">
           <p class="panel-title">Recent Transactions</p>
           <p class="panel-sub">10 most recent transactions</p>
@@ -375,226 +399,1059 @@
   function recentItemHtmlDash(t){
     const isIncome = !t.transferTo && t.income>0;
     const isTransfer = !!t.transferTo;
-    const amt = isTransfer ? t.expense : (isIncome ? tSeluruh antarmuka web telah dikembalikan ke bahasa Inggris. Pada halaman Dashboard, kini juga terdapat satu bagian tambahan untuk menampilkan grafik **Expenses by Subcategory** (Pengeluaran per Subkategori).
+    const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
+    const sign = isTransfer ? '' : (isIncome ? '+' : '-');
+    const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
+    
+    let displayNote = esc(t.note) || esc(t.subcategory) || '—';
+    if (isTransfer) {
+      displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+    }
 
-Silakan timpa ketiga file tersebut dengan kode di bawah ini:
-
-### 1. `index.html`
-Perbarui file ini untuk mengembalikan semua teks antarmuka (termasuk modal) ke bahasa Inggris.
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Money Manager</title>
-<meta name="description" content="Personal finance manager dashboard — income, expenses, balances, and budgets by category.">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="paper-texture"></div>
-<div id="app">
-
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h13a1 1 0 011 1v2M3 7v10a2 2 0 002 2h14a1 1 0 001-1V9a1 1 0 00-1-1H5a2 2 0 01-2-2z"/><circle cx="16" cy="14" r="1.4"/></svg>
+    return `<div class="recent-item">
+      <div class="recent-icon">${(t.subcategory||'').trim().slice(0,2) || catIcon(t.category)}</div>
+      <div class="recent-mid">
+        <div class="t1" title="${displayNote}">${displayNote}</div>
+        <div class="t2">${fmtDateShort(t.date)} · ${esc(t.account)}</div>
       </div>
-      <div class="brand-text">
-        <h1>Money Manager</h1>
-        <p>Personal Finance Ledger</p>
+      <div class="recent-amt ${color}">${sign}${fmtCurrency(amt)}</div>
+    </div>`;
+  }
+  function emptyHtml(msg){
+    return `<div class="empty">${icon('wallet')}<div>${esc(msg)}</div></div>`;
+  }
+  
+  function renderCategoryDonutBlock(monthTx){
+    const byCat = {};
+    monthTx.filter(t=>!t.transferTo && t.expense>0).forEach(t=>{
+      byCat[t.category] = (byCat[t.category]||0) + t.expense;
+    });
+    const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    if(entries.length===0) return emptyHtml('No expenses this month');
+    const top = entries.slice(0,7);
+    const data = top.map(([cat,val],i)=> ({label:cat, value:val, color:CHART_PALETTE[i%CHART_PALETTE.length]}));
+    const total = entries.reduce((s,[,v])=>s+v,0);
+    return `<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+      ${renderDonut(data,140)}
+      <div style="flex:1; min-width:160px;">
+        ${data.map(d=>`<div class="legend-item" style="justify-content:space-between; margin-bottom:6px;">
+          <span style="display:flex;align-items:center;gap:7px;"><span class="legend-swatch" style="background:${d.color}"></span>${catIcon(d.label)} ${esc(d.label)}</span>
+          <span style="font-family:var(--font-mono);font-weight:600;color:var(--ink)">${Math.round(d.value/total*100)}%</span>
+        </div>`).join('')}
       </div>
-      <button class="icon-btn theme-btn" id="btnThemeToggle" title="Toggle Dark/Light Mode">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-      </button>
-    </div>
-    <div class="topbar-actions">
-      <button class="icon-btn" id="btnExport" title="Export data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
-      <button class="icon-btn" id="btnImport" title="Import data (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></button>
-      <button class="icon-btn" id="btnReset" title="Reset to demo data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.36-6.36M21 12a9 9 0 01-15.36 6.36"/><path d="M3 4v5h5M21 20v-5h-5"/></svg></button>
-      <input type="file" id="importFileInput" accept="application/json" hidden>
-    </div>
-  </header>
+    </div>`;
+  }
 
-  <nav class="tab-nav-wrap"><div class="tab-nav" id="tabNav"></div></nav>
-
-  <main>
-    <section class="view" id="view-dashboard"></section>
-    <section class="view" id="view-transactions"></section>
-    <section class="view" id="view-balance"></section>
-    <section class="view" id="view-budgets"></section>
-    <section class="view" id="view-categories"></section>
-    <section class="view" id="view-accounts"></section>
-  </main>
-
-  <footer>Money Manager · data saved locally on this device</footer>
-</div>
-
-<!-- Transaction Modal -->
-<div class="modal-overlay" id="txnModalOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="txnModalTitle">Add Transaction</h3>
-      <button class="icon-btn" id="btnTxnClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="type-toggle">
-        <button type="button" data-type="expense" class="active">Expense</button>
-        <button type="button" data-type="income">Income</button>
-        <button type="button" data-type="transfer">Transfer</button>
+  function renderSubcategoryDonutBlock(monthTx){
+    const bySubCat = {};
+    monthTx.filter(t=>!t.transferTo && t.expense>0).forEach(t=>{
+      const key = t.subcategory || 'Uncategorized';
+      bySubCat[key] = (bySubCat[key]||0) + t.expense;
+    });
+    const entries = Object.entries(bySubCat).sort((a,b)=>b[1]-a[1]);
+    if(entries.length===0) return emptyHtml('No expenses this month');
+    const top = entries.slice(0,7);
+    const data = top.map(([sub,val],i)=> ({label:sub, value:val, color:CHART_PALETTE[(i+5)%CHART_PALETTE.length]}));
+    const total = entries.reduce((s,[,v])=>s+v,0);
+    return `<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+      ${renderDonut(data,140)}
+      <div style="flex:1; min-width:160px;">
+        ${data.map(d=>{
+          const parts = splitSub(d.label);
+          return `<div class="legend-item" style="justify-content:space-between; margin-bottom:6px;">
+          <span style="display:flex;align-items:center;gap:7px;"><span class="legend-swatch" style="background:${d.color}"></span>${parts.icon} ${esc(parts.name)}</span>
+          <span style="font-family:var(--font-mono);font-weight:600;color:var(--ink)">${Math.round(d.value/total*100)}%</span>
+        </div>`}).join('')}
       </div>
-      <div class="form-row">
-        <div class="field"><label>Date</label><input type="date" class="input" id="txnDate"></div>
-        <div class="field"><label>Account</label><select class="input" id="txnAccount"></select></div>
-      </div>
-      <div class="form-row" id="rowCategory">
-        <div class="field"><label>Category</label><select class="input" id="txnCategory"></select></div>
-        <div class="field"><label>Subcategory</label><select class="input" id="txnSubcategory"></select></div>
-      </div>
-      <div class="form-row" id="rowTransfer" style="display:none">
-        <div class="field"><label>Transfer To</label><select class="input" id="txnTransferTo"></select></div>
-      </div>
-      <div class="field"><label>Note</label><input type="text" class="input" id="txnNote" placeholder="e.g. Lunch with friends"></div>
-      <div class="field"><label id="amountLabel">Amount</label><input type="number" class="input" id="txnAmount" placeholder="0" min="0"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="btnTxnCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnTxnSave">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Account Modal -->
-<div class="modal-overlay" id="acctModalOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="acctModalTitle">Add Account</h3>
-      <button class="icon-btn" id="btnAcctClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Account Name</label><input type="text" class="input" id="acctName" placeholder="e.g. Main Wallet"></div>
-      <div class="form-row">
-        <div class="field"><label>Type</label>
-          <select class="input" id="acctType">
-            <option value="bank">Bank</option>
-            <option value="digital">Digital Bank</option>
-            <option value="ewallet">E-Wallet</option>
-            <option value="cash">Cash</option>
-          </select>
+    </div>`;
+  }
+  
+  /* ============ TRANSACTIONS ============ */
+  function renderTransactions(){
+    const { enriched } = computeLedger();
+    let list = [...enriched].reverse();
+  
+    if(filters.type) {
+      if(filters.type === 'income') list = list.filter(t => !t.transferTo && t.income > 0);
+      else if(filters.type === 'expense') list = list.filter(t => !t.transferTo && t.expense > 0);
+      else if(filters.type === 'transfer') list = list.filter(t => !!t.transferTo);
+    }
+    if(filters.account) list = list.filter(t=>t.account===filters.account);
+    if(filters.category) list = list.filter(t=>t.category===filters.category);
+    if(filters.date) list = list.filter(t=>t.date===filters.date);
+    if(filters.q){
+      const q = filters.q.toLowerCase();
+      list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q) || (t.transferTo||'').toLowerCase().includes(q));
+    }
+  
+    const totalPages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
+    txnPage = Math.min(txnPage, totalPages-1);
+    const pageList = list.slice(txnPage*PAGE_SIZE, txnPage*PAGE_SIZE+PAGE_SIZE);
+  
+    const el = document.getElementById('view-transactions');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Transactions</h2><p class="sub">${list.length} transactions found</p></div>
+        <div class="section-head-actions">
+          <button class="btn btn-primary" id="btnAddTxn">${icon('plus')}Add Transaction</button>
         </div>
-        <div class="field"><label>Current Balance</label><input type="number" class="input" id="acctBalance" placeholder="0"></div>
       </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="btnAcctCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnAcctSave">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Budget Modal -->
-<div class="modal-overlay" id="budgetModalOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="budgetModalTitle">Add Budget</h3>
-      <button class="icon-btn" id="btnBudgetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field"><label>Category</label><select class="input" id="budgetCategory"></select></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
+              <th style="text-align:right">Type</th><th style="text-align:right">Amount</th>
+              <th></th>
+            </tr>
+            <tr class="table-filter-row">
+              <td><input type="date" class="input" id="fDate" value="${filters.date}" title="Filter by Date"></td>
+              <td></td>
+              <td>
+                <select class="input" id="fAccount">
+                  <option value="">All</option>
+                  ${state.accounts.map(a=>`<option value="${esc(a.name)}" ${filters.account===a.name?'selected':''}>${esc(a.name)}</option>`).join('')}
+                </select>
+              </td>
+              <td>
+                <select class="input" id="fCategory">
+                  <option value="">All</option>
+                  ${state.categories.map(c=>`<option value="${esc(c.category)}" ${filters.category===c.category?'selected':''}>${esc(c.category)}</option>`).join('')}
+                </select>
+              </td>
+              <td><input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}"></td>
+              <td style="text-align:right">
+                <select class="input" id="fType">
+                  <option value="">All</option>
+                  <option value="income" ${filters.type==='income'?'selected':''}>Income</option>
+                  <option value="expense" ${filters.type==='expense'?'selected':''}>Expense</option>
+                  <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
+                </select>
+              </td>
+              <td></td>
+              <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Clear</button></td>
+            </tr>
+          </thead>
+          <tbody>
+            ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="8"><div class="empty">${icon('wallet')}<div>No matching transactions</div></div></td></tr>`}
+          </tbody>
+        </table>
       </div>
-      <div class="form-row">
-        <div class="field"><label>Subcategory</label><select class="input" id="budgetSubcategory"></select></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Monthly Limit Amount</label><input type="number" class="input" id="budgetAmount" placeholder="e.g. 500000" min="0"></div>
-      </div>
-      <input type="hidden" id="budgetOldKey">
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="btnBudgetCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnBudgetSave">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Category Modal -->
-<div class="modal-overlay" id="catModalOverlay">
-  <div class="modal" style="overflow: visible;">
-    <div class="modal-head">
-      <h3 id="catModalTitle">Add Category</h3>
-      <button class="icon-btn" id="btnCatClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body" style="overflow: visible;">
-      <div class="field"><label>Category Name</label><input type="text" class="input" id="catName" placeholder="e.g. Shopping"></div>
-      <div class="form-row">
-        <div class="field">
-          <label>Category Type</label>
-          <select class="input" id="catType">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-            <option value="both">Both</option>
-          </select>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+        <span style="font-size:12.5px; color:var(--ink-muted)">Page ${txnPage+1} of ${totalPages}</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-sm" id="pgPrev" ${txnPage===0?'disabled':''}>← Previous</button>
+          <button class="btn btn-sm" id="pgNext" ${txnPage>=totalPages-1?'disabled':''}>Next →</button>
         </div>
-        <div class="field">
-          <label>Icon</label>
-          <div class="emoji-dropdown-wrap">
-            <button type="button" class="input emoji-selector-btn" id="btnCatIcon">📁</button>
-            <input type="hidden" id="catIconValue" value="📁">
-            <div class="emoji-popover" id="catEmojiPopover">
-              <div class="recent-emojis-wrap">
-                <div class="recent-emojis-title">Recent</div>
-                <div class="recent-emojis-list" id="catRecentList"></div>
+      </div>
+    `;
+  
+    document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
+    document.getElementById('fType').addEventListener('change', e=>{ filters.type=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fAccount').addEventListener('change', e=>{ filters.account=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fCategory').addEventListener('change', e=>{ filters.category=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fDate').addEventListener('change', e=>{ filters.date=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',date:''}; txnPage=0; renderTransactions(); });
+    document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
+    document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
+    
+    el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
+    el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
+    el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
+  }
+  
+  function txnRowHtml(t){
+    const isTransfer = !!t.transferTo;
+    const isIncome = !isTransfer && t.income > 0;
+    const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
+    const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
+    const typeLabel = isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense');
+    
+    let displayNote = esc(t.note) || esc(t.subcategory) || '—';
+    if (isTransfer) {
+      displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+    }
+    
+    return `<tr>
+      <td>${fmtDateShort(t.date)}</td>
+      <td>${dayName(t.date)}</td>
+      <td>${esc(t.account)}</td>
+      <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
+      <td class="note-cell" title="${displayNote}">${displayNote}</td>
+      <td style="text-align:right"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
+      <td class="num ${color}">${fmtCurrency(amt)}</td>
+      <td><div class="row-actions">
+        <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
+        <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
+        <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
+      </div></td>
+    </tr>`;
+  }
+  
+  function deleteTxn(id){
+    if(!confirm('Delete this transaction? This cannot be undone.')) return;
+    state.transactions = state.transactions.filter(t=>t.id!==id);
+    saveState();
+    renderTransactions();
+    toast('Transaction deleted');
+  }
+  
+  /* ============ TRANSACTION MODAL ============ */
+  function openTxnModal(id, isDuplicate = false){
+    if(state.accounts.length === 0) { toast('Please create an account first'); return; }
+
+    editingTxnId = isDuplicate ? null : (id || null);
+    const t = id ? state.transactions.find(x=>x.id===id) : null;
+    txnType = t ? (t.transferTo ? 'transfer' : (t.income>0 ? 'income' : 'expense')) : 'expense';
+  
+    document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplicate Transaction' : (id ? 'Edit Transaction' : 'Add Transaction');
+    document.getElementById('txnDate').value = t ? t.date : todayStr();
+    document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
+    document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
+    document.getElementById('txnNote').value = t ? (t.note||'') : '';
+    document.getElementById('txnAmount').value = t ? (t.transferTo? t.expense : (t.income||t.expense||'')) : '';
+  
+    setTxnType(txnType);
+
+    if(t) {
+      document.getElementById('txnCategory').value = t.category;
+      populateSubcategorySelect(t.category, t.subcategory);
+    }
+
+    document.getElementById('txnTransferTo').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
+    if(t && t.transferTo) document.getElementById('txnTransferTo').value = t.transferTo;
+  
+    document.getElementById('txnModalOverlay').classList.add('open');
+    document.getElementById('txnDate').focus();
+  }
+  function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.remove('open'); }
+  
+  function populateCategorySelect(selected, type = txnType){
+    const sel = document.getElementById('txnCategory');
+    let filtered = state.categories;
+    
+    if (type === 'expense') {
+        filtered = state.categories.filter(c => c.type === 'expense' || c.type === 'both');
+    } else if (type === 'income') {
+        filtered = state.categories.filter(c => c.type === 'income' || c.type === 'both');
+    }
+
+    sel.innerHTML = filtered.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
+    
+    if(selected && filtered.some(c => c.category === selected)) {
+        sel.value = selected;
+    } else if (filtered.length > 0) {
+        sel.value = filtered[0].category;
+    }
+  }
+
+  function populateSubcategorySelect(cat, selected){
+    const catObj = state.categories.find(c=>c.category===cat);
+    const sel = document.getElementById('txnSubcategory');
+    const subs = catObj ? catObj.subcategories : [];
+    sel.innerHTML = `<option value="">—</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    if(selected) sel.value = selected;
+  }
+  
+  function setTxnType(type){
+    txnType = type;
+    document.querySelectorAll('.type-toggle button').forEach(b=> b.classList.toggle('active', b.dataset.type===type));
+    document.getElementById('rowCategory').style.display = type==='transfer' ? 'none' : 'flex';
+    document.getElementById('rowTransfer').style.display = type==='transfer' ? 'flex' : 'none';
+    document.getElementById('amountLabel').textContent = type==='income' ? 'Income Amount' : (type==='transfer' ? 'Transfer Amount' : 'Expense Amount');
+
+    if (type !== 'transfer') {
+      populateCategorySelect(document.getElementById('txnCategory').value, type);
+      populateSubcategorySelect(document.getElementById('txnCategory').value);
+    }
+  }
+  
+  function saveTxnForm(){
+    const date = document.getElementById('txnDate').value;
+    const account = document.getElementById('txnAccount').value;
+    const note = document.getElementById('txnNote').value.trim();
+    const amount = Number(document.getElementById('txnAmount').value) || 0;
+    if(!date){ toast('Date is required'); return; }
+    if(amount<=0){ toast('Amount must be greater than 0'); return; }
+  
+    let payload = { date, account, note, category:'', subcategory:'', expense:0, income:0, transferTo:'' };
+    if(txnType==='transfer'){
+      const to = document.getElementById('txnTransferTo').value;
+      if(to===account){ toast('Target account must be different'); return; }
+      payload.category = 'Lifestyle';
+      payload.subcategory = '🔁 Transfer Between Accounts';
+      payload.expense = amount;
+      payload.transferTo = to;
+    } else if(txnType==='income'){
+      payload.category = document.getElementById('txnCategory').value;
+      payload.subcategory = document.getElementById('txnSubcategory').value;
+      payload.income = amount;
+    } else {
+      payload.category = document.getElementById('txnCategory').value;
+      payload.subcategory = document.getElementById('txnSubcategory').value;
+      payload.expense = amount;
+    }
+  
+    if(editingTxnId){
+      const idx = state.transactions.findIndex(t=>t.id===editingTxnId);
+      state.transactions[idx] = Object.assign({id:editingTxnId}, payload);
+      toast('Transaction updated');
+    } else {
+      state.transactions.push(Object.assign({id:uid()}, payload));
+      toast('Transaction added');
+    }
+    saveState();
+    closeTxnModal();
+    renderCurrentTab();
+  }
+  
+  /* ============ BALANCE (MONTHLY) ============ */
+  function renderBalance(){
+    const { enriched } = computeLedger();
+    const months = monthlyAggregate(enriched);
+    const el = document.getElementById('view-balance');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Monthly Balance</h2><p class="sub">Cash flow summary per month, calculated automatically</p></div>
+      </div>
+      <div class="card card-pad" style="margin-bottom:18px;">
+        <p class="panel-title">End of Month Balance Trend</p>
+        ${renderMonthlyBars(months)}
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Income</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--expense)"></span>Expense</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Month</th><th style="text-align:right">Opening Balance</th><th style="text-align:right">Income</th>
+            <th style="text-align:right">Expense</th><th style="text-align:right">Net Cash Flow</th><th style="text-align:right">Ending Balance</th>
+          </tr></thead>
+          <tbody>
+            ${months.slice().reverse().map(m=>`<tr>
+              <td style="font-weight:600">${esc(m.label)}</td>
+              <td class="num">${fmtCurrency(m.start)}</td>
+              <td class="num pos">${fmtCurrency(m.income)}</td>
+              <td class="num neg">${fmtCurrency(m.expense)}</td>
+              <td class="num ${m.net>=0?'pos':'neg'}">${fmtCurrency(m.net)}</td>
+              <td class="num" style="font-weight:600">${fmtCurrency(m.end)}</td>
+            </tr>`).join('') || `<tr><td colspan="6"><div class="empty">No data available</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  /* ============ BUDGETS ============ */
+  function renderBudgets() {
+    const { enriched } = computeLedger();
+    const nowKey = todayStr().slice(0,7);
+    
+    const budgetKeys = Object.keys(state.budgets || {});
+    const spendTracker = {};
+    budgetKeys.forEach(k => spendTracker[k] = 0);
+
+    enriched.filter(t=>t.date.slice(0,7)===nowKey && !t.transferTo && t.expense > 0).forEach(t=>{
+      if (spendTracker[t.category] !== undefined) spendTracker[t.category] += t.expense;
+      const subKey = t.category + '|' + t.subcategory;
+      if (spendTracker[subKey] !== undefined) spendTracker[subKey] += t.expense;
+    });
+  
+    const el = document.getElementById('view-budgets');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Budgets</h2><p class="sub">Monitor monthly spending limits · ${fmtMonthLabel(nowKey)}</p></div>
+        <div class="section-head-actions">
+          <button class="btn btn-primary" id="btnAddBudget">${icon('plus')}Add Budget</button>
+        </div>
+      </div>
+  
+      <div class="card card-pad" style="margin-bottom:20px;">
+        <p class="panel-title">Active Budgets</p>
+        <p class="panel-sub">Track overall category spending or specifically target a subcategory.</p>
+        <div class="budget-list">
+          ${budgetKeys.length > 0 ? budgetKeys.map(k=>{
+            const budget = state.budgets[k];
+            const spend = spendTracker[k] || 0;
+            const pct = budget>0 ? Math.min(100, Math.round(spend/budget*100)) : 0;
+            const over = budget>0 && spend>budget;
+            
+            let label = k;
+            let cIcon = '📁';
+            if(k.includes('|')) {
+                const [c, s] = k.split('|');
+                const parts = splitSub(s);
+                cIcon = parts.icon;
+                label = parts.name;
+            } else {
+                cIcon = catIcon(k);
+            }
+
+            return `<div class="budget-row">
+              <div class="budget-top" style="align-items: center;">
+                <span class="cat-label">${cIcon} ${esc(label)}</span>
+                <div style="display:flex; align-items:center;">
+                  <span class="amounts">${fmtCurrency(spend)} / ${fmtCurrency(budget)}</span>
+                  <div class="row-actions">
+                    <button data-editbudget="${esc(k)}" title="Edit Limit">${icon('edit')}</button>
+                    <button data-delbudget="${esc(k)}" class="del" title="Delete Budget">${icon('trash')}</button>
+                  </div>
+                </div>
               </div>
-              <div id="catPickerContainer"></div>
-            </div>
-          </div>
+              <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+            </div>`;
+          }).join('') : emptyHtml('No active budgets. Click "Add Budget" to get started.')}
         </div>
       </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="btnCatCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnCatSave">Save</button>
-    </div>
-  </div>
-</div>
+    `;
+    
+    document.getElementById('btnAddBudget').addEventListener('click', () => openBudgetModal());
+    el.querySelectorAll('[data-editbudget]').forEach(b => b.addEventListener('click', () => openBudgetModal(b.dataset.editbudget)));
+    el.querySelectorAll('[data-delbudget]').forEach(b => b.addEventListener('click', () => deleteBudget(b.dataset.delbudget)));
+  }
 
-<!-- Subcategory Modal -->
-<div class="modal-overlay" id="subModalOverlay">
-  <div class="modal" style="overflow: visible;">
-    <div class="modal-head">
-      <h3 id="subModalTitle">Add Subcategory</h3>
-      <button class="icon-btn" id="btnSubClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body" style="overflow: visible;">
-      <div class="field"><label>Subcategory Name</label><input type="text" class="input" id="subName" placeholder="e.g. Groceries"></div>
-      <div class="field">
-        <label>Subcategory Icon</label>
-        <div class="emoji-dropdown-wrap">
-          <button type="button" class="input emoji-selector-btn" id="btnSubIcon">📁</button>
-          <input type="hidden" id="subIconValue" value="📁">
-          <div class="emoji-popover" id="subEmojiPopover">
-            <div class="recent-emojis-wrap">
-              <div class="recent-emojis-title">Recent</div>
-              <div class="recent-emojis-list" id="subRecentList"></div>
-            </div>
-            <div id="subPickerContainer"></div>
-          </div>
+  function openBudgetModal(key = null) {
+    if(state.categories.length === 0) { toast('Please create a category first'); return; }
+
+    document.getElementById('budgetModalTitle').textContent = key ? 'Edit Budget' : 'Add Budget';
+    document.getElementById('budgetOldKey').value = key || '';
+    
+    const selCat = document.getElementById('budgetCategory');
+    const expCats = state.categories.filter(c => c.type === 'expense' || c.type === 'both');
+    selCat.innerHTML = expCats.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
+    
+    let targetCat = expCats[0] ? expCats[0].category : '';
+    let targetSub = '';
+    let amount = '';
+    
+    if (key) {
+      if (key.includes('|')) {
+          const parts = key.split('|');
+          targetCat = parts[0];
+          targetSub = parts.slice(1).join('|');
+      } else {
+          targetCat = key;
+      }
+      amount = state.budgets[key];
+    }
+    
+    if (targetCat) selCat.value = targetCat;
+    
+    const popSub = (cat) => {
+      const catObj = state.categories.find(c=>c.category===cat);
+      const selSub = document.getElementById('budgetSubcategory');
+      const subs = catObj ? catObj.subcategories : [];
+      selSub.innerHTML = `<option value="">-- All Subcategories --</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    };
+    
+    popSub(targetCat);
+    if (targetSub) document.getElementById('budgetSubcategory').value = targetSub;
+    
+    selCat.onchange = (e) => popSub(e.target.value);
+    
+    document.getElementById('budgetAmount').value = amount;
+    document.getElementById('budgetModalOverlay').classList.add('open');
+  }
+
+  function closeBudgetModal() {
+    document.getElementById('budgetModalOverlay').classList.remove('open');
+  }
+
+  function saveBudgetForm() {
+    const oldKey = document.getElementById('budgetOldKey').value;
+    const cat = document.getElementById('budgetCategory').value;
+    const sub = document.getElementById('budgetSubcategory').value;
+    const amount = Number(document.getElementById('budgetAmount').value);
+    
+    if (amount <= 0) { toast('Amount must be greater than 0'); return; }
+    
+    const newKey = sub ? `${cat}|${sub}` : cat;
+    if (!state.budgets) state.budgets = {};
+    
+    if (oldKey && oldKey !== newKey) {
+        if (state.budgets[newKey] !== undefined) {
+            toast('Budget for this target already exists');
+            return;
+        }
+        delete state.budgets[oldKey];
+    } else if (!oldKey && state.budgets[newKey] !== undefined) {
+        toast('Budget for this target already exists');
+        return;
+    }
+    
+    state.budgets[newKey] = amount;
+    saveState();
+    closeBudgetModal();
+    renderBudgets();
+    toast('Budget saved');
+  }
+
+  function deleteBudget(key) {
+    if(!confirm('Delete this budget tracker?')) return;
+    delete state.budgets[key];
+    saveState();
+    renderBudgets();
+    toast('Budget deleted');
+  }
+
+  /* ============ CATEGORIES ============ */
+  function renderCategories(){
+    const el = document.getElementById('view-categories');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Categories</h2><p class="sub">Manage and organize your transaction categories</p></div>
+        <div class="section-head-actions">
+          <button class="btn btn-primary" id="btnAddCat">${icon('plus')}New Category</button>
         </div>
       </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="btnSubCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnSubSave">Save</button>
-    </div>
-  </div>
-</div>
+  
+      <div id="catList" class="card card-pad">
+        ${state.categories.map(c=>{
+          let typeLabel = c.type === 'expense' ? 'Expense' : (c.type === 'income' ? 'Income' : 'Both');
+          return `
+          <div class="cat-section">
+            <h4>
+              <span class="cat-icon-edit" data-editcat="${esc(c.category)}" title="Edit Category">${catIcon(c.category)}</span>
+              ${esc(c.category)} <span class="cat-type-tag">${typeLabel}</span>
+              <div class="cat-actions">
+                <button class="icon-btn-micro" data-addsub="${esc(c.category)}" title="Add Subcategory">${icon('plus')}</button>
+                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category Name">${icon('edit')}</button>
+                <button class="icon-btn-micro" data-dupcat="${esc(c.category)}" title="Duplicate Category">${icon('copy')}</button>
+                <button class="icon-btn-micro del" data-delcat="${esc(c.category)}" title="Delete Category">${icon('trash')}</button>
+              </div>
+            </h4>
+            <div class="sub-grid">
+              ${c.subcategories.map(s=>{
+                const parts = splitSub(s);
+                return `
+                <span class="sub-chip">
+                  <span class="cat-icon-edit" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit Subcategory">${parts.icon}</span>
+                  ${esc(parts.name)}
+                  <button class="icon-btn-micro" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit">${icon('edit')}</button>
+                  <button class="icon-btn-micro del" data-delsub="${esc(c.category)}|${esc(s)}" title="Delete">${icon('trash')}</button>
+                </span>
+              `}).join('') || '<span class="sub-chip" style="opacity:.6">No subcategories</span>'}
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+    `;
+  
+    document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
+    el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
+    el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.dupcat, true)));
+    el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
+    
+    el.querySelectorAll('[data-addsub]').forEach(b=> b.addEventListener('click', ()=> openSubModal(b.dataset.addsub)));
+    el.querySelectorAll('[data-editsub]').forEach(b=> {
+      b.addEventListener('click', ()=> {
+        const [cat, sub] = b.dataset.editsub.split('|');
+        openSubModal(cat, sub);
+      });
+    });
+    el.querySelectorAll('[data-delsub]').forEach(b=> {
+      b.addEventListener('click', ()=> {
+        const [cat, sub] = b.dataset.delsub.split('|');
+        deleteSubcategory(cat, sub);
+      });
+    });
+  }
 
-<div class="toast" id="toast"></div>
+  // --- Category & Subcategory Modals Logic ---
 
-<!-- EmojiMart Web Component -->
-<script src="[https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js](https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js)"></script>
-<script src="app.js"></script>
-</body>
-</html>
+  function setEmojiPicker(btnId, inputId, emoji) {
+    document.getElementById(inputId).value = emoji;
+    document.getElementById(btnId).textContent = emoji;
+  }
+
+  function renderRecentEmojis() {
+    const recents = state.recentEmojis || ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
+    const html = recents.map(e => `<button type="button" class="recent-btn" onclick="window.selectRecentEmoji('${e}')">${e}</button>`).join('');
+    
+    const catList = document.getElementById('catRecentList');
+    const subList = document.getElementById('subRecentList');
+    if (catList) catList.innerHTML = html;
+    if (subList) subList.innerHTML = html;
+  }
+
+  window.selectRecentEmoji = function(emoji) {
+    if (document.getElementById('catEmojiPopover').classList.contains('show')) {
+      handleEmojiSelect('btnCatIcon', 'catIconValue', emoji);
+      document.getElementById('catEmojiPopover').classList.remove('show');
+    } else if (document.getElementById('subEmojiPopover').classList.contains('show')) {
+      handleEmojiSelect('btnSubIcon', 'subIconValue', emoji);
+      document.getElementById('subEmojiPopover').classList.remove('show');
+    }
+  };
+
+  function handleEmojiSelect(btnId, inputId, emoji) {
+    setEmojiPicker(btnId, inputId, emoji);
+    
+    if (!state.recentEmojis) state.recentEmojis = [];
+    state.recentEmojis = [emoji, ...state.recentEmojis.filter(e => e !== emoji)].slice(0, 15);
+    saveState();
+    renderRecentEmojis();
+  }
+
+  function initEmojiPicker() {
+    if(window.EmojiMart) {
+      // EXCLUDE 'flags' completely
+      const categoriesNoFrequentAndFlags = ['people', 'nature', 'foods', 'activity', 'places', 'objects', 'symbols'];
+      
+      const catPickerOptions = {
+        onEmojiSelect: (e) => {
+          handleEmojiSelect('btnCatIcon', 'catIconValue', e.native);
+          document.getElementById('catEmojiPopover').classList.remove('show');
+        },
+        theme: 'light',
+        previewPosition: 'none',
+        skinTonePosition: 'none',
+        categories: categoriesNoFrequentAndFlags
+      };
+      const catPicker = new EmojiMart.Picker(catPickerOptions);
+      document.getElementById('catPickerContainer').appendChild(catPicker);
+
+      const subPickerOptions = {
+        onEmojiSelect: (e) => {
+          handleEmojiSelect('btnSubIcon', 'subIconValue', e.native);
+          document.getElementById('subEmojiPopover').classList.remove('show');
+        },
+        theme: 'light',
+        previewPosition: 'none',
+        skinTonePosition: 'none',
+        categories: categoriesNoFrequentAndFlags
+      };
+      const subPicker = new EmojiMart.Picker(subPickerOptions);
+      document.getElementById('subPickerContainer').appendChild(subPicker);
+
+      renderRecentEmojis();
+    }
+  }
+
+  function openCatModal(name = null, isDuplicate = false) {
+    editingCatOldName = isDuplicate ? null : name;
+    duplicatingCatName = isDuplicate ? name : null;
+
+    const c = name ? state.categories.find(x => x.category === name) : null;
+    
+    document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplicate Category' : (name ? 'Edit Category' : 'Add Category');
+    
+    let defaultName = '';
+    if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
+    document.getElementById('catName').value = defaultName;
+    document.getElementById('catType').value = c ? (c.type || 'expense') : 'expense';
+    
+    const icon = c ? c.icon : '📁';
+    document.getElementById('catIconValue').value = icon;
+    document.getElementById('btnCatIcon').textContent = icon;
+
+    document.getElementById('catModalOverlay').classList.add('open');
+    document.getElementById('catName').focus();
+    renderRecentEmojis();
+  }
+  function closeCatModal() { document.getElementById('catModalOverlay').classList.remove('open'); }
+
+  function saveCatForm() {
+    const newName = document.getElementById('catName').value.trim();
+    const newIcon = document.getElementById('catIconValue').value;
+    const newType = document.getElementById('catType').value;
+
+    if (!newName) { toast('Category name is required'); return; }
+
+    if (editingCatOldName) {
+      if (newName !== editingCatOldName && state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
+        toast('Category name already exists'); return;
+      }
+      const cat = state.categories.find(c => c.category === editingCatOldName);
+      cat.category = newName;
+      cat.icon = newIcon;
+      cat.type = newType;
+
+      if (state.budgets && editingCatOldName !== newName) {
+          const oldKeys = Object.keys(state.budgets).filter(k => k === editingCatOldName || k.startsWith(editingCatOldName + '|'));
+          oldKeys.forEach(k => {
+              let newKey = newName;
+              if (k.includes('|')) {
+                  newKey = newName + '|' + k.split('|')[1];
+              }
+              state.budgets[newKey] = state.budgets[k];
+              delete state.budgets[k];
+          });
+      }
+      if (newName !== editingCatOldName) {
+          state.transactions.forEach(t => { if (t.category === editingCatOldName) t.category = newName; });
+      }
+      toast('Category updated');
+    } else {
+      if (state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
+        toast('Category name already exists'); return;
+      }
+      let subs = [];
+      if (duplicatingCatName) {
+        const orig = state.categories.find(c => c.category === duplicatingCatName);
+        if (orig) subs = [...orig.subcategories];
+      }
+      state.categories.push({ category: newName, icon: newIcon, type: newType, subcategories: subs });
+      toast(duplicatingCatName ? 'Category duplicated' : 'Category added');
+    }
+
+    saveState(); renderCategories(); closeCatModal();
+  }
+
+  function openSubModal(catName, subName = null) {
+    targetCatForSub = catName;
+    editingSubOldName = subName;
+
+    document.getElementById('subModalTitle').textContent = subName ? 'Edit Subcategory' : 'Add Subcategory';
+    
+    let icon = '📁';
+    let name = '';
+    
+    if (subName) {
+      const parts = splitSub(subName);
+      icon = parts.icon;
+      name = parts.name;
+    }
+
+    document.getElementById('subName').value = name;
+    document.getElementById('subIconValue').value = icon;
+    document.getElementById('btnSubIcon').textContent = icon;
+    
+    document.getElementById('subModalOverlay').classList.add('open');
+    document.getElementById('subName').focus();
+    renderRecentEmojis();
+  }
+  function closeSubModal() { document.getElementById('subModalOverlay').classList.remove('open'); }
+
+  function saveSubForm() {
+    const name = document.getElementById('subName').value.trim();
+    const icon = document.getElementById('subIconValue').value;
+    if (!name) { toast('Subcategory name is required'); return; }
+
+    const newSub = icon + ' ' + name;
+    const cat = state.categories.find(c => c.category === targetCatForSub);
+    if (!cat) return;
+
+    if (editingSubOldName) {
+      if (newSub !== editingSubOldName && cat.subcategories.includes(newSub)) { 
+        toast('Subcategory already exists'); return; 
+      }
+      cat.subcategories = cat.subcategories.map(s => s === editingSubOldName ? newSub : s);
+      
+      const oldKey = targetCatForSub + '|' + editingSubOldName;
+      const newKey = targetCatForSub + '|' + newSub;
+      if (state.budgets && state.budgets[oldKey] !== undefined) {
+          state.budgets[newKey] = state.budgets[oldKey];
+          delete state.budgets[oldKey];
+      }
+
+      state.transactions.forEach(t => {
+          if (t.category === targetCatForSub && t.subcategory === editingSubOldName) t.subcategory = newSub;
+      });
+      toast('Subcategory updated');
+    } else {
+      if (cat.subcategories.includes(newSub)) { toast('Subcategory already exists'); return; }
+      cat.subcategories.push(newSub);
+      toast('Subcategory added');
+    }
+
+    saveState(); renderCategories(); closeSubModal();
+  }
+
+  function deleteCategory(name) {
+    const used = state.transactions.some(t => t.category === name);
+    if (used) { toast('Cannot delete: Category is currently used in transactions'); return; }
+    if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
+    
+    state.categories = state.categories.filter(c => c.category !== name);
+    if (state.budgets) {
+        delete state.budgets[name];
+        Object.keys(state.budgets).forEach(k => {
+            if (k.startsWith(name + '|')) delete state.budgets[k];
+        });
+    }
+    
+    saveState(); renderCategories(); toast('Category deleted');
+  }
+
+  function deleteSubcategory(catName, subName) {
+    const used = state.transactions.some(t => t.category === catName && t.subcategory === subName);
+    if (used) { toast('Cannot delete: Subcategory is currently used in transactions'); return; }
+    if (!confirm(`Are you sure you want to delete subcategory "${subName}"?`)) return;
+    
+    const cat = state.categories.find(c => c.category === catName);
+    if (cat) cat.subcategories = cat.subcategories.filter(s => s !== subName);
+    
+    const key = catName + '|' + subName;
+    if (state.budgets) delete state.budgets[key];
+
+    saveState(); renderCategories(); toast('Subcategory deleted');
+  }
+  
+  /* ============ ACCOUNTS ============ */
+  function renderAccounts(){
+    const { accBal } = computeLedger();
+    const el = document.getElementById('view-accounts');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Accounts</h2><p class="sub">Balances are calculated dynamically. Editing current balance will automatically adjust opening entry.</p></div>
+        <div class="section-head-actions">
+          <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Add Account</button>
+        </div>
+      </div>
+      <div class="acct-grid">
+        ${state.accounts.map((a, i)=>`
+          <div class="acct-card" data-acct="${esc(a.name)}" data-idx="${i}" draggable="true">
+            <div class="acct-top">
+              <div class="acct-icon">${ACCOUNT_ICONS[a.type]||'💳'}</div>
+              <span class="acct-type-tag">${a.type}</span>
+            </div>
+            <div class="acct-name">${esc(a.name)}</div>
+            <div class="acct-balance">${fmtCurrency(accBal[a.name]||0)}</div>
+            <div class="row-actions" style="justify-content:flex-end;">
+              <button data-editacct="${esc(a.name)}" title="Edit">${icon('edit')}</button>
+              <button data-dupacct="${esc(a.name)}" title="Duplicate">${icon('copy')}</button>
+              <button data-delacct="${esc(a.name)}" class="del" title="Delete">${icon('trash')}</button>
+            </div>
+          </div>
+        `).join('')}
+        ${state.accounts.length === 0 ? emptyHtml('No accounts yet. Click "Add Account" to get started.') : ''}
+      </div>
+    `;
+    
+    document.getElementById('btnAddAcct').addEventListener('click', ()=> openAcctModal());
+    el.querySelectorAll('[data-editacct]').forEach(b=> b.addEventListener('click', ()=> openAcctModal(b.dataset.editacct)));
+    el.querySelectorAll('[data-dupacct]').forEach(b=> b.addEventListener('click', ()=> duplicateAcct(b.dataset.dupacct)));
+    el.querySelectorAll('[data-delacct]').forEach(b=> b.addEventListener('click', ()=> deleteAcct(b.dataset.delacct)));
+
+    // Drag and Drop Logic
+    const cards = el.querySelectorAll('.acct-card');
+    let dragSrcIdx = null;
+
+    cards.forEach(card => {
+      card.addEventListener('dragstart', (e) => {
+        dragSrcIdx = Number(card.dataset.idx);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragSrcIdx);
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        cards.forEach(c => c.classList.remove('drag-over'));
+      });
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        return false;
+      });
+      card.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        if (Number(card.dataset.idx) !== dragSrcIdx) {
+          card.classList.add('drag-over');
+        }
+      });
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('drag-over');
+      });
+      card.addEventListener('drop', (e) => {
+        e.stopPropagation();
+        const targetIdx = Number(card.dataset.idx);
+        if (dragSrcIdx !== null && dragSrcIdx !== targetIdx) {
+          const draggedAcct = state.accounts.splice(dragSrcIdx, 1)[0];
+          state.accounts.splice(targetIdx, 0, draggedAcct);
+          saveState();
+          renderAccounts();
+        }
+        return false;
+      });
+    });
+  }
+  
+  function deleteAcct(name){
+    const used = state.transactions.some(t=>t.account===name || t.transferTo===name);
+    if(used){ toast('Cannot delete account: still used in transactions'); return; }
+    if(!confirm(`Delete account "${name}"?`)) return;
+    state.accounts = state.accounts.filter(a=>a.name!==name);
+    saveState();
+    renderAccounts();
+    toast('Account deleted');
+  }
+
+  function duplicateAcct(name){
+    const { accBal } = computeLedger();
+    const a = state.accounts.find(x=>x.name===name);
+    if(!a) return;
+    const newName = prompt('Enter name for duplicated account:', a.name + ' Copy');
+    if(!newName || newName.trim() === '') return;
+    if(state.accounts.some(x=>x.name.toLowerCase()===newName.trim().toLowerCase())){
+        toast('Account name already exists'); return;
+    }
+    state.accounts.push({ name: newName.trim(), type: a.type, opening: accBal[a.name] || 0 });
+    saveState(); renderAccounts(); toast('Account duplicated');
+  }
+  
+  function openAcctModal(name){
+    editingAcctName = name || null;
+    const { accBal } = computeLedger();
+    const a = name ? state.accounts.find(x=>x.name===name) : null;
+    
+    document.getElementById('acctModalTitle').textContent = name ? 'Edit Account' : 'Add Account';
+    document.getElementById('acctName').value = a ? a.name : '';
+    document.getElementById('acctType').value = a ? a.type : 'bank';
+    
+    document.getElementById('acctBalance').value = a ? (accBal[a.name] || 0) : 0;
+    
+    document.getElementById('acctModalOverlay').classList.add('open');
+    document.getElementById('acctName').focus();
+  }
+  function closeAcctModal(){ document.getElementById('acctModalOverlay').classList.remove('open'); }
+  
+  function saveAcctForm(){
+    const name = document.getElementById('acctName').value.trim();
+    const type = document.getElementById('acctType').value;
+    const currentBalanceTarget = Number(document.getElementById('acctBalance').value)||0;
+    
+    if(!name){ toast('Account name is required'); return; }
+    
+    if(editingAcctName){
+      const { accBal } = computeLedger();
+      const idx = state.accounts.findIndex(a=>a.name===editingAcctName);
+      
+      if(editingAcctName!==name && state.accounts.some(a=>a.name===name)){
+         toast('Account name already used'); return; 
+      }
+      
+      const oldCurrentBalance = accBal[editingAcctName] || 0;
+      const difference = currentBalanceTarget - oldCurrentBalance;
+
+      if(editingAcctName!==name){
+        state.transactions.forEach(t=>{
+          if(t.account===editingAcctName) t.account=name;
+          if(t.transferTo===editingAcctName) t.transferTo=name;
+        });
+      }
+      
+      state.accounts[idx].name = name;
+      state.accounts[idx].type = type;
+      state.accounts[idx].opening = (Number(state.accounts[idx].opening) || 0) + difference;
+      
+      toast('Account updated');
+    } else {
+      if(state.accounts.some(a=>a.name===name)){ toast('Account name already used'); return; }
+      state.accounts.push({ name, type, opening: currentBalanceTarget });
+      toast('Account added');
+    }
+    
+    saveState();
+    closeAcctModal();
+    renderCurrentTab();
+  }
+  
+  /* ============ IMPORT / EXPORT / RESET ============ */
+  function exportData(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `money-manager-${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Data exported');
+  }
+  function importData(file){
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const parsed = JSON.parse(reader.result);
+        if(!Array.isArray(parsed.transactions) || !Array.isArray(parsed.accounts)) throw new Error('Invalid format');
+        state = parsed;
+        saveState();
+        renderCurrentTab();
+        toast('Data imported successfully');
+      }catch(e){
+        toast('Failed to import: invalid file');
+      }
+    };
+    reader.readAsText(file);
+  }
+  function resetData(){
+    if(!confirm('Reset to demo data? All local changes will be lost.')) return;
+    state = JSON.parse(JSON.stringify(SEED));
+    saveState();
+    renderCurrentTab();
+    toast('Data reset to defaults');
+  }
+  
+  /* ============ INIT ============ */
+  function init(){
+    initTheme();
+    renderNav();
+    document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
+    renderCurrentTab();
+    
+    setTimeout(initEmojiPicker, 500); 
+
+    // Theme Toggle
+    document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
+
+    // Emoji Popover Toggles
+    document.getElementById('btnCatIcon').addEventListener('click', () => {
+      document.getElementById('catEmojiPopover').classList.toggle('show');
+    });
+    document.getElementById('btnSubIcon').addEventListener('click', () => {
+      document.getElementById('subEmojiPopover').classList.toggle('show');
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.emoji-dropdown-wrap')) {
+        document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
+      }
+    });
+  
+    // Export/Import/Reset
+    document.getElementById('btnExport').addEventListener('click', exportData);
+    document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
+    document.getElementById('btnReset').addEventListener('click', resetData);
+  
+    // Transactions
+    document.getElementById('txnCategory').addEventListener('change', e=> populateSubcategorySelect(e.target.value));
+    document.querySelectorAll('.type-toggle button').forEach(b=> b.addEventListener('click', ()=> setTxnType(b.dataset.type)));
+    document.getElementById('btnTxnSave').addEventListener('click', saveTxnForm);
+    document.getElementById('btnTxnCancel').addEventListener('click', closeTxnModal);
+    document.getElementById('btnTxnClose').addEventListener('click', closeTxnModal);
+    document.getElementById('txnModalOverlay').addEventListener('click', e=>{ if(e.target.id==='txnModalOverlay') closeTxnModal(); });
+  
+    // Accounts
+    document.getElementById('btnAcctSave').addEventListener('click', saveAcctForm);
+    document.getElementById('btnAcctCancel').addEventListener('click', closeAcctModal);
+    document.getElementById('btnAcctClose').addEventListener('click', closeAcctModal);
+    document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
+
+    // Budgets
+    document.getElementById('btnBudgetSave').addEventListener('click', saveBudgetForm);
+    document.getElementById('btnBudgetCancel').addEventListener('click', closeBudgetModal);
+    document.getElementById('btnBudgetClose').addEventListener('click', closeBudgetModal);
+    document.getElementById('budgetModalOverlay').addEventListener('click', e=>{ if(e.target.id==='budgetModalOverlay') closeBudgetModal(); });
+
+    // Categories
+    document.getElementById('btnCatSave').addEventListener('click', saveCatForm);
+    document.getElementById('btnCatCancel').addEventListener('click', closeCatModal);
+    document.getElementById('btnCatClose').addEventListener('click', closeCatModal);
+    document.getElementById('catModalOverlay').addEventListener('click', e=>{ if(e.target.id==='catModalOverlay') closeCatModal(); });
+
+    // Subcategories
+    document.getElementById('btnSubSave').addEventListener('click', saveSubForm);
+    document.getElementById('btnSubCancel').addEventListener('click', closeSubModal);
+    document.getElementById('btnSubClose').addEventListener('click', closeSubModal);
+    document.getElementById('subModalOverlay').addEventListener('click', e=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
+  
+    document.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ 
+        closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); closeBudgetModal();
+        document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
+      }
+    });
+  }
+  
+  document.addEventListener('DOMContentLoaded', init);
