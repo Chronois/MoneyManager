@@ -105,6 +105,45 @@
   </div>
 </div>
 
+<!-- Category Modal -->
+<div class="modal-overlay" id="catModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="catModalTitle">Add Category</h3>
+      <button class="icon-btn" id="btnCatClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Category Name</label><input type="text" class="input" id="catName" placeholder="e.g. Shopping"></div>
+      <div class="field">
+        <label>Category Icon</label>
+        <div class="emoji-picker" id="catIconPicker"></div>
+        <input type="hidden" id="catIconValue" value="📁">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnCatCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnCatSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subcategory Modal -->
+<div class="modal-overlay" id="subModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="subModalTitle">Add Subcategory</h3>
+      <button class="icon-btn" id="btnSubClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Subcategory Name</label><input type="text" class="input" id="subName" placeholder="e.g. Groceries"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnSubCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnSubSave">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="app.js"></script>
