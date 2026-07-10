@@ -6,15 +6,22 @@
    const SEED = {
     "transactions": [], 
     "categories": [
-      {"category": "Food & Beverages", "icon": "🍽️", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
-      {"category": "Transportation", "icon": "🚗", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
-      {"category": "Lifestyle", "icon": "🎯", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
-      {"category": "Daily Necessities", "icon": "🧺", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
-      {"category": "Accounts Receivable", "icon": "🧾", "subcategories": ["🧾 Receivable"]},
-      {"category": "Accounts Payable", "icon": "💳", "subcategories": ["💰 Debt"]},
-      {"category": "Allowance", "icon": "💵", "subcategories": ["💵 Allowance"]},
-      {"category": "Salary", "icon": "💎", "subcategories": ["💎 Salary"]},
-      {"category": "Adjustment", "icon": "✏️", "subcategories": ["✏️ Error Correction"]}
+      {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
+      {"category": "Transportation", "icon": "🚗", "type": "expense", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
+      {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
+      {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
+      {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
+      {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
+      {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
+      {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
+      {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
+      {"category": "Present", "icon": "🎁", "type": "expense", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
+      {"category": "Accounts Payable", "icon": "💳", "type": "expense", "subcategories": ["💰 Debt"]},
+      {"category": "Accounts Receivable", "icon": "🧾", "type": "income", "subcategories": ["🧾 Receivable"]},
+      {"category": "Allowance", "icon": "💵", "type": "income", "subcategories": ["💵 Allowance"]},
+      {"category": "Salary", "icon": "💎", "type": "income", "subcategories": ["💎 Salary"]},
+      {"category": "Bonus", "icon": "🪙", "type": "income", "subcategories": ["👛 Bonus", "🪙 THR"]},
+      {"category": "Adjustment", "icon": "✏️", "type": "both", "subcategories": ["✏️ Error Correction"]}
     ], 
     "accounts": [], 
     "budgets": {},
@@ -23,15 +30,10 @@
   
   const STORAGE_KEY = 'mm_money_manager_v1';
   
-  const CATEGORY_ICONS_FALLBACK = {
-    'Food & Beverages':'🍽️','Transportation':'🚗','Lifestyle':'🎯','Daily Necessities':'🧺',
-    'Clothes':'👕','Accessory':'💍','Beauty':'💄','Health':'🩺','Education':'📚','Present':'🎁',
-    'Accounts Receivable':'🧾','Accounts Payable':'💳','Allowance':'💵','Salary':'💎','Bonus':'🪙','Adjustment':'✏️'
-  };
   const ACCOUNT_ICONS = { bank:'🏦', digital: '📱', ewallet:'💳', cash:'💵' };
   const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA8','#4B85A6','#B0784F','#6D8C63','#A6555F','#5E9C8C','#9C8A5C','#7A9E4C','#C97F9E','#5A7DA6','#A88B4C'];
-  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   
   const ICONS = {
     plus:'<path d="M12 5v14M5 12h14"/>',
@@ -73,10 +75,17 @@
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
     
-    // Migration: ensure every category has an icon and recent emojis exist
+    // Migration: pastikan ada icon dan type untuk backward compatibility
     if(parsed.categories){
       parsed.categories.forEach(c => {
-        if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '📁';
+        if(!c.icon) c.icon = '📁';
+        if(!c.type) {
+            const inc = ['Accounts Receivable', 'Allowance', 'Salary', 'Bonus'];
+            const both = ['Adjustment'];
+            if(inc.includes(c.category)) c.type = 'income';
+            else if(both.includes(c.category)) c.type = 'both';
+            else c.type = 'expense';
+        }
       });
     }
     if(!parsed.recentEmojis) {
@@ -91,17 +100,17 @@
   function fmtCurrency(n){
     n = Math.round(n||0);
     const neg = n < 0;
-    return (neg?'-':'') + 'Rp' + Math.abs(n).toLocaleString('en-US');
+    return (neg?'-':'') + 'Rp' + Math.abs(n).toLocaleString('id-ID');
   }
   function fmtDateShort(d){
     const [y,m,day] = d.split('-').map(Number);
-    return `${day} ${MONTHS_EN[m-1]} ${y}`;
+    return `${day} ${MONTHS_ID[m-1]} ${y}`;
   }
   function fmtMonthLabel(key){
     const [y,m] = key.split('-').map(Number);
-    return `${MONTHS_EN[m-1]} ${y}`;
+    return `${MONTHS_ID[m-1]} ${y}`;
   }
-  function dayName(d){ return DAYS_EN[new Date(d+'T00:00:00').getDay()]; }
+  function dayName(d){ return DAYS_ID[new Date(d+'T00:00:00').getDay()]; }
   function todayStr(){ const d = new Date(); return d.toISOString().slice(0,10); }
   function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -224,8 +233,8 @@
       const hExpense = Math.max(2, Math.round(m.expense/max*118));
       return `<div class="col">
         <div class="bars">
-          <div class="bar" style="height:${hIncome}px;background:var(--income)" title="${esc(m.label)} · Income ${fmtCurrency(m.income)}"></div>
-          <div class="bar" style="height:${hExpense}px;background:var(--expense)" title="${esc(m.label)} · Expense ${fmtCurrency(m.expense)}"></div>
+          <div class="bar" style="height:${hIncome}px;background:var(--income)" title="${esc(m.label)} · Pemasukan ${fmtCurrency(m.income)}"></div>
+          <div class="bar" style="height:${hExpense}px;background:var(--expense)" title="${esc(m.label)} · Pengeluaran ${fmtCurrency(m.expense)}"></div>
         </div>
         <div class="col-label">${esc(m.label.split(' ')[0])}</div>
       </div>`;
@@ -244,12 +253,12 @@
   
   /* ============ NAV ============ */
   const TABS = [
-    { id:'dashboard', label:'Dashboard' },
-    { id:'transactions', label:'Transactions' },
-    { id:'balance', label:'Monthly Balance' },
-    { id:'budgets', label:'Budgets' },
-    { id:'categories', label:'Categories' },
-    { id:'accounts', label:'Accounts' },
+    { id:'dashboard', label:'Dasbor' },
+    { id:'transactions', label:'Transaksi' },
+    { id:'balance', label:'Saldo Bulanan' },
+    { id:'budgets', label:'Anggaran' },
+    { id:'categories', label:'Kategori' },
+    { id:'accounts', label:'Akun' },
   ];
   function renderNav(){
     const nav = document.getElementById('tabNav');
@@ -284,55 +293,55 @@
     const el = document.getElementById('view-dashboard');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Dashboard</h2><p class="sub">Financial summary · ${fmtMonthLabel(nowKey)}</p></div>
+        <div><h2>Dasbor</h2><p class="sub">Ringkasan keuangan · ${fmtMonthLabel(nowKey)}</p></div>
         <div class="section-head-actions">
-          <button class="btn btn-primary" id="btnAddTxnDash">${icon('plus')}Add Transaction</button>
+          <button class="btn btn-primary" id="btnAddTxnDash">${icon('plus')}Tambah Transaksi</button>
         </div>
       </div>
       <div class="stat-grid">
         <div class="stat-card hero"><span class="swatch"></span>
-          <div class="label">Total Balance</div>
+          <div class="label">Total Saldo</div>
           <div class="value">${fmtCurrency(total)}</div>
-          <div class="delta">in ${state.accounts.length} accounts</div>
+          <div class="delta">di ${state.accounts.length} akun</div>
         </div>
         <div class="stat-card"><span class="swatch"></span>
-          <div class="label">This Month's Income</div>
+          <div class="label">Pemasukan Bulan Ini</div>
           <div class="value pos">${fmtCurrency(income)}</div>
-          <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.income>0).length} transactions</div>
+          <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.income>0).length} transaksi</div>
         </div>
         <div class="stat-card"><span class="swatch"></span>
-          <div class="label">This Month's Expense</div>
+          <div class="label">Pengeluaran Bulan Ini</div>
           <div class="value neg">${fmtCurrency(expense)}</div>
-          <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.expense>0).length} transactions</div>
+          <div class="delta">${monthTx.filter(t=>!t.transferTo&&t.expense>0).length} transaksi</div>
         </div>
         <div class="stat-card"><span class="swatch"></span>
-          <div class="label">Net Cash Flow</div>
+          <div class="label">Arus Kas Bersih</div>
           <div class="value ${net>=0?'pos':'neg'}">${fmtCurrency(net)}</div>
-          <div class="delta">current month</div>
+          <div class="delta">bulan berjalan</div>
         </div>
       </div>
   
       <div class="dash-grid">
         <div class="card card-pad">
-          <p class="panel-title">Monthly Trend</p>
-          <p class="panel-sub">Income vs expenses, last 6 months</p>
+          <p class="panel-title">Tren Bulanan</p>
+          <p class="panel-sub">Pemasukan vs pengeluaran, 6 bulan terakhir</p>
           ${renderMonthlyBars(monthlyAggregate(enriched).slice(-6))}
           <div class="chart-legend">
-            <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Income</div>
-            <div class="legend-item"><span class="legend-swatch" style="background:var(--expense)"></span>Expense</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Pemasukan</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--expense)"></span>Pengeluaran</div>
           </div>
         </div>
         <div class="card card-pad">
-          <p class="panel-title">Expenses by Category</p>
-          <p class="panel-sub">Month of ${fmtMonthLabel(nowKey)}</p>
+          <p class="panel-title">Pengeluaran per Kategori</p>
+          <p class="panel-sub">Bulan ${fmtMonthLabel(nowKey)}</p>
           ${renderCategoryDonutBlock(monthTx)}
         </div>
       </div>
   
       <div class="dash-grid">
         <div class="card card-pad">
-          <p class="panel-title">Account Balances</p>
-          <p class="panel-sub">Manage accounts in the 'Accounts' tab</p>
+          <p class="panel-title">Saldo per Akun</p>
+          <p class="panel-sub">Kelola akun di menu 'Akun'</p>
           <div class="acct-grid" style="grid-template-columns:repeat(2,1fr)">
             ${state.accounts.slice(0,6).map(a=>`
               <div class="acct-card" style="padding:12px 14px;">
@@ -343,14 +352,14 @@
                 <div class="acct-name">${esc(a.name)}</div>
                 <div class="acct-balance" style="font-size:15px;">${fmtCurrency(accBal[a.name]||0)}</div>
               </div>`).join('')}
-            ${state.accounts.length === 0 ? emptyHtml('No accounts yet.') : ''}
+            ${state.accounts.length === 0 ? emptyHtml('Belum ada akun.') : ''}
           </div>
         </div>
         <div class="card card-pad">
-          <p class="panel-title">Recent Transactions</p>
-          <p class="panel-sub">10 most recent transactions</p>
+          <p class="panel-title">Transaksi Terbaru</p>
+          <p class="panel-sub">10 transaksi terakhir</p>
           <div>
-            ${enriched.slice(-10).reverse().map(t=> recentItemHtmlDash(t)).join('') || emptyHtml('No transactions yet')}
+            ${enriched.slice(-10).reverse().map(t=> recentItemHtmlDash(t)).join('') || emptyHtml('Belum ada transaksi')}
           </div>
         </div>
       </div>
@@ -367,7 +376,7 @@
     
     let displayNote = esc(t.note) || esc(t.subcategory) || '—';
     if (isTransfer) {
-      displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+      displayNote = t.note ? `${esc(t.note)} (Ke: ${esc(t.transferTo)})` : `Transfer ke ${esc(t.transferTo)}`;
     }
 
     return `<div class="recent-item">
@@ -389,7 +398,7 @@
       byCat[t.category] = (byCat[t.category]||0) + t.expense;
     });
     const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-    if(entries.length===0) return emptyHtml('No expenses this month');
+    if(entries.length===0) return emptyHtml('Belum ada pengeluaran bulan ini');
     const top = entries.slice(0,7);
     const data = top.map(([cat,val],i)=> ({label:cat, value:val, color:CHART_PALETTE[i%CHART_PALETTE.length]}));
     const total = entries.reduce((s,[,v])=>s+v,0);
@@ -429,17 +438,17 @@
     const el = document.getElementById('view-transactions');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Transactions</h2><p class="sub">${list.length} transactions found</p></div>
+        <div><h2>Transaksi</h2><p class="sub">${list.length} transaksi ditemukan</p></div>
         <div class="section-head-actions">
-          <button class="btn btn-primary" id="btnAddTxn">${icon('plus')}Add Transaction</button>
+          <button class="btn btn-primary" id="btnAddTxn">${icon('plus')}Tambah Transaksi</button>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
-              <th style="text-align:right">Type</th><th style="text-align:right">Amount</th>
+              <th>Tanggal</th><th>Hari</th><th>Akun</th><th>Kategori</th><th>Catatan</th>
+              <th style="text-align:right">Tipe</th><th style="text-align:right">Jumlah</th>
               <th></th>
             </tr>
             <tr class="table-filter-row">
@@ -447,39 +456,39 @@
               <td></td>
               <td>
                 <select class="input" id="fAccount">
-                  <option value="">All</option>
+                  <option value="">Semua</option>
                   ${state.accounts.map(a=>`<option value="${esc(a.name)}" ${filters.account===a.name?'selected':''}>${esc(a.name)}</option>`).join('')}
                 </select>
               </td>
               <td>
                 <select class="input" id="fCategory">
-                  <option value="">All</option>
+                  <option value="">Semua</option>
                   ${state.categories.map(c=>`<option value="${esc(c.category)}" ${filters.category===c.category?'selected':''}>${esc(c.category)}</option>`).join('')}
                 </select>
               </td>
-              <td><input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}"></td>
+              <td><input type="text" class="input" id="fSearch" placeholder="Cari catatan..." value="${esc(filters.q)}"></td>
               <td style="text-align:right">
                 <select class="input" id="fType">
-                  <option value="">All</option>
-                  <option value="income" ${filters.type==='income'?'selected':''}>Income</option>
-                  <option value="expense" ${filters.type==='expense'?'selected':''}>Expense</option>
+                  <option value="">Semua</option>
+                  <option value="income" ${filters.type==='income'?'selected':''}>Pemasukan</option>
+                  <option value="expense" ${filters.type==='expense'?'selected':''}>Pengeluaran</option>
                   <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
                 </select>
               </td>
               <td></td>
-              <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Clear</button></td>
+              <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Reset</button></td>
             </tr>
           </thead>
           <tbody>
-            ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="8"><div class="empty">${icon('wallet')}<div>No matching transactions</div></div></td></tr>`}
+            ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="8"><div class="empty">${icon('wallet')}<div>Tidak ada transaksi yang cocok</div></div></td></tr>`}
           </tbody>
         </table>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
-        <span style="font-size:12.5px; color:var(--ink-muted)">Page ${txnPage+1} of ${totalPages}</span>
+        <span style="font-size:12.5px; color:var(--ink-muted)">Halaman ${txnPage+1} dari ${totalPages}</span>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-sm" id="pgPrev" ${txnPage===0?'disabled':''}>← Previous</button>
-          <button class="btn btn-sm" id="pgNext" ${txnPage>=totalPages-1?'disabled':''}>Next →</button>
+          <button class="btn btn-sm" id="pgPrev" ${txnPage===0?'disabled':''}>← Sebelumnya</button>
+          <button class="btn btn-sm" id="pgNext" ${txnPage>=totalPages-1?'disabled':''}>Berikutnya →</button>
         </div>
       </div>
     `;
@@ -508,7 +517,7 @@
     
     let displayNote = esc(t.note) || esc(t.subcategory) || '—';
     if (isTransfer) {
-      displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+      displayNote = t.note ? `${esc(t.note)} (Ke: ${esc(t.transferTo)})` : `Transfer ke ${esc(t.transferTo)}`;
     }
     
     return `<tr>
@@ -521,53 +530,69 @@
       <td class="num ${color}">${fmtCurrency(amt)}</td>
       <td><div class="row-actions">
         <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
-        <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
-        <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
+        <button data-dup="${t.id}" title="Duplikat">${icon('copy')}</button>
+        <button data-del="${t.id}" class="del" title="Hapus">${icon('trash')}</button>
       </div></td>
     </tr>`;
   }
   
   function deleteTxn(id){
-    if(!confirm('Delete this transaction? This cannot be undone.')) return;
+    if(!confirm('Hapus transaksi ini? Tidak dapat dibatalkan.')) return;
     state.transactions = state.transactions.filter(t=>t.id!==id);
     saveState();
     renderTransactions();
-    toast('Transaction deleted');
+    toast('Transaksi dihapus');
   }
   
   /* ============ TRANSACTION MODAL ============ */
   function openTxnModal(id, isDuplicate = false){
-    if(state.accounts.length === 0) { toast('Please create an account first'); return; }
+    if(state.accounts.length === 0) { toast('Silakan buat akun terlebih dahulu'); return; }
 
     editingTxnId = isDuplicate ? null : (id || null);
     const t = id ? state.transactions.find(x=>x.id===id) : null;
     txnType = t ? (t.transferTo ? 'transfer' : (t.income>0 ? 'income' : 'expense')) : 'expense';
   
-    document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplicate Transaction' : (id ? 'Edit Transaction' : 'Add Transaction');
+    document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplikat Transaksi' : (id ? 'Ubah Transaksi' : 'Tambah Transaksi');
     document.getElementById('txnDate').value = t ? t.date : todayStr();
     document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
     document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
     document.getElementById('txnNote').value = t ? (t.note||'') : '';
     document.getElementById('txnAmount').value = t ? (t.transferTo? t.expense : (t.income||t.expense||'')) : '';
   
-    populateCategorySelect(t ? t.category : state.categories[0].category);
-    document.getElementById('txnCategory').value = t ? t.category : state.categories[0].category;
-    populateSubcategorySelect(document.getElementById('txnCategory').value, t? t.subcategory : '');
-  
+    setTxnType(txnType);
+
+    if(t) {
+      document.getElementById('txnCategory').value = t.category;
+      populateSubcategorySelect(t.category, t.subcategory);
+    }
+
     document.getElementById('txnTransferTo').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
     if(t && t.transferTo) document.getElementById('txnTransferTo').value = t.transferTo;
   
-    setTxnType(txnType);
     document.getElementById('txnModalOverlay').classList.add('open');
     document.getElementById('txnDate').focus();
   }
   function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.remove('open'); }
   
-  function populateCategorySelect(selected){
+  function populateCategorySelect(selected, type = txnType){
     const sel = document.getElementById('txnCategory');
-    sel.innerHTML = state.categories.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
-    if(selected) sel.value = selected;
+    let filtered = state.categories;
+    
+    if (type === 'expense') {
+        filtered = state.categories.filter(c => c.type === 'expense' || c.type === 'both');
+    } else if (type === 'income') {
+        filtered = state.categories.filter(c => c.type === 'income' || c.type === 'both');
+    }
+
+    sel.innerHTML = filtered.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
+    
+    if(selected && filtered.some(c => c.category === selected)) {
+        sel.value = selected;
+    } else if (filtered.length > 0) {
+        sel.value = filtered[0].category;
+    }
   }
+
   function populateSubcategorySelect(cat, selected){
     const catObj = state.categories.find(c=>c.category===cat);
     const sel = document.getElementById('txnSubcategory');
@@ -581,7 +606,12 @@
     document.querySelectorAll('.type-toggle button').forEach(b=> b.classList.toggle('active', b.dataset.type===type));
     document.getElementById('rowCategory').style.display = type==='transfer' ? 'none' : 'flex';
     document.getElementById('rowTransfer').style.display = type==='transfer' ? 'flex' : 'none';
-    document.getElementById('amountLabel').textContent = type==='income' ? 'Income Amount' : (type==='transfer' ? 'Transfer Amount' : 'Expense Amount');
+    document.getElementById('amountLabel').textContent = type==='income' ? 'Jumlah Pemasukan' : (type==='transfer' ? 'Jumlah Transfer' : 'Jumlah Pengeluaran');
+
+    if (type !== 'transfer') {
+      populateCategorySelect(document.getElementById('txnCategory').value, type);
+      populateSubcategorySelect(document.getElementById('txnCategory').value);
+    }
   }
   
   function saveTxnForm(){
@@ -589,13 +619,13 @@
     const account = document.getElementById('txnAccount').value;
     const note = document.getElementById('txnNote').value.trim();
     const amount = Number(document.getElementById('txnAmount').value) || 0;
-    if(!date){ toast('Date is required'); return; }
-    if(amount<=0){ toast('Amount must be greater than 0'); return; }
+    if(!date){ toast('Tanggal wajib diisi'); return; }
+    if(amount<=0){ toast('Jumlah harus lebih dari 0'); return; }
   
     let payload = { date, account, note, category:'', subcategory:'', expense:0, income:0, transferTo:'' };
     if(txnType==='transfer'){
       const to = document.getElementById('txnTransferTo').value;
-      if(to===account){ toast('Target account must be different'); return; }
+      if(to===account){ toast('Akun tujuan harus berbeda dari akun sumber'); return; }
       payload.category = 'Lifestyle';
       payload.subcategory = '🔁 Transfer Between Accounts';
       payload.expense = amount;
@@ -613,10 +643,10 @@
     if(editingTxnId){
       const idx = state.transactions.findIndex(t=>t.id===editingTxnId);
       state.transactions[idx] = Object.assign({id:editingTxnId}, payload);
-      toast('Transaction updated');
+      toast('Transaksi diperbarui');
     } else {
       state.transactions.push(Object.assign({id:uid()}, payload));
-      toast('Transaction added');
+      toast('Transaksi ditambahkan');
     }
     saveState();
     closeTxnModal();
@@ -630,21 +660,21 @@
     const el = document.getElementById('view-balance');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Monthly Balance</h2><p class="sub">Cash flow summary per month, calculated automatically</p></div>
+        <div><h2>Saldo Bulanan</h2><p class="sub">Ringkasan arus kas per bulan, dihitung otomatis dari seluruh transaksi</p></div>
       </div>
       <div class="card card-pad" style="margin-bottom:18px;">
-        <p class="panel-title">End of Month Balance Trend</p>
+        <p class="panel-title">Tren Saldo Akhir Bulan</p>
         ${renderMonthlyBars(months)}
         <div class="chart-legend">
-          <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Income</div>
-          <div class="legend-item"><span class="legend-swatch" style="background:var(--expense)"></span>Expense</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Pemasukan</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--expense)"></span>Pengeluaran</div>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Month</th><th style="text-align:right">Opening Balance</th><th style="text-align:right">Income</th>
-            <th style="text-align:right">Expense</th><th style="text-align:right">Net Cash Flow</th><th style="text-align:right">Ending Balance</th>
+            <th>Bulan</th><th style="text-align:right">Saldo Awal</th><th style="text-align:right">Pemasukan</th>
+            <th style="text-align:right">Pengeluaran</th><th style="text-align:right">Arus Kas Bersih</th><th style="text-align:right">Saldo Akhir</th>
           </tr></thead>
           <tbody>
             ${months.slice().reverse().map(m=>`<tr>
@@ -654,7 +684,7 @@
               <td class="num neg">${fmtCurrency(m.expense)}</td>
               <td class="num ${m.net>=0?'pos':'neg'}">${fmtCurrency(m.net)}</td>
               <td class="num" style="font-weight:600">${fmtCurrency(m.end)}</td>
-            </tr>`).join('') || `<tr><td colspan="6"><div class="empty">No data available</div></td></tr>`}
+            </tr>`).join('') || `<tr><td colspan="6"><div class="empty">Belum ada data</div></td></tr>`}
           </tbody>
         </table>
       </div>
@@ -679,15 +709,15 @@
     const el = document.getElementById('view-budgets');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Budgets</h2><p class="sub">Monitor monthly spending limits · ${fmtMonthLabel(nowKey)}</p></div>
+        <div><h2>Anggaran</h2><p class="sub">Pantau batas pengeluaran bulanan · ${fmtMonthLabel(nowKey)}</p></div>
         <div class="section-head-actions">
-          <button class="btn btn-primary" id="btnAddBudget">${icon('plus')}Add Budget</button>
+          <button class="btn btn-primary" id="btnAddBudget">${icon('plus')}Tambah Anggaran</button>
         </div>
       </div>
   
       <div class="card card-pad" style="margin-bottom:20px;">
-        <p class="panel-title">Active Budgets</p>
-        <p class="panel-sub">You can track overall category spending or specifically target a subcategory.</p>
+        <p class="panel-title">Anggaran Aktif</p>
+        <p class="panel-sub">Lacak pengeluaran total kategori atau targetkan subkategori spesifik.</p>
         <div class="budget-list">
           ${budgetKeys.length > 0 ? budgetKeys.map(k=>{
             const budget = state.budgets[k];
@@ -712,14 +742,14 @@
                 <div style="display:flex; align-items:center;">
                   <span class="amounts">${fmtCurrency(spend)} / ${fmtCurrency(budget)}</span>
                   <div class="row-actions">
-                    <button data-editbudget="${esc(k)}" title="Edit Limit">${icon('edit')}</button>
-                    <button data-delbudget="${esc(k)}" class="del" title="Delete Budget">${icon('trash')}</button>
+                    <button data-editbudget="${esc(k)}" title="Ubah Batas">${icon('edit')}</button>
+                    <button data-delbudget="${esc(k)}" class="del" title="Hapus Anggaran">${icon('trash')}</button>
                   </div>
                 </div>
               </div>
               <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
             </div>`;
-          }).join('') : emptyHtml('No active budgets. Click "Add Budget" to get started.')}
+          }).join('') : emptyHtml('Belum ada anggaran. Klik "Tambah Anggaran" untuk memulai.')}
         </div>
       </div>
     `;
@@ -730,15 +760,17 @@
   }
 
   function openBudgetModal(key = null) {
-    if(state.categories.length === 0) { toast('Please create a category first'); return; }
+    if(state.categories.length === 0) { toast('Buat kategori terlebih dahulu'); return; }
 
-    document.getElementById('budgetModalTitle').textContent = key ? 'Edit Budget' : 'Add Budget';
+    document.getElementById('budgetModalTitle').textContent = key ? 'Ubah Anggaran' : 'Tambah Anggaran';
     document.getElementById('budgetOldKey').value = key || '';
     
     const selCat = document.getElementById('budgetCategory');
-    selCat.innerHTML = state.categories.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
+    // Hanya tampilkan kategori yang merupakan expense / both
+    const expCats = state.categories.filter(c => c.type === 'expense' || c.type === 'both');
+    selCat.innerHTML = expCats.map(c=>`<option value="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</option>`).join('');
     
-    let targetCat = state.categories[0] ? state.categories[0].category : '';
+    let targetCat = expCats[0] ? expCats[0].category : '';
     let targetSub = '';
     let amount = '';
     
@@ -759,7 +791,7 @@
       const catObj = state.categories.find(c=>c.category===cat);
       const selSub = document.getElementById('budgetSubcategory');
       const subs = catObj ? catObj.subcategories : [];
-      selSub.innerHTML = `<option value="">-- All Subcategories --</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      selSub.innerHTML = `<option value="">-- Seluruh Subkategori --</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
     };
     
     popSub(targetCat);
@@ -781,19 +813,19 @@
     const sub = document.getElementById('budgetSubcategory').value;
     const amount = Number(document.getElementById('budgetAmount').value);
     
-    if (amount <= 0) { toast('Amount must be greater than 0'); return; }
+    if (amount <= 0) { toast('Jumlah harus lebih dari 0'); return; }
     
     const newKey = sub ? `${cat}|${sub}` : cat;
     if (!state.budgets) state.budgets = {};
     
     if (oldKey && oldKey !== newKey) {
         if (state.budgets[newKey] !== undefined) {
-            toast('Budget for this target already exists');
+            toast('Anggaran untuk target ini sudah ada');
             return;
         }
         delete state.budgets[oldKey];
     } else if (!oldKey && state.budgets[newKey] !== undefined) {
-        toast('Budget for this target already exists');
+        toast('Anggaran untuk target ini sudah ada');
         return;
     }
     
@@ -801,15 +833,15 @@
     saveState();
     closeBudgetModal();
     renderBudgets();
-    toast('Budget saved');
+    toast('Anggaran disimpan');
   }
 
   function deleteBudget(key) {
-    if(!confirm('Delete this budget tracker?')) return;
+    if(!confirm('Hapus pelacak anggaran ini?')) return;
     delete state.budgets[key];
     saveState();
     renderBudgets();
-    toast('Budget deleted');
+    toast('Anggaran dihapus');
   }
 
   /* ============ CATEGORIES ============ */
@@ -817,23 +849,25 @@
     const el = document.getElementById('view-categories');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Categories</h2><p class="sub">Manage and organize your transaction categories</p></div>
+        <div><h2>Kategori</h2><p class="sub">Kelola dan atur kategori transaksimu</p></div>
         <div class="section-head-actions">
-          <button class="btn btn-primary" id="btnAddCat">${icon('plus')}New Category</button>
+          <button class="btn btn-primary" id="btnAddCat">${icon('plus')}Tambah Kategori</button>
         </div>
       </div>
   
       <div id="catList" class="card card-pad">
-        ${state.categories.map(c=>`
+        ${state.categories.map(c=>{
+          let typeLabel = c.type === 'expense' ? 'Pengeluaran' : (c.type === 'income' ? 'Pemasukan' : 'Keduanya');
+          return `
           <div class="cat-section">
             <h4>
-              <span class="cat-icon-edit" data-editcat="${esc(c.category)}" title="Edit Category">${catIcon(c.category)}</span>
-              ${esc(c.category)}
+              <span class="cat-icon-edit" data-editcat="${esc(c.category)}" title="Ubah Kategori">${catIcon(c.category)}</span>
+              ${esc(c.category)} <span class="cat-type-tag">${typeLabel}</span>
               <div class="cat-actions">
-                <button class="icon-btn-micro" data-addsub="${esc(c.category)}" title="Add Subcategory">${icon('plus')}</button>
-                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category Name">${icon('edit')}</button>
-                <button class="icon-btn-micro" data-dupcat="${esc(c.category)}" title="Duplicate Category">${icon('copy')}</button>
-                <button class="icon-btn-micro del" data-delcat="${esc(c.category)}" title="Delete Category">${icon('trash')}</button>
+                <button class="icon-btn-micro" data-addsub="${esc(c.category)}" title="Tambah Subkategori">${icon('plus')}</button>
+                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Ubah Nama Kategori">${icon('edit')}</button>
+                <button class="icon-btn-micro" data-dupcat="${esc(c.category)}" title="Duplikat Kategori">${icon('copy')}</button>
+                <button class="icon-btn-micro del" data-delcat="${esc(c.category)}" title="Hapus Kategori">${icon('trash')}</button>
               </div>
             </h4>
             <div class="sub-grid">
@@ -841,25 +875,23 @@
                 const parts = splitSub(s);
                 return `
                 <span class="sub-chip">
-                  <span class="cat-icon-edit" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit Subcategory">${parts.icon}</span>
+                  <span class="cat-icon-edit" data-editsub="${esc(c.category)}|${esc(s)}" title="Ubah Subkategori">${parts.icon}</span>
                   ${esc(parts.name)}
-                  <button class="icon-btn-micro" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit">${icon('edit')}</button>
-                  <button class="icon-btn-micro del" data-delsub="${esc(c.category)}|${esc(s)}" title="Delete">${icon('trash')}</button>
+                  <button class="icon-btn-micro" data-editsub="${esc(c.category)}|${esc(s)}" title="Ubah">${icon('edit')}</button>
+                  <button class="icon-btn-micro del" data-delsub="${esc(c.category)}|${esc(s)}" title="Hapus">${icon('trash')}</button>
                 </span>
-              `}).join('') || '<span class="sub-chip" style="opacity:.6">No subcategories</span>'}
+              `}).join('') || '<span class="sub-chip" style="opacity:.6">Belum ada subkategori</span>'}
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
     `;
   
-    // Add / Edit / Duplicate Categories -> Uses Modal
     document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
     el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
     el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.dupcat, true)));
     el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
     
-    // Add / Edit / Delete Subcategories -> Uses Modal
     el.querySelectorAll('[data-addsub]').forEach(b=> b.addEventListener('click', ()=> openSubModal(b.dataset.addsub)));
     el.querySelectorAll('[data-editsub]').forEach(b=> {
       b.addEventListener('click', ()=> {
@@ -905,7 +937,6 @@
   function handleEmojiSelect(btnId, inputId, emoji) {
     setEmojiPicker(btnId, inputId, emoji);
     
-    // Manage Custom Recent Array
     if (!state.recentEmojis) state.recentEmojis = [];
     state.recentEmojis = [emoji, ...state.recentEmojis.filter(e => e !== emoji)].slice(0, 15);
     saveState();
@@ -914,8 +945,8 @@
 
   function initEmojiPicker() {
     if(window.EmojiMart) {
-      // Sembunyikan Kategori 'frequent' bawaan karena kita membuat 'recent' custom
-      const categoriesNoFrequent = ['people', 'nature', 'foods', 'activity', 'places', 'objects', 'symbols', 'flags'];
+      // EXCLUDE 'flags' completely
+      const categoriesNoFrequentAndFlags = ['people', 'nature', 'foods', 'activity', 'places', 'objects', 'symbols'];
       
       const catPickerOptions = {
         onEmojiSelect: (e) => {
@@ -925,7 +956,7 @@
         theme: 'light',
         previewPosition: 'none',
         skinTonePosition: 'none',
-        categories: categoriesNoFrequent
+        categories: categoriesNoFrequentAndFlags
       };
       const catPicker = new EmojiMart.Picker(catPickerOptions);
       document.getElementById('catPickerContainer').appendChild(catPicker);
@@ -938,7 +969,7 @@
         theme: 'light',
         previewPosition: 'none',
         skinTonePosition: 'none',
-        categories: categoriesNoFrequent
+        categories: categoriesNoFrequentAndFlags
       };
       const subPicker = new EmojiMart.Picker(subPickerOptions);
       document.getElementById('subPickerContainer').appendChild(subPicker);
@@ -953,11 +984,12 @@
 
     const c = name ? state.categories.find(x => x.category === name) : null;
     
-    document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplicate Category' : (name ? 'Edit Category' : 'Add Category');
+    document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplikat Kategori' : (name ? 'Ubah Kategori' : 'Tambah Kategori');
     
     let defaultName = '';
     if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
     document.getElementById('catName').value = defaultName;
+    document.getElementById('catType').value = c ? (c.type || 'expense') : 'expense';
     
     const icon = c ? c.icon : '📁';
     document.getElementById('catIconValue').value = icon;
@@ -972,16 +1004,18 @@
   function saveCatForm() {
     const newName = document.getElementById('catName').value.trim();
     const newIcon = document.getElementById('catIconValue').value;
+    const newType = document.getElementById('catType').value;
 
-    if (!newName) { toast('Category name is required'); return; }
+    if (!newName) { toast('Nama kategori wajib diisi'); return; }
 
     if (editingCatOldName) {
       if (newName !== editingCatOldName && state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
-        toast('Category name already exists'); return;
+        toast('Nama kategori sudah ada'); return;
       }
       const cat = state.categories.find(c => c.category === editingCatOldName);
       cat.category = newName;
       cat.icon = newIcon;
+      cat.type = newType;
 
       if (state.budgets && editingCatOldName !== newName) {
           const oldKeys = Object.keys(state.budgets).filter(k => k === editingCatOldName || k.startsWith(editingCatOldName + '|'));
@@ -997,18 +1031,18 @@
       if (newName !== editingCatOldName) {
           state.transactions.forEach(t => { if (t.category === editingCatOldName) t.category = newName; });
       }
-      toast('Category updated');
+      toast('Kategori diperbarui');
     } else {
       if (state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
-        toast('Category name already exists'); return;
+        toast('Nama kategori sudah ada'); return;
       }
       let subs = [];
       if (duplicatingCatName) {
         const orig = state.categories.find(c => c.category === duplicatingCatName);
         if (orig) subs = [...orig.subcategories];
       }
-      state.categories.push({ category: newName, icon: newIcon, subcategories: subs });
-      toast(duplicatingCatName ? 'Category duplicated' : 'Category added');
+      state.categories.push({ category: newName, icon: newIcon, type: newType, subcategories: subs });
+      toast(duplicatingCatName ? 'Kategori diduplikat' : 'Kategori ditambahkan');
     }
 
     saveState(); renderCategories(); closeCatModal();
@@ -1018,7 +1052,7 @@
     targetCatForSub = catName;
     editingSubOldName = subName;
 
-    document.getElementById('subModalTitle').textContent = subName ? 'Edit Subcategory' : 'Add Subcategory';
+    document.getElementById('subModalTitle').textContent = subName ? 'Ubah Subkategori' : 'Tambah Subkategori';
     
     let icon = '📁';
     let name = '';
@@ -1042,7 +1076,7 @@
   function saveSubForm() {
     const name = document.getElementById('subName').value.trim();
     const icon = document.getElementById('subIconValue').value;
-    if (!name) { toast('Subcategory name is required'); return; }
+    if (!name) { toast('Nama subkategori wajib diisi'); return; }
 
     const newSub = icon + ' ' + name;
     const cat = state.categories.find(c => c.category === targetCatForSub);
@@ -1050,7 +1084,7 @@
 
     if (editingSubOldName) {
       if (newSub !== editingSubOldName && cat.subcategories.includes(newSub)) { 
-        toast('Subcategory already exists'); return; 
+        toast('Subkategori sudah ada'); return; 
       }
       cat.subcategories = cat.subcategories.map(s => s === editingSubOldName ? newSub : s);
       
@@ -1064,11 +1098,11 @@
       state.transactions.forEach(t => {
           if (t.category === targetCatForSub && t.subcategory === editingSubOldName) t.subcategory = newSub;
       });
-      toast('Subcategory updated');
+      toast('Subkategori diperbarui');
     } else {
-      if (cat.subcategories.includes(newSub)) { toast('Subcategory already exists'); return; }
+      if (cat.subcategories.includes(newSub)) { toast('Subkategori sudah ada'); return; }
       cat.subcategories.push(newSub);
-      toast('Subcategory added');
+      toast('Subkategori ditambahkan');
     }
 
     saveState(); renderCategories(); closeSubModal();
@@ -1076,8 +1110,8 @@
 
   function deleteCategory(name) {
     const used = state.transactions.some(t => t.category === name);
-    if (used) { toast('Cannot delete: Category is currently used in transactions'); return; }
-    if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
+    if (used) { toast('Tidak dapat dihapus: Kategori masih dipakai pada transaksi'); return; }
+    if (!confirm(`Yakin ingin menghapus kategori "${name}"?`)) return;
     
     state.categories = state.categories.filter(c => c.category !== name);
     if (state.budgets) {
@@ -1087,13 +1121,13 @@
         });
     }
     
-    saveState(); renderCategories(); toast('Category deleted');
+    saveState(); renderCategories(); toast('Kategori dihapus');
   }
 
   function deleteSubcategory(catName, subName) {
     const used = state.transactions.some(t => t.category === catName && t.subcategory === subName);
-    if (used) { toast('Cannot delete: Subcategory is currently used in transactions'); return; }
-    if (!confirm(`Are you sure you want to delete subcategory "${subName}"?`)) return;
+    if (used) { toast('Tidak dapat dihapus: Subkategori masih dipakai pada transaksi'); return; }
+    if (!confirm(`Yakin ingin menghapus subkategori "${subName}"?`)) return;
     
     const cat = state.categories.find(c => c.category === catName);
     if (cat) cat.subcategories = cat.subcategories.filter(s => s !== subName);
@@ -1101,7 +1135,7 @@
     const key = catName + '|' + subName;
     if (state.budgets) delete state.budgets[key];
 
-    saveState(); renderCategories(); toast('Subcategory deleted');
+    saveState(); renderCategories(); toast('Subkategori dihapus');
   }
   
   /* ============ ACCOUNTS ============ */
@@ -1110,9 +1144,9 @@
     const el = document.getElementById('view-accounts');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Accounts</h2><p class="sub">Balances are calculated dynamically. Editing current balance will automatically adjust opening entry.</p></div>
+        <div><h2>Akun</h2><p class="sub">Saldo dihitung otomatis. Mengubah saldo saat ini akan menyesuaikan data saldo awal.</p></div>
         <div class="section-head-actions">
-          <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Add Account</button>
+          <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Tambah Akun</button>
         </div>
       </div>
       <div class="acct-grid">
@@ -1125,13 +1159,13 @@
             <div class="acct-name">${esc(a.name)}</div>
             <div class="acct-balance">${fmtCurrency(accBal[a.name]||0)}</div>
             <div class="row-actions" style="justify-content:flex-end;">
-              <button data-editacct="${esc(a.name)}" title="Edit">${icon('edit')}</button>
-              <button data-dupacct="${esc(a.name)}" title="Duplicate">${icon('copy')}</button>
-              <button data-delacct="${esc(a.name)}" class="del" title="Delete">${icon('trash')}</button>
+              <button data-editacct="${esc(a.name)}" title="Ubah">${icon('edit')}</button>
+              <button data-dupacct="${esc(a.name)}" title="Duplikat">${icon('copy')}</button>
+              <button data-delacct="${esc(a.name)}" class="del" title="Hapus">${icon('trash')}</button>
             </div>
           </div>
         `).join('')}
-        ${state.accounts.length === 0 ? emptyHtml('No accounts yet. Click "Add Account" to get started.') : ''}
+        ${state.accounts.length === 0 ? emptyHtml('Belum ada akun. Klik "Tambah Akun" untuk mulai.') : ''}
       </div>
     `;
     
@@ -1184,25 +1218,25 @@
   
   function deleteAcct(name){
     const used = state.transactions.some(t=>t.account===name || t.transferTo===name);
-    if(used){ toast('Cannot delete account: still used in transactions'); return; }
-    if(!confirm(`Delete account "${name}"?`)) return;
+    if(used){ toast('Gagal: Akun masih digunakan pada transaksi'); return; }
+    if(!confirm(`Hapus akun "${name}"?`)) return;
     state.accounts = state.accounts.filter(a=>a.name!==name);
     saveState();
     renderAccounts();
-    toast('Account deleted');
+    toast('Akun dihapus');
   }
 
   function duplicateAcct(name){
     const { accBal } = computeLedger();
     const a = state.accounts.find(x=>x.name===name);
     if(!a) return;
-    const newName = prompt('Enter name for duplicated account:', a.name + ' Copy');
+    const newName = prompt('Nama untuk akun duplikat:', a.name + ' Copy');
     if(!newName || newName.trim() === '') return;
     if(state.accounts.some(x=>x.name.toLowerCase()===newName.trim().toLowerCase())){
-        toast('Account name already exists'); return;
+        toast('Nama akun sudah ada'); return;
     }
     state.accounts.push({ name: newName.trim(), type: a.type, opening: accBal[a.name] || 0 });
-    saveState(); renderAccounts(); toast('Account duplicated');
+    saveState(); renderAccounts(); toast('Akun diduplikat');
   }
   
   function openAcctModal(name){
@@ -1210,7 +1244,7 @@
     const { accBal } = computeLedger();
     const a = name ? state.accounts.find(x=>x.name===name) : null;
     
-    document.getElementById('acctModalTitle').textContent = name ? 'Edit Account' : 'Add Account';
+    document.getElementById('acctModalTitle').textContent = name ? 'Ubah Akun' : 'Tambah Akun';
     document.getElementById('acctName').value = a ? a.name : '';
     document.getElementById('acctType').value = a ? a.type : 'bank';
     
@@ -1226,14 +1260,14 @@
     const type = document.getElementById('acctType').value;
     const currentBalanceTarget = Number(document.getElementById('acctBalance').value)||0;
     
-    if(!name){ toast('Account name is required'); return; }
+    if(!name){ toast('Nama akun wajib diisi'); return; }
     
     if(editingAcctName){
       const { accBal } = computeLedger();
       const idx = state.accounts.findIndex(a=>a.name===editingAcctName);
       
       if(editingAcctName!==name && state.accounts.some(a=>a.name===name)){
-         toast('Account name already used'); return; 
+         toast('Nama akun sudah ada'); return; 
       }
       
       const oldCurrentBalance = accBal[editingAcctName] || 0;
@@ -1250,11 +1284,11 @@
       state.accounts[idx].type = type;
       state.accounts[idx].opening = (Number(state.accounts[idx].opening) || 0) + difference;
       
-      toast('Account updated');
+      toast('Akun diperbarui');
     } else {
-      if(state.accounts.some(a=>a.name===name)){ toast('Account name already used'); return; }
+      if(state.accounts.some(a=>a.name===name)){ toast('Nama akun sudah ada'); return; }
       state.accounts.push({ name, type, opening: currentBalanceTarget });
-      toast('Account added');
+      toast('Akun ditambahkan');
     }
     
     saveState();
@@ -1270,7 +1304,7 @@
     a.href = url; a.download = `money-manager-${todayStr()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
-    toast('Data exported');
+    toast('Data diekspor');
   }
   function importData(file){
     const reader = new FileReader();
@@ -1281,19 +1315,19 @@
         state = parsed;
         saveState();
         renderCurrentTab();
-        toast('Data imported successfully');
+        toast('Data berhasil diimpor');
       }catch(e){
-        toast('Failed to import: invalid file');
+        toast('Gagal mengimpor: file tidak valid');
       }
     };
     reader.readAsText(file);
   }
   function resetData(){
-    if(!confirm('Reset to demo data? All local changes will be lost.')) return;
+    if(!confirm('Reset data ini? Transaksi dan akun akan dihapus.')) return;
     state = JSON.parse(JSON.stringify(SEED));
     saveState();
     renderCurrentTab();
-    toast('Data reset to defaults');
+    toast('Data direset');
   }
   
   /* ============ INIT ============ */
