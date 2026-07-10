@@ -68,6 +68,10 @@ html {
   background: var(--ink-muted);
 }
 
+/* Menghilangkan tombol segitiga/panah atas dan bawah */
+::-webkit-scrollbar-button {
+  display: none;
+}
 /* subtle graph-paper texture behind everything */
 .paper-texture{
   position:fixed; inset:0; pointer-events:none; z-index:0;
