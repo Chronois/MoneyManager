@@ -357,6 +357,7 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .cat-section:hover .cat-actions { opacity: 1; }
 .cat-icon-edit { cursor: pointer; transition: opacity .15s ease; display: inline-block; }
 .cat-icon-edit:hover { opacity: 0.6; transform: scale(1.1); }
+.cat-type-tag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; background: var(--paper-2); color: var(--ink-muted); border-radius: 6px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* ---------- Table Filters ---------- */
 .table-filter-row td { padding: 8px 10px; background: var(--paper-2); border-bottom: 2px solid var(--border); }
@@ -369,7 +370,7 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .budget-row .amounts { margin-right: 12px; }
 
 /* ---------- Full Emoji Picker Popover & Custom Recent ---------- */
-.emoji-dropdown-wrap { position: relative; }
+.emoji-dropdown-wrap { position: relative; width: 100%; }
 .emoji-selector-btn { 
   font-size: 26px; padding: 6px 16px; cursor: pointer; 
   text-align: center; width: max-content; 
