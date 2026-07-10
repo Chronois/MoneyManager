@@ -699,8 +699,9 @@
             let cIcon = '📁';
             if(k.includes('|')) {
                 const [c, s] = k.split('|');
-                cIcon = catIcon(c);
-                label = `${c} ➔ ${s}`;
+                const parts = splitSub(s);
+                cIcon = parts.icon;
+                label = parts.name;
             } else {
                 cIcon = catIcon(k);
             }
@@ -876,6 +877,11 @@
 
   // --- Category & Subcategory Modals Logic ---
 
+  function setEmojiPicker(btnId, inputId, emoji) {
+    document.getElementById(inputId).value = emoji;
+    document.getElementById(btnId).textContent = emoji;
+  }
+
   function renderRecentEmojis() {
     const recents = state.recentEmojis || ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
     const html = recents.map(e => `<button type="button" class="recent-btn" onclick="window.selectRecentEmoji('${e}')">${e}</button>`).join('');
@@ -897,8 +903,7 @@
   };
 
   function handleEmojiSelect(btnId, inputId, emoji) {
-    document.getElementById(inputId).value = emoji;
-    document.getElementById(btnId).textContent = emoji;
+    setEmojiPicker(btnId, inputId, emoji);
     
     // Manage Custom Recent Array
     if (!state.recentEmojis) state.recentEmojis = [];
