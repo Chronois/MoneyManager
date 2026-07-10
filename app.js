@@ -1096,7 +1096,7 @@ function renderBalance(){
   const el = document.getElementById('view-balance');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Monthly Balance</h2><p class="sub">Automatically Calculated Monthly Cash Flow Summary</p></div>
+      <div><h2>Monthly Balance</h2><p class="sub">Automatically calculated monthly cash flow summary</p></div>
     </div>
     <div class="card card-pad" style="margin-bottom:18px;">
       <p class="panel-title">End of Month Balance Trend</p>
