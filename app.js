@@ -786,7 +786,7 @@ function renderSubcategoryBarBlock(monthTx){
   const max = top[0][1];
   
   let html = '<div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 12px;">';
-  html += '<p class="panel-title" style="font-size:13.5px; margin-bottom:4px;">Comparison Details</p>';
+  html += '<p class="panel-title" style="font-size:13.5px; margin-bottom:4px;">Details</p>';
   
   top.forEach(([sub,val], i) => {
     const parts = splitSub(sub);
