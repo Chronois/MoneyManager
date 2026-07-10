@@ -2,15 +2,16 @@
    MONEY MANAGER — app logic
    ============================================================ */
 
-   const SEED = {"transactions": [{"id": 1, "date": "2026-03-02", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Ayam - TO", "expense": 13000, "transferTo": "", "income": 0}, {"id": 2, "date": "2026-03-02", "account": "GoPay", "category": "Lifestyle", "subcategory": "💸Game", "note": "Top Up HSR", "expense": 176490, "transferTo": "", "income": 0}, {"id": 3, "date": "2026-03-03", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Padang - Ibra", "expense": 13000, "transferTo": "", "income": 0}, {"id": 4, "date": "2026-03-04", "account": "BNI", "category": "Daily Necessities", "subcategory": "🫙Food & Drink Container(s)", "note": "Ecentio Kotak Makan", "expense": 37050, "transferTo": "", "income": 0}], "categories": [{"category": "Food & Beverages", "subcategories": ["🍽️Main Meal", "🥛Drink", "🥯Snack", "🍌Fruits", "🍅Vegetables", "👨‍🍳Cooking ingredients", "🛵 Dining Out"]}, {"category": "Transportation", "subcategories": ["🏍️Motorcycle", "🚕Car", "🚌Bus", "🚐 Angkot", "🚅Train", "🚐 Travel", "⛽ Gasoline", "🛣️ Toll", "🅿️ Parking", "💳E-Money Card"]}, {"category": "Lifestyle", "subcategories": ["📈Trend", "💸Game", "🎲 Toys", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription", "💻 Laptop Maintenance"]}, {"category": "Daily Necessities", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🫖 Water Gallon", "🪙Electricity Token", "🫙Food & Drink Container(s)", "🌐 Internet"]}, {"category": "Clothes", "subcategories": ["👕Shirt", "👖Pants", "🧥Jacket", "🥼Functional Clothing"]}, {"category": "Accessory", "subcategories": ["🧢Hat", "⌚Watch", "🗝️Keychain"]}, {"category": "Beauty", "subcategories": ["🧴Skincare", "✂️ Haircut"]}, {"category": "Health", "subcategories": ["💆Massage", "🏥 Pharmacy", "🩺 Medical Service"]}, {"category": "Education", "subcategories": ["📚Book"]}, {"category": "Present", "subcategories": ["👨‍👩‍👦‍👦For Family", "🎁 Gift"]}, {"category": "Accounts Receivable", "subcategories": ["🧾Receivable"]}, {"category": "Accounts Payable", "subcategories": ["💰Debt"]}, {"category": "Allowance", "subcategories": ["💵Allowance"]}, {"category": "Salary", "subcategories": ["💎Salary"]}, {"category": "Bonus", "subcategories": ["👛Bonus", "🪙THR"]}, {"category": "Adjustment", "subcategories": ["✏️ Error Correction"]}], "accounts": [{"name": "BNI", "type": "bank", "opening": 2359114}, {"name": "BNI 2", "type": "bank", "opening": 4232269}, {"name": "GoPay", "type": "ewallet", "opening": 210320}, {"name": "SeaBank", "type": "bank", "opening": 25293}, {"name": "ShopeePay", "type": "ewallet", "opening": 16000}, {"name": "Cash", "type": "cash", "opening": 12000}, {"name": "Dana", "type": "ewallet", "opening": 4274}, {"name": "Steam Wallet", "type": "ewallet", "opening": 0}, {"name": "Taplus", "type": "bank", "opening": 0}], "budgets": {"Food & Beverages": 1500000, "Transportation": 500000, "Lifestyle": 400000, "Daily Necessities": 300000, "Clothes": 200000}};
+   const SEED = {"transactions": [{"id": 1, "date": "2026-03-02", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Ayam - TO", "expense": 13000, "transferTo": "", "income": 0}, {"id": 2, "date": "2026-03-02", "account": "GoPay", "category": "Lifestyle", "subcategory": "💸Game", "note": "Top Up HSR", "expense": 176490, "transferTo": "", "income": 0}, {"id": 3, "date": "2026-03-03", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Padang - Ibra", "expense": 13000, "transferTo": "", "income": 0}, {"id": 4, "date": "2026-03-04", "account": "BNI", "category": "Daily Necessities", "subcategory": "🫙Food & Drink Container(s)", "note": "Ecentio Kotak Makan", "expense": 37050, "transferTo": "", "income": 0}], "categories": [{"category": "Food & Beverages", "subcategories": ["🍽️Main Meal", "🥛Drink", "🥯Snack", "🍌Fruits", "🍅Vegetables", "👨‍🍳Cooking ingredients", "🛵 Dining Out"]}, {"category": "Transportation", "subcategories": ["🏍️Motorcycle", "🚕Car", "🚌Bus", "🚐 Angkot", "🚅Train", "🚐 Travel", "⛽ Gasoline", "🛣️ Toll", "🅿️ Parking", "💳E-Money Card"]}, {"category": "Lifestyle", "subcategories": ["📈Trend", "💸Game", "🎲 Toys", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription", "💻 Laptop Maintenance"]}, {"category": "Daily Necessities", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🫖 Water Gallon", "🪙Electricity Token", "🫙Food & Drink Container(s)", "🌐 Internet"]}, {"category": "Clothes", "subcategories": ["👕Shirt", "👖Pants", "🧥Jacket", "🥼Functional Clothing"]}, {"category": "Accessory", "subcategories": ["🧢Hat", "⌚Watch", "🗝️Keychain"]}, {"category": "Beauty", "subcategories": ["🧴Skincare", "✂️ Haircut"]}, {"category": "Health", "subcategories": ["💆Massage", "🏥 Pharmacy", "🩺 Medical Service"]}, {"category": "Education", "subcategories": ["📚Book"]}, {"category": "Present", "subcategories": ["👨‍👩‍👦‍👦For Family", "🎁 Gift"]}, {"category": "Accounts Receivable", "subcategories": ["🧾Receivable"]}, {"category": "Accounts Payable", "subcategories": ["💰Debt"]}, {"category": "Allowance", "subcategories": ["💵Allowance"]}, {"category": "Salary", "subcategories": ["💎Salary"]}, {"category": "Bonus", "subcategories": ["👛Bonus", "🪙THR"]}, {"category": "Adjustment", "subcategories": ["✏️ Error Correction"]}], "accounts": [{"name": "BNI", "type": "bank", "opening": 2359114}, {"name": "BNI 2", "type": "bank", "opening": 4232269}, {"name": "GoPay", "type": "ewallet", "opening": 210320}, {"name": "SeaBank", "type": "digital", "opening": 25293}, {"name": "ShopeePay", "type": "ewallet", "opening": 16000}, {"name": "Cash", "type": "cash", "opening": 12000}, {"name": "Dana", "type": "ewallet", "opening": 4274}, {"name": "Steam Wallet", "type": "ewallet", "opening": 0}, {"name": "Taplus", "type": "bank", "opening": 0}], "budgets": {"Food & Beverages": 1500000, "Transportation": 500000, "Lifestyle": 400000, "Daily Necessities": 300000, "Clothes": 200000}};
   const STORAGE_KEY = 'mm_money_manager_v1';
   
-  const CATEGORY_ICONS = {
+  // Fallback if category has no icon saved in state
+  const CATEGORY_ICONS_FALLBACK = {
     'Food & Beverages':'🍽️','Transportation':'🚗','Lifestyle':'🎯','Daily Necessities':'🧺',
     'Clothes':'👕','Accessory':'💍','Beauty':'💄','Health':'🩺','Education':'📚','Present':'🎁',
     'Accounts Receivable':'🧾','Accounts Payable':'💳','Allowance':'💵','Salary':'💎','Bonus':'🪙','Adjustment':'✏️'
   };
-  const ACCOUNT_ICONS = { bank:'🏦', ewallet:'📱', cash:'💵' };
+  const ACCOUNT_ICONS = { bank:'🏦', digital: '📱', ewallet:'💳', cash:'💵' };
   const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA8','#4B85A6','#B0784F','#6D8C63','#A6555F','#5E9C8C','#9C8A5C','#7A9E4C','#C97F9E','#5A7DA6','#A88B4C'];
   const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -34,19 +35,27 @@
   let editingAcctName = null;
   let txnType = 'expense';
   let currentTab = 'dashboard';
-  let filters = { account:'', category:'', type:'', q:'', from:'', to:'' };
+  let filters = { account:'', category:'', type:'', q:'', date:'' };
   let txnPage = 0;
   const PAGE_SIZE = 40;
   
   function loadState(){
+    let parsed = JSON.parse(JSON.stringify(SEED));
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw){
-        const parsed = JSON.parse(raw);
-        if(parsed && Array.isArray(parsed.transactions)) return parsed;
+        const userState = JSON.parse(raw);
+        if(userState && Array.isArray(userState.transactions)) parsed = userState;
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
-    return JSON.parse(JSON.stringify(SEED));
+    
+    // Migration: ensure every category has an icon
+    if(parsed.categories){
+      parsed.categories.forEach(c => {
+        if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '💠';
+      });
+    }
+    return parsed;
   }
   function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   
@@ -68,8 +77,10 @@
   function todayStr(){ const d = new Date(); return d.toISOString().slice(0,10); }
   function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function catIcon(cat){ return CATEGORY_ICONS[cat] || '💠'; }
-  function subLabel(sub){ return sub || '—'; }
+  function catIcon(cat){ 
+    const c = state.categories.find(x => x.category === cat);
+    return c && c.icon ? c.icon : '💠'; 
+  }
   
   /* ============ LEDGER ENGINE ============ */
   function computeLedger(){
@@ -178,7 +189,8 @@
     { id:'dashboard', label:'Dashboard' },
     { id:'transactions', label:'Transactions' },
     { id:'balance', label:'Monthly Balance' },
-    { id:'categories', label:'Categories & Budgets' },
+    { id:'budgets', label:'Budgets' },
+    { id:'categories', label:'Categories' },
     { id:'accounts', label:'Accounts' },
   ];
   function renderNav(){
@@ -197,6 +209,7 @@
     if(currentTab==='dashboard') renderDashboard();
     else if(currentTab==='transactions') renderTransactions();
     else if(currentTab==='balance') renderBalance();
+    else if(currentTab==='budgets') renderBudgets();
     else if(currentTab==='categories') renderCategories();
     else if(currentTab==='accounts') renderAccounts();
   }
@@ -338,8 +351,7 @@
     }
     if(filters.account) list = list.filter(t=>t.account===filters.account);
     if(filters.category) list = list.filter(t=>t.category===filters.category);
-    if(filters.from) list = list.filter(t=>t.date>=filters.from);
-    if(filters.to) list = list.filter(t=>t.date<=filters.to);
+    if(filters.date) list = list.filter(t=>t.date===filters.date);
     if(filters.q){
       const q = filters.q.toLowerCase();
       list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q));
@@ -357,33 +369,42 @@
           <button class="btn btn-primary" id="btnAddTxn">${icon('plus')}Add Transaction</button>
         </div>
       </div>
-      <div class="filters">
-        <div class="field"><label>Type</label>
-          <select class="input" id="fType">
-            <option value="">All</option>
-            <option value="income" ${filters.type==='income'?'selected':''}>Income</option>
-            <option value="expense" ${filters.type==='expense'?'selected':''}>Expense</option>
-            <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
-          </select>
-        </div>
-        <div class="field"><label>Account</label>
-          <select class="input" id="fAccount"><option value="">All</option>${state.accounts.map(a=>`<option value="${esc(a.name)}" ${filters.account===a.name?'selected':''}>${esc(a.name)}</option>`).join('')}</select>
-        </div>
-        <div class="field"><label>Category</label>
-          <select class="input" id="fCategory"><option value="">All</option>${state.categories.map(c=>`<option value="${esc(c.category)}" ${filters.category===c.category?'selected':''}>${esc(c.category)}</option>`).join('')}</select>
-        </div>
-        <div class="field"><label>From</label><input type="date" class="input" id="fFrom" value="${filters.from}"></div>
-        <div class="field"><label>To</label><input type="date" class="input" id="fTo" value="${filters.to}"></div>
-        <div class="field search-field"><label>Search note</label><input type="text" class="input" id="fSearch" placeholder="e.g. Lunch" value="${esc(filters.q)}"></div>
-        <div class="field"><label>&nbsp;</label><button class="btn btn-ghost btn-sm" id="fClear">Reset filter</button></div>
-      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
-            <th style="text-align:right">Income</th><th style="text-align:right">Expense</th>
-            <th>Transfer To</th><th style="text-align:right">Balance</th><th style="text-align:right">Acct Bal</th><th></th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
+              <th style="text-align:right">Type</th><th style="text-align:right">Amount</th>
+              <th>Transfer To</th><th style="text-align:right">Balance</th><th style="text-align:right">Acct Bal</th><th></th>
+            </tr>
+            <tr class="table-filter-row">
+              <td><input type="date" class="input" id="fDate" value="${filters.date}" title="Filter by Date"></td>
+              <td></td>
+              <td>
+                <select class="input" id="fAccount">
+                  <option value="">All</option>
+                  ${state.accounts.map(a=>`<option value="${esc(a.name)}" ${filters.account===a.name?'selected':''}>${esc(a.name)}</option>`).join('')}
+                </select>
+              </td>
+              <td>
+                <select class="input" id="fCategory">
+                  <option value="">All</option>
+                  ${state.categories.map(c=>`<option value="${esc(c.category)}" ${filters.category===c.category?'selected':''}>${esc(c.category)}</option>`).join('')}
+                </select>
+              </td>
+              <td><input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}"></td>
+              <td style="text-align:right">
+                <select class="input" id="fType">
+                  <option value="">All</option>
+                  <option value="income" ${filters.type==='income'?'selected':''}>Income</option>
+                  <option value="expense" ${filters.type==='expense'?'selected':''}>Expense</option>
+                  <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
+                </select>
+              </td>
+              <td colspan="4"></td>
+              <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Clear</button></td>
+            </tr>
+          </thead>
           <tbody>
             ${pageList.map(t=>txnRowHtml(t)).join('') || `<tr><td colspan="11"><div class="empty">${icon('wallet')}<div>No matching transactions</div></div></td></tr>`}
           </tbody>
@@ -402,10 +423,9 @@
     document.getElementById('fType').addEventListener('change', e=>{ filters.type=e.target.value; txnPage=0; renderTransactions(); });
     document.getElementById('fAccount').addEventListener('change', e=>{ filters.account=e.target.value; txnPage=0; renderTransactions(); });
     document.getElementById('fCategory').addEventListener('change', e=>{ filters.category=e.target.value; txnPage=0; renderTransactions(); });
-    document.getElementById('fFrom').addEventListener('change', e=>{ filters.from=e.target.value; txnPage=0; renderTransactions(); });
-    document.getElementById('fTo').addEventListener('change', e=>{ filters.to=e.target.value; txnPage=0; renderTransactions(); });
+    document.getElementById('fDate').addEventListener('change', e=>{ filters.date=e.target.value; txnPage=0; renderTransactions(); });
     document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
-    document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',from:'',to:''}; txnPage=0; renderTransactions(); });
+    document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',date:''}; txnPage=0; renderTransactions(); });
     document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
     document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
     
@@ -416,14 +436,19 @@
   
   function txnRowHtml(t){
     const isTransfer = !!t.transferTo;
+    const isIncome = !isTransfer && t.income > 0;
+    const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
+    const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
+    const typeLabel = isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense');
+    
     return `<tr>
       <td>${fmtDateShort(t.date)}</td>
       <td>${dayName(t.date)}</td>
       <td>${esc(t.account)}</td>
       <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
       <td class="note-cell" title="${esc(t.note)} ${esc(t.subcategory)}">${esc(t.note) || esc(t.subcategory) || '—'}</td>
-      <td class="num pos">${t.income? fmtCurrency(t.income):'—'}</td>
-      <td class="num neg">${t.expense? fmtCurrency(t.expense):'—'}</td>
+      <td style="text-align:right"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
+      <td class="num ${color}">${fmtCurrency(amt)}</td>
       <td>${isTransfer? esc(t.transferTo) : '—'}</td>
       <td class="num">${fmtCurrency(t.runningBalance)}</td>
       <td class="num">${fmtCurrency(t.runningAccountBalance)}</td>
@@ -567,8 +592,8 @@
     `;
   }
   
-  /* ============ CATEGORIES & BUDGETS ============ */
-  function renderCategories(){
+  /* ============ BUDGETS ============ */
+  function renderBudgets() {
     const { enriched } = computeLedger();
     const nowKey = todayStr().slice(0,7);
     const spendByCat = {};
@@ -576,25 +601,22 @@
       spendByCat[t.category] = (spendByCat[t.category]||0) + (t.expense||0);
     });
   
-    const el = document.getElementById('view-categories');
+    const el = document.getElementById('view-budgets');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Categories & Budgets</h2><p class="sub">Manage categories and monitor monthly budgets · ${fmtMonthLabel(nowKey)}</p></div>
-        <div class="section-head-actions">
-          <button class="btn" id="btnAddCat">${icon('plus')}New Category</button>
-        </div>
+        <div><h2>Budgets</h2><p class="sub">Monitor monthly spending limits · ${fmtMonthLabel(nowKey)}</p></div>
       </div>
   
       <div class="card card-pad" style="margin-bottom:20px;">
-        <p class="panel-title">Monthly Budget</p>
-        <p class="panel-sub">Set spending limits per category — set to 0 to disable</p>
+        <p class="panel-title">Monthly Budgets</p>
+        <p class="panel-sub">Set spending limits per category — set to 0 to disable tracking for that category.</p>
         <div class="budget-list">
           ${state.categories.map(c=>{
             const budget = (state.budgets && state.budgets[c.category]) || 0;
             const spend = spendByCat[c.category] || 0;
             const pct = budget>0 ? Math.min(100, Math.round(spend/budget*100)) : 0;
             const over = budget>0 && spend>budget;
-            if(budget<=0 && spend<=0) return '';
+            if(budget<=0 && spend<=0) return ''; // Hide unbudgeted unused categories
             return `<div class="budget-row">
               <div class="budget-top">
                 <span class="cat-label">${catIcon(c.category)} ${esc(c.category)}</span>
@@ -602,11 +624,32 @@
               </div>
               <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${budget>0?pct:0}%"></div></div>
             </div>`;
-          }).join('') || emptyHtml('No budgets configured')}
+          }).join('') || emptyHtml('No active budgets')}
+        </div>
+      </div>
+    `;
+    
+    el.querySelectorAll('[data-budget]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        state.budgets = state.budgets || {};
+        state.budgets[inp.dataset.budget] = Number(inp.value)||0;
+        saveState(); renderBudgets(); toast('Budget saved');
+      });
+    });
+  }
+
+  /* ============ CATEGORIES ============ */
+  function renderCategories(){
+    const el = document.getElementById('view-categories');
+    el.innerHTML = `
+      <div class="section-head">
+        <div><h2>Categories</h2><p class="sub">Manage and organize your transaction categories</p></div>
+        <div class="section-head-actions">
+          <button class="btn" id="btnAddCat">${icon('plus')}New Category</button>
         </div>
       </div>
   
-      <div id="catList">
+      <div id="catList" class="card card-pad">
         ${state.categories.map(c=>`
           <div class="cat-section">
             <h4>
@@ -632,20 +675,11 @@
       </div>
     `;
   
-    // Budgets
-    el.querySelectorAll('[data-budget]').forEach(inp=>{
-      inp.addEventListener('change', ()=>{
-        state.budgets = state.budgets || {};
-        state.budgets[inp.dataset.budget] = Number(inp.value)||0;
-        saveState(); renderCategories(); toast('Budget saved');
-      });
-    });
-  
     // Add Subcategory
     el.querySelectorAll('[data-addsub]').forEach(b=>{
       b.addEventListener('click', ()=>{
         const cat = b.dataset.addsub;
-        const name = prompt(`New subcategory name for "${cat}" (emojis allowed):`);
+        const name = prompt(`New subcategory name for "${cat}":`);
         if(!name) return;
         const catObj = state.categories.find(c=>c.category===cat);
         if(catObj.subcategories.includes(name.trim())){ toast('Subcategory already exists'); return; }
@@ -659,7 +693,8 @@
       const name = prompt('New category name:');
       if(!name) return;
       if(state.categories.some(c=>c.category.toLowerCase()===name.trim().toLowerCase())){ toast('Category already exists'); return; }
-      state.categories.push({ category:name.trim(), subcategories:[] });
+      const newIcon = prompt('Enter an emoji icon for this category (e.g. 🍔):', '📁');
+      state.categories.push({ category:name.trim(), icon: newIcon || '📁', subcategories:[] });
       saveState(); renderCategories(); toast('Category added');
     });
   
@@ -685,18 +720,29 @@
   
   // Category Actions
   function editCategory(oldName) {
+    const cat = state.categories.find(c => c.category === oldName);
+    if (!cat) return;
+    
     const newName = prompt('Enter new category name:', oldName);
-    if (!newName || newName.trim() === '' || newName === oldName) return;
-    if (state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
+    if (!newName || newName.trim() === '') return;
+    
+    const newIcon = prompt('Enter new emoji icon:', cat.icon || '📁');
+    
+    if (newName.trim() !== oldName && state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
         toast('Category name already exists'); return;
     }
-    const cat = state.categories.find(c => c.category === oldName);
-    if (cat) cat.category = newName.trim();
-    if (state.budgets && state.budgets[oldName] !== undefined) {
+    
+    cat.category = newName.trim();
+    cat.icon = newIcon || cat.icon;
+
+    if (state.budgets && state.budgets[oldName] !== undefined && newName.trim() !== oldName) {
         state.budgets[newName.trim()] = state.budgets[oldName];
         delete state.budgets[oldName];
     }
-    state.transactions.forEach(t => { if (t.category === oldName) t.category = newName.trim(); });
+    if (newName.trim() !== oldName) {
+        state.transactions.forEach(t => { if (t.category === oldName) t.category = newName.trim(); });
+    }
+    
     saveState(); renderCategories(); toast('Category updated');
   }
   
@@ -708,7 +754,7 @@
     if (state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
         toast('Category name already exists'); return;
     }
-    state.categories.push({ category: newName.trim(), subcategories: [...cat.subcategories] });
+    state.categories.push({ category: newName.trim(), icon: cat.icon, subcategories: [...cat.subcategories] });
     saveState(); renderCategories(); toast('Category duplicated');
   }
   
@@ -751,7 +797,7 @@
     const el = document.getElementById('view-accounts');
     el.innerHTML = `
       <div class="section-head">
-        <div><h2>Accounts</h2><p class="sub">Balances are calculated dynamically from opening balance + transactions</p></div>
+        <div><h2>Accounts</h2><p class="sub">Balances are calculated dynamically. Editing current balance will automatically adjust opening entry.</p></div>
         <div class="section-head-actions">
           <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Add Account</button>
         </div>
@@ -767,6 +813,7 @@
             <div class="acct-balance">${fmtCurrency(accBal[a.name]||0)}</div>
             <div class="row-actions" style="justify-content:flex-end;">
               <button data-editacct="${esc(a.name)}" title="Edit">${icon('edit')}</button>
+              <button data-dupacct="${esc(a.name)}" title="Duplicate">${icon('copy')}</button>
               <button data-delacct="${esc(a.name)}" class="del" title="Delete">${icon('trash')}</button>
             </div>
           </div>
@@ -775,6 +822,7 @@
     `;
     document.getElementById('btnAddAcct').addEventListener('click', ()=> openAcctModal());
     el.querySelectorAll('[data-editacct]').forEach(b=> b.addEventListener('click', ()=> openAcctModal(b.dataset.editacct)));
+    el.querySelectorAll('[data-dupacct]').forEach(b=> b.addEventListener('click', ()=> duplicateAcct(b.dataset.dupacct)));
     el.querySelectorAll('[data-delacct]').forEach(b=> b.addEventListener('click', ()=> deleteAcct(b.dataset.delacct)));
   }
   
@@ -787,38 +835,73 @@
     renderAccounts();
     toast('Account deleted');
   }
+
+  function duplicateAcct(name){
+    const { accBal } = computeLedger();
+    const a = state.accounts.find(x=>x.name===name);
+    if(!a) return;
+    const newName = prompt('Enter name for duplicated account:', a.name + ' Copy');
+    if(!newName || newName.trim() === '') return;
+    if(state.accounts.some(x=>x.name.toLowerCase()===newName.trim().toLowerCase())){
+        toast('Account name already exists'); return;
+    }
+    state.accounts.push({ name: newName.trim(), type: a.type, opening: accBal[a.name] || 0 });
+    saveState(); renderAccounts(); toast('Account duplicated');
+  }
   
   function openAcctModal(name){
     editingAcctName = name || null;
+    const { accBal } = computeLedger();
     const a = name ? state.accounts.find(x=>x.name===name) : null;
+    
     document.getElementById('acctModalTitle').textContent = name ? 'Edit Account' : 'Add Account';
     document.getElementById('acctName').value = a ? a.name : '';
     document.getElementById('acctType').value = a ? a.type : 'bank';
-    document.getElementById('acctOpening').value = a ? a.opening : 0;
+    
+    // Bind to current balance visually instead of purely opening logic
+    document.getElementById('acctBalance').value = a ? (accBal[a.name] || 0) : 0;
+    
     document.getElementById('acctModalOverlay').classList.add('open');
     document.getElementById('acctName').focus();
   }
   function closeAcctModal(){ document.getElementById('acctModalOverlay').classList.remove('open'); }
+  
   function saveAcctForm(){
     const name = document.getElementById('acctName').value.trim();
     const type = document.getElementById('acctType').value;
-    const opening = Number(document.getElementById('acctOpening').value)||0;
+    const currentBalanceTarget = Number(document.getElementById('acctBalance').value)||0;
+    
     if(!name){ toast('Account name is required'); return; }
+    
     if(editingAcctName){
+      const { accBal } = computeLedger();
       const idx = state.accounts.findIndex(a=>a.name===editingAcctName);
+      
+      if(editingAcctName!==name && state.accounts.some(a=>a.name===name)){
+         toast('Account name already used'); return; 
+      }
+      
+      const oldCurrentBalance = accBal[editingAcctName] || 0;
+      const difference = currentBalanceTarget - oldCurrentBalance;
+
       if(editingAcctName!==name){
         state.transactions.forEach(t=>{
           if(t.account===editingAcctName) t.account=name;
           if(t.transferTo===editingAcctName) t.transferTo=name;
         });
       }
-      state.accounts[idx] = { name, type, opening };
+      
+      state.accounts[idx].name = name;
+      state.accounts[idx].type = type;
+      state.accounts[idx].opening = (Number(state.accounts[idx].opening) || 0) + difference;
+      
       toast('Account updated');
     } else {
       if(state.accounts.some(a=>a.name===name)){ toast('Account name already used'); return; }
-      state.accounts.push({ name, type, opening });
+      state.accounts.push({ name, type, opening: currentBalanceTarget });
       toast('Account added');
     }
+    
     saveState();
     closeAcctModal();
     renderCurrentTab();
