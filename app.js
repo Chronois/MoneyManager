@@ -911,8 +911,9 @@ function renderTransactions(){
 
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
-        <div style="width: 70px; padding: 0 14px; flex-shrink:0; display:flex; align-items:flex-end;">
-           <button class="btn btn-ghost" id="fClear" style="padding: 6px 12px; font-size:12px; height: 32px; margin-bottom: 1px; color: var(--ink-faint);" title="Reset Filters">Reset</button>
+        <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+           <label style="font-size:11px; visibility:hidden; user-select:none;">Reset</label>
+           <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 34px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--paper-2);" title="Reset Filters">Reset</button>
         </div>
     </div>
 
@@ -996,42 +997,6 @@ function renderTransactions(){
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
   el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
-}
-
-function txnRowHtml(t){
-  const isTransfer = !!t.transferTo;
-  const isIncome = !isTransfer && t.income > 0;
-  const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
-  const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
-  const typeLabel = isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense');
-  
-  let displayNote = esc(t.note) || esc(t.subcategory) || '—';
-  if (isTransfer) {
-    displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
-  }
-  
-  return `<tr>
-    <td>${fmtDateShort(t.date)}</td>
-    <td>${dayName(t.date)}</td>
-    <td>${esc(t.account)}</td>
-    <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
-    <td class="note-cell" title="${displayNote}">${displayNote}</td>
-    <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
-    <td class="num ${color}">${fmtCurrency(amt)}</td>
-    <td><div class="row-actions">
-      <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
-      <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
-      <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
-    </div></td>
-  </tr>`;
-}
-
-function deleteTxn(id){
-  if(!confirm('Delete this transaction? This action cannot be undone.')) return;
-  state.transactions = state.transactions.filter(t=>t.id!==id);
-  saveState();
-  renderTransactions();
-  toast('Transaction deleted');
 }
 
 /* ============ TRANSACTION MODAL ============ */
