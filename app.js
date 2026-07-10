@@ -30,6 +30,7 @@ let cloudSyncTimeout = null;
 
 // --- Default Data / Initial Data ---
 const SEED = {
+  "currency": "IDR",
   "transactions": [], 
   "categories": [
     {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
@@ -59,6 +60,16 @@ const ACCOUNT_ICONS = { bank:'🏦', digital: '📱', ewallet:'💳', cash:'💵
 const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA8','#4B85A6','#B0784F','#6D8C63','#A6555F','#5E9C8C','#9C8A5C','#7A9E4C','#C97F9E','#5A7DA6','#A88B4C'];
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Static conversion rates against IDR (Baseline)
+const CURRENCIES = {
+  IDR: { rate: 1, locale: 'id-ID' },
+  USD: { rate: 16200, locale: 'en-US' },
+  EUR: { rate: 17500, locale: 'de-DE' },
+  JPY: { rate: 105, locale: 'ja-JP' },
+  KRW: { rate: 12, locale: 'ko-KR' },
+  CNY: { rate: 2250, locale: 'zh-CN' }
+};
 
 const ICONS = {
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -100,6 +111,8 @@ function loadStateLocal(){
     }
   }catch(e){ console.warn('Failed to load saved data', e); }
   
+  if(!parsed.currency) parsed.currency = 'IDR';
+
   if(parsed.categories){
     parsed.categories.forEach(c => {
       if(!c.icon) c.icon = '📁';
@@ -151,7 +164,9 @@ onAuthStateChanged(auth, async (user) => {
         const cloudData = JSON.parse(docSnap.data().appData);
         if(cloudData && Array.isArray(cloudData.transactions)) {
            state = cloudData;
+           if(!state.currency) state.currency = 'IDR';
            localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
+           document.getElementById('currencySelect').value = state.currency;
            renderCurrentTab();
            toast('Data successfully fetched from Cloud ☁️');
         }
@@ -174,10 +189,21 @@ onAuthStateChanged(auth, async (user) => {
 
 /* ============ HELPERS ============ */
 function fmtCurrency(n){
-  n = Math.round(n||0);
-  const neg = n < 0;
-  return (neg?'-':'') + '$' + Math.abs(n).toLocaleString('en-US');
+  n = Number(n) || 0;
+  const curr = state.currency || 'IDR';
+  const config = CURRENCIES[curr] || CURRENCIES['IDR'];
+  
+  // Calculate converted amount
+  const converted = n / config.rate;
+  
+  return new Intl.NumberFormat(config.locale, {
+    style: 'currency',
+    currency: curr,
+    minimumFractionDigits: (curr === 'IDR' || curr === 'JPY' || curr === 'KRW') ? 0 : 2,
+    maximumFractionDigits: (curr === 'IDR' || curr === 'JPY' || curr === 'KRW') ? 0 : 2
+  }).format(converted);
 }
+
 function fmtDateShort(d){
   const [y,m,day] = d.split('-').map(Number);
   return `${MONTHS_EN[m-1]} ${day}, ${y}`;
@@ -628,7 +654,7 @@ function renderTransactions(){
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
   
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
-  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
+  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true))));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
 
@@ -681,7 +707,16 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
-  document.getElementById('txnAmount').value = t ? (t.transferTo? t.expense : (t.income||t.expense||'')) : '';
+
+  // Get active currency rate
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  if(t) {
+    const rawAmt = t.transferTo ? t.expense : (t.income || t.expense || 0);
+    const val = rawAmt / rate;
+    document.getElementById('txnAmount').value = val % 1 === 0 ? val : val.toFixed(2);
+  } else {
+    document.getElementById('txnAmount').value = '';
+  }
 
   setTxnType(txnType);
 
@@ -742,7 +777,11 @@ function saveTxnForm(){
   const date = document.getElementById('txnDate').value;
   const account = document.getElementById('txnAccount').value;
   const note = document.getElementById('txnNote').value.trim();
-  const amount = Number(document.getElementById('txnAmount').value) || 0;
+  
+  // Calculate value back to IDR to store in database
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  const amount = (Number(document.getElementById('txnAmount').value) || 0) * rate;
+
   if(!date){ toast('Date is required'); return; }
   if(amount<=0){ toast('Amount must be greater than 0'); return; }
 
@@ -895,6 +934,8 @@ function openBudgetModal(key = null) {
   
   let targetCat = expCats[0] ? expCats[0].category : '';
   let targetSub = '';
+  
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
   let amount = '';
   
   if (key) {
@@ -905,7 +946,11 @@ function openBudgetModal(key = null) {
     } else {
         targetCat = key;
     }
-    amount = state.budgets[key];
+    
+    // Convert back from IDR to active currency for editing
+    const rawAmt = state.budgets[key] || 0;
+    const val = rawAmt / rate;
+    amount = val % 1 === 0 ? val : val.toFixed(2);
   }
   
   if (targetCat) selCat.value = targetCat;
@@ -934,7 +979,9 @@ function saveBudgetForm() {
   const oldKey = document.getElementById('budgetOldKey').value;
   const cat = document.getElementById('budgetCategory').value;
   const sub = document.getElementById('budgetSubcategory').value;
-  const amount = Number(document.getElementById('budgetAmount').value);
+  
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  const amount = (Number(document.getElementById('budgetAmount').value) || 0) * rate;
   
   if (amount <= 0) { toast('Amount must be greater than 0'); return; }
   
@@ -1370,7 +1417,14 @@ function openAcctModal(name){
   document.getElementById('acctName').value = a ? a.name : '';
   document.getElementById('acctType').value = a ? a.type : 'bank';
   
-  document.getElementById('acctBalance').value = a ? (accBal[a.name] || 0) : 0;
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  if(a) {
+    const rawBal = accBal[a.name] || 0;
+    const val = rawBal / rate;
+    document.getElementById('acctBalance').value = val % 1 === 0 ? val : val.toFixed(2);
+  } else {
+    document.getElementById('acctBalance').value = 0;
+  }
   
   document.getElementById('acctModalOverlay').classList.add('open');
   document.getElementById('acctName').focus();
@@ -1380,7 +1434,9 @@ function closeAcctModal(){ document.getElementById('acctModalOverlay').classList
 function saveAcctForm(){
   const name = document.getElementById('acctName').value.trim();
   const type = document.getElementById('acctType').value;
-  const currentBalanceTarget = Number(document.getElementById('acctBalance').value)||0;
+  
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  const currentBalanceTarget = (Number(document.getElementById('acctBalance').value) || 0) * rate;
   
   if(!name){ toast('Account name is required'); return; }
   
@@ -1435,6 +1491,8 @@ function importData(file){
       const parsed = JSON.parse(reader.result);
       if(!Array.isArray(parsed.transactions) || !Array.isArray(parsed.accounts)) throw new Error('Invalid format');
       state = parsed;
+      if(!state.currency) state.currency = 'IDR';
+      document.getElementById('currencySelect').value = state.currency;
       saveState();
       renderCurrentTab();
       toast('Data successfully imported');
@@ -1447,6 +1505,7 @@ function importData(file){
 function resetData(){
   if(!confirm('Reset this data? Transactions and accounts will be deleted.')) return;
   state = JSON.parse(JSON.stringify(SEED));
+  document.getElementById('currencySelect').value = state.currency;
   saveState();
   renderCurrentTab();
   toast('Data reset');
@@ -1513,6 +1572,19 @@ function init(){
   initTheme();
   renderNav();
   document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
+  
+  // Set up Currency Selector
+  const currSelect = document.getElementById('currencySelect');
+  if(currSelect) {
+    currSelect.value = state.currency || 'IDR';
+    currSelect.addEventListener('change', (e) => {
+      state.currency = e.target.value;
+      saveState();
+      renderCurrentTab();
+      toast(`Currency changed to ${state.currency}`);
+    });
+  }
+
   renderCurrentTab();
   
   setTimeout(initEmojiPicker, 500); 
