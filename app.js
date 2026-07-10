@@ -5,6 +5,9 @@
    const SEED = {"transactions": [{"id": 1, "date": "2026-03-02", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Ayam - TO", "expense": 13000, "transferTo": "", "income": 0}, {"id": 2, "date": "2026-03-02", "account": "GoPay", "category": "Lifestyle", "subcategory": "💸Game", "note": "Top Up HSR", "expense": 176490, "transferTo": "", "income": 0}, {"id": 3, "date": "2026-03-03", "account": "BNI", "category": "Food & Beverages", "subcategory": "🍽️Main Meal", "note": "Nasi Padang - Ibra", "expense": 13000, "transferTo": "", "income": 0}, {"id": 4, "date": "2026-03-04", "account": "BNI", "category": "Daily Necessities", "subcategory": "🫙Food & Drink Container(s)", "note": "Ecentio Kotak Makan", "expense": 37050, "transferTo": "", "income": 0}], "categories": [{"category": "Food & Beverages", "subcategories": ["🍽️Main Meal", "🥛Drink", "🥯Snack", "🍌Fruits", "🍅Vegetables", "👨‍🍳Cooking ingredients", "🛵 Dining Out"]}, {"category": "Transportation", "subcategories": ["🏍️Motorcycle", "🚕Car", "🚌Bus", "🚐 Angkot", "🚅Train", "🚐 Travel", "⛽ Gasoline", "🛣️ Toll", "🅿️ Parking", "💳E-Money Card"]}, {"category": "Lifestyle", "subcategories": ["📈Trend", "💸Game", "🎲 Toys", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription", "💻 Laptop Maintenance"]}, {"category": "Daily Necessities", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🫖 Water Gallon", "🪙Electricity Token", "🫙Food & Drink Container(s)", "🌐 Internet"]}, {"category": "Clothes", "subcategories": ["👕Shirt", "👖Pants", "🧥Jacket", "🥼Functional Clothing"]}, {"category": "Accessory", "subcategories": ["🧢Hat", "⌚Watch", "🗝️Keychain"]}, {"category": "Beauty", "subcategories": ["🧴Skincare", "✂️ Haircut"]}, {"category": "Health", "subcategories": ["💆Massage", "🏥 Pharmacy", "🩺 Medical Service"]}, {"category": "Education", "subcategories": ["📚Book"]}, {"category": "Present", "subcategories": ["👨‍👩‍👦‍👦For Family", "🎁 Gift"]}, {"category": "Accounts Receivable", "subcategories": ["🧾Receivable"]}, {"category": "Accounts Payable", "subcategories": ["💰Debt"]}, {"category": "Allowance", "subcategories": ["💵Allowance"]}, {"category": "Salary", "subcategories": ["💎Salary"]}, {"category": "Bonus", "subcategories": ["👛Bonus", "🪙THR"]}, {"category": "Adjustment", "subcategories": ["✏️ Error Correction"]}], "accounts": [{"name": "BNI", "type": "bank", "opening": 2359114}, {"name": "BNI 2", "type": "bank", "opening": 4232269}, {"name": "GoPay", "type": "ewallet", "opening": 210320}, {"name": "SeaBank", "type": "digital", "opening": 25293}, {"name": "ShopeePay", "type": "ewallet", "opening": 16000}, {"name": "Cash", "type": "cash", "opening": 12000}, {"name": "Dana", "type": "ewallet", "opening": 4274}, {"name": "Steam Wallet", "type": "ewallet", "opening": 0}, {"name": "Taplus", "type": "bank", "opening": 0}], "budgets": {"Food & Beverages": 1500000, "Transportation": 500000, "Lifestyle": 400000, "Daily Necessities": 300000, "Clothes": 200000}};
   const STORAGE_KEY = 'mm_money_manager_v1';
   
+  // Emojis for categories
+  const EMOJI_PRESETS = ['🍽️','🚗','🎯','🧺','👕','💍','💄','🩺','📚','🎁','🧾','💳','💵','💎','🪙','✏️','🍔','🏠','🎮','✈️','📱','💡','🛒','🐶','🏥','💸','💰','💼'];
+
   // Fallback if category has no icon saved in state
   const CATEGORY_ICONS_FALLBACK = {
     'Food & Beverages':'🍽️','Transportation':'🚗','Lifestyle':'🎯','Daily Necessities':'🧺',
@@ -38,6 +41,11 @@
   let filters = { account:'', category:'', type:'', q:'', date:'' };
   let txnPage = 0;
   const PAGE_SIZE = 40;
+
+  let editingCatOldName = null;
+  let duplicatingCatName = null;
+  let editingSubOldName = null;
+  let targetCatForSub = null;
   
   function loadState(){
     let parsed = JSON.parse(JSON.stringify(SEED));
@@ -52,7 +60,7 @@
     // Migration: ensure every category has an icon
     if(parsed.categories){
       parsed.categories.forEach(c => {
-        if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '💠';
+        if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '📁';
       });
     }
     return parsed;
@@ -79,7 +87,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function catIcon(cat){ 
     const c = state.categories.find(x => x.category === cat);
-    return c && c.icon ? c.icon : '💠'; 
+    return c && c.icon ? c.icon : '📁'; 
   }
   
   /* ============ LEDGER ENGINE ============ */
@@ -354,7 +362,7 @@
     if(filters.date) list = list.filter(t=>t.date===filters.date);
     if(filters.q){
       const q = filters.q.toLowerCase();
-      list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q));
+      list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q) || (t.transferTo||'').toLowerCase().includes(q));
     }
   
     const totalPages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
@@ -647,7 +655,7 @@
       <div class="section-head">
         <div><h2>Categories</h2><p class="sub">Manage and organize your transaction categories</p></div>
         <div class="section-head-actions">
-          <button class="btn" id="btnAddCat">${icon('plus')}New Category</button>
+          <button class="btn btn-primary" id="btnAddCat">${icon('plus')}New Category</button>
         </div>
       </div>
   
@@ -655,11 +663,10 @@
         ${state.categories.map(c=>`
           <div class="cat-section">
             <h4>
-              <span class="cat-icon-edit" data-editicon="${esc(c.category)}" title="Click to change icon">${catIcon(c.category)}</span>
-              ${esc(c.category)}
+              ${catIcon(c.category)} ${esc(c.category)}
               <div class="cat-actions">
                 <button class="icon-btn-micro" data-addsub="${esc(c.category)}" title="Add Subcategory">${icon('plus')}</button>
-                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category Name">${icon('edit')}</button>
+                <button class="icon-btn-micro" data-editcat="${esc(c.category)}" title="Edit Category">${icon('edit')}</button>
                 <button class="icon-btn-micro" data-dupcat="${esc(c.category)}" title="Duplicate Category">${icon('copy')}</button>
                 <button class="icon-btn-micro del" data-delcat="${esc(c.category)}" title="Delete Category">${icon('trash')}</button>
               </div>
@@ -678,40 +685,18 @@
       </div>
     `;
   
-    // Add Subcategory
-    el.querySelectorAll('[data-addsub]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        const cat = b.dataset.addsub;
-        const name = prompt(`New subcategory name for "${cat}":`);
-        if(!name) return;
-        const catObj = state.categories.find(c=>c.category===cat);
-        if(catObj.subcategories.includes(name.trim())){ toast('Subcategory already exists'); return; }
-        catObj.subcategories.push(name.trim());
-        saveState(); renderCategories(); toast('Subcategory added');
-      });
-    });
-  
-    // Add New Category
-    document.getElementById('btnAddCat').addEventListener('click', ()=>{
-      const name = prompt('New category name:');
-      if(!name) return;
-      if(state.categories.some(c=>c.category.toLowerCase()===name.trim().toLowerCase())){ toast('Category already exists'); return; }
-      const newIcon = prompt('Enter an emoji icon for this category (e.g. 🍔):', '📁');
-      state.categories.push({ category:name.trim(), icon: newIcon || '📁', subcategories:[] });
-      saveState(); renderCategories(); toast('Category added');
-    });
-  
-    // Edit Icon, Edit Name, Duplicate, Delete Categories
-    el.querySelectorAll('[data-editicon]').forEach(b=> b.addEventListener('click', ()=> editCategoryIcon(b.dataset.editicon)));
-    el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> editCategory(b.dataset.editcat)));
-    el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> duplicateCategory(b.dataset.dupcat)));
+    // Add / Edit / Duplicate Categories -> Uses Modal
+    document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
+    el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
+    el.querySelectorAll('[data-dupcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.dupcat, true)));
     el.querySelectorAll('[data-delcat]').forEach(b=> b.addEventListener('click', ()=> deleteCategory(b.dataset.delcat)));
     
-    // Edit, Delete Subcategories
+    // Add / Edit / Delete Subcategories -> Uses Modal
+    el.querySelectorAll('[data-addsub]').forEach(b=> b.addEventListener('click', ()=> openSubModal(b.dataset.addsub)));
     el.querySelectorAll('[data-editsub]').forEach(b=> {
       b.addEventListener('click', ()=> {
         const [cat, sub] = b.dataset.editsub.split('|');
-        editSubcategory(cat, sub);
+        openSubModal(cat, sub);
       });
     });
     el.querySelectorAll('[data-delsub]').forEach(b=> {
@@ -721,52 +706,123 @@
       });
     });
   }
+
+  // --- Category & Subcategory Modals Logic ---
   
-  // Category Actions
-  function editCategoryIcon(name) {
-    const cat = state.categories.find(c => c.category === name);
-    if (!cat) return;
-    const newIcon = prompt(`Enter new emoji icon for "${name}":`, cat.icon || '📁');
-    if (newIcon && newIcon.trim() !== '') {
-        cat.icon = newIcon.trim();
-        saveState(); renderCategories(); toast('Icon updated');
-    }
+  function initEmojiPicker() {
+    const picker = document.getElementById('catIconPicker');
+    picker.innerHTML = EMOJI_PRESETS.map(e => `<button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>`).join('');
+    picker.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        picker.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('catIconValue').value = btn.dataset.emoji;
+      });
+    });
   }
 
-  function editCategory(oldName) {
-    const cat = state.categories.find(c => c.category === oldName);
-    if (!cat) return;
-    
-    const newName = prompt('Enter new category name:', oldName);
-    if (!newName || newName.trim() === '' || newName === oldName) return;
-    
-    if (state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
-        toast('Category name already exists'); return;
-    }
-    
-    cat.category = newName.trim();
+  function setEmojiPicker(emoji) {
+    document.getElementById('catIconValue').value = emoji;
+    const picker = document.getElementById('catIconPicker');
+    picker.querySelectorAll('.emoji-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.emoji === emoji);
+    });
+  }
 
-    if (state.budgets && state.budgets[oldName] !== undefined) {
-        state.budgets[newName.trim()] = state.budgets[oldName];
-        delete state.budgets[oldName];
-    }
-    state.transactions.forEach(t => { if (t.category === oldName) t.category = newName.trim(); });
+  function openCatModal(name = null, isDuplicate = false) {
+    editingCatOldName = isDuplicate ? null : name;
+    duplicatingCatName = isDuplicate ? name : null;
+
+    const c = name ? state.categories.find(x => x.category === name) : null;
     
-    saveState(); renderCategories(); toast('Category name updated');
+    document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplicate Category' : (name ? 'Edit Category' : 'Add Category');
+    
+    let defaultName = '';
+    if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
+    document.getElementById('catName').value = defaultName;
+    
+    setEmojiPicker(c ? c.icon : EMOJI_PRESETS[0]);
+
+    document.getElementById('catModalOverlay').classList.add('open');
+    document.getElementById('catName').focus();
   }
-  
-  function duplicateCategory(name) {
-    const cat = state.categories.find(c => c.category === name);
-    if (!cat) return;
-    const newName = prompt('Enter name for duplicated category:', cat.category + ' Copy');
-    if (!newName || newName.trim() === '') return;
-    if (state.categories.some(c => c.category.toLowerCase() === newName.trim().toLowerCase())) {
+  function closeCatModal() { document.getElementById('catModalOverlay').classList.remove('open'); }
+
+  function saveCatForm() {
+    const newName = document.getElementById('catName').value.trim();
+    const newIcon = document.getElementById('catIconValue').value;
+
+    if (!newName) { toast('Category name is required'); return; }
+
+    if (editingCatOldName) {
+      if (newName !== editingCatOldName && state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
         toast('Category name already exists'); return;
+      }
+      const cat = state.categories.find(c => c.category === editingCatOldName);
+      cat.category = newName;
+      cat.icon = newIcon;
+
+      if (state.budgets && state.budgets[editingCatOldName] !== undefined && newName !== editingCatOldName) {
+          state.budgets[newName] = state.budgets[editingCatOldName];
+          delete state.budgets[editingCatOldName];
+      }
+      if (newName !== editingCatOldName) {
+          state.transactions.forEach(t => { if (t.category === editingCatOldName) t.category = newName; });
+      }
+      toast('Category updated');
+    } else {
+      if (state.categories.some(c => c.category.toLowerCase() === newName.toLowerCase())) {
+        toast('Category name already exists'); return;
+      }
+      let subs = [];
+      if (duplicatingCatName) {
+        const orig = state.categories.find(c => c.category === duplicatingCatName);
+        if (orig) subs = [...orig.subcategories];
+      }
+      state.categories.push({ category: newName, icon: newIcon, subcategories: subs });
+      toast(duplicatingCatName ? 'Category duplicated' : 'Category added');
     }
-    state.categories.push({ category: newName.trim(), icon: cat.icon, subcategories: [...cat.subcategories] });
-    saveState(); renderCategories(); toast('Category duplicated');
+
+    saveState(); renderCategories(); closeCatModal();
   }
-  
+
+  function openSubModal(catName, subName = null) {
+    targetCatForSub = catName;
+    editingSubOldName = subName;
+
+    document.getElementById('subModalTitle').textContent = subName ? 'Edit Subcategory' : 'Add Subcategory';
+    document.getElementById('subName').value = subName || '';
+    
+    document.getElementById('subModalOverlay').classList.add('open');
+    document.getElementById('subName').focus();
+  }
+  function closeSubModal() { document.getElementById('subModalOverlay').classList.remove('open'); }
+
+  function saveSubForm() {
+    const newSub = document.getElementById('subName').value.trim();
+    if (!newSub) { toast('Subcategory name is required'); return; }
+
+    const cat = state.categories.find(c => c.category === targetCatForSub);
+    if (!cat) return;
+
+    if (editingSubOldName) {
+      if (newSub !== editingSubOldName && cat.subcategories.includes(newSub)) { 
+        toast('Subcategory already exists'); return; 
+      }
+      cat.subcategories = cat.subcategories.map(s => s === editingSubOldName ? newSub : s);
+      state.transactions.forEach(t => {
+          if (t.category === targetCatForSub && t.subcategory === editingSubOldName) t.subcategory = newSub;
+      });
+      toast('Subcategory updated');
+    } else {
+      if (cat.subcategories.includes(newSub)) { toast('Subcategory already exists'); return; }
+      cat.subcategories.push(newSub);
+      toast('Subcategory added');
+    }
+
+    saveState(); renderCategories(); closeSubModal();
+  }
+
   function deleteCategory(name) {
     const used = state.transactions.some(t => t.category === name);
     if (used) { toast('Cannot delete: Category is currently used in transactions'); return; }
@@ -775,22 +831,7 @@
     if (state.budgets) delete state.budgets[name];
     saveState(); renderCategories(); toast('Category deleted');
   }
-  
-  // Subcategory Actions
-  function editSubcategory(catName, oldSub) {
-    const newSub = prompt(`Enter new name for subcategory "${oldSub}":`, oldSub);
-    if (!newSub || newSub.trim() === '' || newSub === oldSub) return;
-    const cat = state.categories.find(c => c.category === catName);
-    if (!cat) return;
-    if (cat.subcategories.includes(newSub.trim())) { toast('Subcategory already exists'); return; }
-  
-    cat.subcategories = cat.subcategories.map(s => s === oldSub ? newSub.trim() : s);
-    state.transactions.forEach(t => {
-        if (t.category === catName && t.subcategory === oldSub) t.subcategory = newSub.trim();
-    });
-    saveState(); renderCategories(); toast('Subcategory updated');
-  }
-  
+
   function deleteSubcategory(catName, subName) {
     const used = state.transactions.some(t => t.category === catName && t.subcategory === subName);
     if (used) { toast('Cannot delete: Subcategory is currently used in transactions'); return; }
@@ -955,12 +996,15 @@
     renderNav();
     document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
     renderCurrentTab();
+    
+    initEmojiPicker();
   
     document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
     document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
     document.getElementById('btnReset').addEventListener('click', resetData);
   
+    // Transactions
     document.getElementById('txnCategory').addEventListener('change', e=> populateSubcategorySelect(e.target.value));
     document.querySelectorAll('.type-toggle button').forEach(b=> b.addEventListener('click', ()=> setTxnType(b.dataset.type)));
     document.getElementById('btnTxnSave').addEventListener('click', saveTxnForm);
@@ -968,13 +1012,26 @@
     document.getElementById('btnTxnClose').addEventListener('click', closeTxnModal);
     document.getElementById('txnModalOverlay').addEventListener('click', e=>{ if(e.target.id==='txnModalOverlay') closeTxnModal(); });
   
+    // Accounts
     document.getElementById('btnAcctSave').addEventListener('click', saveAcctForm);
     document.getElementById('btnAcctCancel').addEventListener('click', closeAcctModal);
     document.getElementById('btnAcctClose').addEventListener('click', closeAcctModal);
     document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
+
+    // Categories
+    document.getElementById('btnCatSave').addEventListener('click', saveCatForm);
+    document.getElementById('btnCatCancel').addEventListener('click', closeCatModal);
+    document.getElementById('btnCatClose').addEventListener('click', closeCatModal);
+    document.getElementById('catModalOverlay').addEventListener('click', e=>{ if(e.target.id==='catModalOverlay') closeCatModal(); });
+
+    // Subcategories
+    document.getElementById('btnSubSave').addEventListener('click', saveSubForm);
+    document.getElementById('btnSubCancel').addEventListener('click', closeSubModal);
+    document.getElementById('btnSubClose').addEventListener('click', closeSubModal);
+    document.getElementById('subModalOverlay').addEventListener('click', e=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
   
     document.addEventListener('keydown', e=>{
-      if(e.key==='Escape'){ closeTxnModal(); closeAcctModal(); }
+      if(e.key==='Escape'){ closeTxnModal(); closeAcctModal(); closeCatModal(); closeSubModal(); }
     });
   }
   document.addEventListener('DOMContentLoaded', init);
