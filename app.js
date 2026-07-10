@@ -802,6 +802,7 @@ function renderSubcategoryBarBlock(monthTx){
 }
 
 /* ============ TRANSACTIONS ============ */
+/* ============ TRANSACTIONS ============ */
 function renderTransactions(){
   const { enriched } = computeLedger();
   let list = [...enriched].reverse();
@@ -836,8 +837,10 @@ function renderTransactions(){
       </div>
     </div>
 
+    <!-- ADVANCED FILTER PANEL -->
     <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
+        <!-- Date Range (Spans Date & Day columns = 130 + 120 = 250px) -->
         <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
           <div style="display:flex; align-items:center; gap:6px;">
@@ -859,6 +862,7 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Account -->
         <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
@@ -873,6 +877,7 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Category -->
         <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
@@ -887,30 +892,35 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Note -->
         <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
            <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
         </div>
 
+        <!-- Type -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: center;">
+            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
               <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All Types'))}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;"><path d="M6 9l6 6 6-6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="select-popover" id="filterTypePopover" style="text-align: center;">
-               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="" style="text-align: center;">All Types</button>
-               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income" style="text-align: center;">Income</button>
-               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense" style="text-align: center;">Expense</button>
-               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer" style="text-align: center;">Transfer</button>
+            <div class="select-popover" id="filterTypePopover">
+               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
+               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
+               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
+               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
             </div>
           </div>
         </div>
 
+        <!-- Empty Space For Amount (130px) -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
+        <!-- Reset Button -->
         <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end;">
+           <label style="font-size:11px; visibility:hidden; user-select:none;">Reset</label>
            <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 36px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
     </div>
@@ -993,7 +1003,7 @@ function renderTransactions(){
   });
 
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
-  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
+  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true))));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
 
