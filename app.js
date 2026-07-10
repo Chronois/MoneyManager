@@ -861,9 +861,6 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
 
-  // Dinamis mengatur simbol mata uang di sebelah kolom input raksasa
-  document.getElementById('amountCurrencyPrefix').textContent = state.currency || 'IDR';
-
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
   if(t) {
     const rawAmt = t.transferTo ? t.expense : (t.income || t.expense || 0);
@@ -884,22 +881,9 @@ function openTxnModal(id, isDuplicate = false){
   if(t && t.transferTo) document.getElementById('txnTransferTo').value = t.transferTo;
 
   document.getElementById('txnModalOverlay').classList.add('open');
-  
-  // Fokus otomatis ke input nominal uang saat dibuka
-  setTimeout(() => document.getElementById('txnAmount').focus(), 50);
+  document.getElementById('txnDate').focus();
 }
-
-function setTxnType(type){
-  txnType = type;
-  document.querySelectorAll('.type-toggle button').forEach(b=> b.classList.toggle('active', b.dataset.type===type));
-  document.getElementById('rowCategory').style.display = type==='transfer' ? 'none' : 'flex';
-  document.getElementById('rowTransfer').style.display = type==='transfer' ? 'flex' : 'none';
-
-  if (type !== 'transfer') {
-    populateCategorySelect(document.getElementById('txnCategory').value, type);
-    populateSubcategorySelect(document.getElementById('txnCategory').value);
-  }
-}
+function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.remove('open'); }
 
 function populateCategorySelect(selected, type = txnType){
   const sel = document.getElementById('txnCategory');
