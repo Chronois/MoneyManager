@@ -112,16 +112,14 @@
       <h3 id="catModalTitle">Add Category</h3>
       <button class="icon-btn" id="btnCatClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="overflow: visible;">
       <div class="field"><label>Category Name</label><input type="text" class="input" id="catName" placeholder="e.g. Shopping"></div>
       <div class="field">
         <label>Category Icon</label>
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnCatIcon">📁</button>
           <input type="hidden" id="catIconValue" value="📁">
-          <div class="emoji-popover" id="catEmojiPopover">
-            <emoji-picker></emoji-picker>
-          </div>
+          <div class="emoji-popover" id="catEmojiPopover"></div>
         </div>
       </div>
     </div>
@@ -139,16 +137,14 @@
       <h3 id="subModalTitle">Add Subcategory</h3>
       <button class="icon-btn" id="btnSubClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="overflow: visible;">
       <div class="field"><label>Subcategory Name</label><input type="text" class="input" id="subName" placeholder="e.g. Groceries"></div>
       <div class="field">
         <label>Subcategory Icon</label>
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnSubIcon">📁</button>
           <input type="hidden" id="subIconValue" value="📁">
-          <div class="emoji-popover" id="subEmojiPopover">
-            <emoji-picker></emoji-picker>
-          </div>
+          <div class="emoji-popover" id="subEmojiPopover"></div>
         </div>
       </div>
     </div>
@@ -161,8 +157,8 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Mengambil Web Component Emoji Picker asli -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+<!-- Menggunakan Web Component EmojiMart yang mendukung fitur 'Recent' & warna bisa dicustom -->
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
