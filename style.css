@@ -356,25 +356,18 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .cat-actions { display: inline-flex; margin-left: 10px; opacity: 0.3; transition: opacity .2s; }
 .cat-section:hover .cat-actions { opacity: 1; }
 
-/* ---------- Micro Buttons for Category Actions ---------- */
-.icon-btn-micro {
-  background: transparent; border: none; padding: 3px; margin-left: 4px;
-  color: var(--ink-faint); cursor: pointer; border-radius: 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-  transition: .15s ease;
-}
-.icon-btn-micro:hover { color: var(--primary-dark); background: var(--border); }
-.icon-btn-micro.del:hover { color: var(--expense); background: var(--expense-light); }
-.icon-btn-micro svg { width: 13px; height: 13px; }
-
-.cat-actions { display: inline-flex; margin-left: 10px; opacity: 0.3; transition: opacity .2s; }
-.cat-section:hover .cat-actions { opacity: 1; }
-
 /* ---------- Table Filters ---------- */
 .table-filter-row td { padding: 8px 10px; background: var(--paper-2); border-bottom: 2px solid var(--border); }
 .table-filter-row .input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; background: var(--surface); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); }
 .table-filter-row .input:focus { border-color: var(--primary); outline: none; }
 
-/* ---------- Category Icon Edit ---------- */
-.cat-icon-edit { cursor: pointer; transition: opacity .15s ease; display: inline-block; }
-.cat-icon-edit:hover { opacity: 0.6; transform: scale(1.1); }
+/* ---------- Emoji Picker ---------- */
+.emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.emoji-btn { 
+  font-size: 20px; width: 36px; height: 36px; border-radius: 8px;
+  border: 2px solid transparent; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .15s ease;
+}
+.emoji-btn:hover { background: var(--paper-2); }
+.emoji-btn.selected { border-color: var(--primary); background: var(--primary-pale); transform: scale(1.05); }
