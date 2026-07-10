@@ -103,12 +103,22 @@
       <h3 id="txnModalTitle">Add Transaction</h3>
       <button class="icon-btn" id="btnTxnClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="type-toggle">
+    <div class="modal-body" style="gap: 18px;">
+      
+      <div class="type-toggle modern-toggle">
         <button type="button" data-type="expense" class="active">Expense</button>
         <button type="button" data-type="income">Income</button>
         <button type="button" data-type="transfer">Transfer</button>
       </div>
+
+      <!-- Nominal Uang Raksasa di Tengah -->
+      <div class="amount-field-container">
+        <div class="amount-wrapper">
+           <span id="amountCurrencyPrefix" class="amount-prefix">IDR</span>
+           <input type="number" step="any" class="input amount-input-huge" id="txnAmount" placeholder="0" min="0">
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="field"><label>Date</label><input type="date" class="input" id="txnDate"></div>
         <div class="field"><label>Account</label><select class="input" id="txnAccount"></select></div>
@@ -120,12 +130,12 @@
       <div class="form-row" id="rowTransfer" style="display:none">
         <div class="field"><label>Transfer To</label><select class="input" id="txnTransferTo"></select></div>
       </div>
-      <div class="field"><label>Note</label><input type="text" class="input" id="txnNote" placeholder="e.g. Lunch"></div>
-      <div class="field"><label id="amountLabel">Amount</label><input type="number" step="any" class="input" id="txnAmount" placeholder="0" min="0"></div>
+      <div class="field"><label>Note</label><input type="text" class="input" id="txnNote" placeholder="e.g. Lunch or groceries..."></div>
+      
     </div>
     <div class="modal-foot">
       <button class="btn" id="btnTxnCancel">Cancel</button>
-      <button class="btn btn-primary" id="btnTxnSave">Save</button>
+      <button class="btn btn-primary" id="btnTxnSave" style="padding-left:24px; padding-right:24px;">Save</button>
     </div>
   </div>
 </div>
