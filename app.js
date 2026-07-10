@@ -7,7 +7,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA55-zN6AE4jP8JaARRPVtNA9Xdk4PVSQA",
   authDomain: "money-manager-7777.firebaseapp.com",
@@ -911,9 +910,8 @@ function renderTransactions(){
 
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
-        <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-           <label style="font-size:11px; visibility:hidden; user-select:none;">Reset</label>
-           <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 34px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--paper-2);" title="Reset Filters">Reset</button>
+        <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end;">
+           <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 36px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
     </div>
 
