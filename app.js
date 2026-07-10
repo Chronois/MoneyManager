@@ -650,7 +650,7 @@ function renderDashboard(){
         <p class="panel-title">Balance per Account</p>
         <p class="panel-sub">Manage accounts in the 'Accounts' menu</p>
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-          ${state.accounts.slice(0, 7).map((a, i) => {
+          ${state.accounts.slice(0, 5).map((a, i) => {
             const bal = accBal[a.name] || 0;
             const pct = (total > 0 && bal > 0) ? Math.min(100, Math.round((bal/total)*100)) : 0;
             const color = CHART_PALETTE[i % CHART_PALETTE.length];
