@@ -363,27 +363,30 @@ footer{ text-align:center; padding:18px; color:var(--ink-faint); font-size:12px;
 .table-filter-row .input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; background: var(--surface); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); }
 .table-filter-row .input:focus { border-color: var(--primary); outline: none; }
 
-/* ---------- Full Emoji Picker Popover ---------- */
+/* ---------- Full Emoji Picker Popover (EmojiMart) ---------- */
 .emoji-dropdown-wrap { position: relative; }
 .emoji-selector-btn { 
   font-size: 26px; padding: 6px 16px; cursor: pointer; 
   text-align: center; width: max-content; 
   background: var(--paper-2); transition: .15s ease;
+  border: 1px solid var(--border); border-radius: 8px;
 }
 .emoji-selector-btn:hover { background: var(--border); }
 .emoji-popover { 
-  display: none; position: absolute; z-index: 1000; 
+  display: none; position: absolute; z-index: 100000; 
   top: calc(100% + 5px); left: 0; box-shadow: var(--shadow-lg); 
-  border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+  background: var(--surface);
 }
 .emoji-popover.show { display: block; animation: fadeIn .2s ease; }
-emoji-picker {
-  --background: var(--surface);
-  --border-color: var(--border);
-  --button-hover-background: var(--paper-2);
-  --indicator-color: var(--primary);
-  width: 320px; height: 350px;
-}
-@media (max-width: 480px) { emoji-picker { width: 280px; } }
-.emoji-btn:hover { background: var(--paper-2); }
-.emoji-btn.selected { border-color: var(--primary); background: var(--primary-pale); transform: scale(1.05); }
+
+/* Mengkonfigurasi tema EmojiMart agar font terlihat jelas (Dark Text di Light Background) */
+em-emoji-picker {
+  --font-family: var(--font-body);
+  --rgb-background: 255, 255, 255;
+  --rgb-input: 245, 250, 243;
+  --rgb-color: 29, 42, 30; /* Text Color -> Ini membuat font Search Bar menjadi gelap */
+  --rgb-accent: 92, 154, 102;
+  height: 380px;
+  border: none;
+}  
