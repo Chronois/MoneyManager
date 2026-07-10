@@ -47,22 +47,21 @@ button{ cursor:pointer; }
 /* ---------- Custom Scrollbar (Menyesuaikan Tema) ---------- */
 html {
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-faint) var(--paper); /* Untuk Firefox */
+  scrollbar-color: var(--ink-muted) transparent; /* Untuk Firefox */
 }
 
 ::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+  width: 8px; /* Lebih tipis seperti di referensi */
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--paper);
+  background: transparent; /* Menghilangkan warna background jalur agar menyatu */
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--ink-faint);
   border-radius: 10px;
-  border: 4px solid var(--paper); /* Efek padding agar terlihat lebih elegan */
 }
 
 ::-webkit-scrollbar-thumb:hover {
