@@ -108,6 +108,32 @@
   </div>
 </div>
 
+<!-- Budget Modal -->
+<div class="modal-overlay" id="budgetModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="budgetModalTitle">Add Budget</h3>
+      <button class="icon-btn" id="btnBudgetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Category</label><select class="input" id="budgetCategory"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Subcategory</label><select class="input" id="budgetSubcategory"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Monthly Limit Amount</label><input type="number" class="input" id="budgetAmount" placeholder="e.g. 500000" min="0"></div>
+      </div>
+      <input type="hidden" id="budgetOldKey">
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnBudgetCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnBudgetSave">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Category Modal -->
 <div class="modal-overlay" id="catModalOverlay">
   <div class="modal" style="overflow: visible;">
@@ -122,7 +148,13 @@
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnCatIcon">📁</button>
           <input type="hidden" id="catIconValue" value="📁">
-          <div class="emoji-popover" id="catEmojiPopover"></div>
+          <div class="emoji-popover" id="catEmojiPopover">
+            <div class="recent-emojis-wrap">
+              <div class="recent-emojis-title">Recent</div>
+              <div class="recent-emojis-list" id="catRecentList"></div>
+            </div>
+            <div id="catPickerContainer"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -147,7 +179,13 @@
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnSubIcon">📁</button>
           <input type="hidden" id="subIconValue" value="📁">
-          <div class="emoji-popover" id="subEmojiPopover"></div>
+          <div class="emoji-popover" id="subEmojiPopover">
+            <div class="recent-emojis-wrap">
+              <div class="recent-emojis-title">Recent</div>
+              <div class="recent-emojis-list" id="subRecentList"></div>
+            </div>
+            <div id="subPickerContainer"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -160,7 +198,7 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Menggunakan Web Component EmojiMart -->
+<!-- Menggunakan Web Component EmojiMart Asli -->
 <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 <script src="app.js"></script>
 </body>
