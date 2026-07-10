@@ -119,7 +119,13 @@
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnCatIcon">📁</button>
           <input type="hidden" id="catIconValue" value="📁">
-          <div class="emoji-popover" id="catEmojiPopover"></div>
+          <div class="emoji-popover" id="catEmojiPopover">
+            <div class="recent-emojis-wrap">
+              <div class="recent-emojis-title">Recent</div>
+              <div class="recent-emojis-list" id="catRecentList"></div>
+            </div>
+            <div id="catPickerContainer"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -144,7 +150,13 @@
         <div class="emoji-dropdown-wrap">
           <button type="button" class="input emoji-selector-btn" id="btnSubIcon">📁</button>
           <input type="hidden" id="subIconValue" value="📁">
-          <div class="emoji-popover" id="subEmojiPopover"></div>
+          <div class="emoji-popover" id="subEmojiPopover">
+            <div class="recent-emojis-wrap">
+              <div class="recent-emojis-title">Recent</div>
+              <div class="recent-emojis-list" id="subRecentList"></div>
+            </div>
+            <div id="subPickerContainer"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -157,7 +169,7 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Menggunakan Web Component EmojiMart yang mendukung fitur 'Recent' & warna bisa dicustom -->
+<!-- Menggunakan Web Component EmojiMart Asli -->
 <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 <script src="app.js"></script>
 </body>
