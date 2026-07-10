@@ -7,7 +7,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA55-zN6AE4jP8JaARRPVtNA9Xdk4PVSQA",
   authDomain: "money-manager-7777.firebaseapp.com",
@@ -18,7 +17,6 @@ const firebaseConfig = {
   measurementId: "G-8TF14TN8EF"
 };
 
-// Initialize Firebase
 const appFirebase = initializeApp(firebaseConfig);
 const analytics = getAnalytics(appFirebase);
 const auth = getAuth(appFirebase);
@@ -28,21 +26,20 @@ const googleProvider = new GoogleAuthProvider();
 let currentUser = null;
 let cloudSyncTimeout = null;
 
-// --- Default Data / Initial Data ---
 const SEED = {
   "currency": "IDR",
   "transactions": [], 
   "categories": [
     {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
     {"category": "Transportation", "icon": "🚗", "type": "expense", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
-    {"category": "Lifestyle", "icon": "🎯", "type": "both", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
+    {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
     {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
     {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
     {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
     {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
-    {"category": "Present", "icon": "🎁", "type": "both", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
+    {"category": "Present", "icon": "🎁", "type": "expense", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
     {"category": "Accounts Payable", "icon": "💳", "type": "expense", "subcategories": ["💰 Debt"]},
     {"category": "Accounts Receivable", "icon": "🧾", "type": "income", "subcategories": ["🧾 Receivable"]},
     {"category": "Allowance", "icon": "💵", "type": "income", "subcategories": ["💵 Allowance"]},
@@ -61,7 +58,6 @@ const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-// Static conversion rates against IDR (Baseline)
 const CURRENCIES = {
   IDR: { rate: 1, locale: 'id-ID' },
   USD: { rate: 16200, locale: 'en-US' },
@@ -92,7 +88,7 @@ let editingTxnId = null;
 let editingAcctName = null;
 let txnType = 'expense';
 let currentTab = 'dashboard';
-let filters = { account:'', category:'', type:'', q:'', date:'' };
+let filters = { account:'', category:'', type:'', q:'', dateFrom:'', dateTo:'' };
 let txnPage = 0;
 const PAGE_SIZE = 40;
 
@@ -101,14 +97,13 @@ let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
 
-// State for Dashboard Month Pickers & Modal Date Pickers (Multi-instance)
 let selectedCatMonth = null;
 let selectedSubCatMonth = null;
 let catPickerYear = null;
 let subPickerYear = null;
 
-let dpViewYear = { txn: null, filter: null };
-let dpViewMonth = { txn: null, filter: null };
+let dpViewYear = { txn: null, filterFrom: null, filterTo: null };
+let dpViewMonth = { txn: null, filterFrom: null, filterTo: null };
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
@@ -142,7 +137,6 @@ function loadStateLocal(){
 
 function saveState(){ 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
-  
   if (currentUser) {
     clearTimeout(cloudSyncTimeout);
     cloudSyncTimeout = setTimeout(() => {
@@ -163,12 +157,11 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('authUserName').textContent = user.displayName || 'User';
     document.getElementById('authUserEmail').textContent = user.email;
     btnAuth.style.color = '#fff';
-    btnAuth.style.background = 'var(--primary)'; 
+    btnAuth.style.background = 'var(--primary)';
     
     try {
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
-      
       if (docSnap.exists() && docSnap.data().appData) {
         const cloudData = JSON.parse(docSnap.data().appData);
         if(cloudData && Array.isArray(cloudData.transactions)) {
@@ -267,7 +260,7 @@ function getDatePickerHTML(year, month, selectedDateStr, targetPrefix) {
   }
 
   const daysHeader = DAYS_EN.map(d => `<div class="dp-day-name">${d.slice(0,2)}</div>`).join('');
-  const clearBtnTxt = targetPrefix === 'filter' ? 'All' : 'Clear';
+  const clearBtnTxt = targetPrefix.includes('filter') ? 'All Dates' : 'Clear';
 
   return `
       <div class="dp-header">
@@ -325,7 +318,7 @@ function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onCh
   popover.querySelector('.dp-clear-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById(inputId).value = '';
-      document.getElementById(labelId).textContent = targetPrefix === 'filter' ? 'All Dates' : 'Select Date';
+      document.getElementById(labelId).textContent = targetPrefix === 'filterFrom' ? 'Start Date' : (targetPrefix === 'filterTo' ? 'End Date' : 'Select Date');
       popover.classList.remove('show');
       if (onChangeCallback) onChangeCallback('');
   });
@@ -599,7 +592,7 @@ function renderDashboard(){
     <div class="dash-grid">
       <div class="card card-pad">
         <p class="panel-title">Monthly Trend</p>
-        <p class="panel-sub">Income vs expense in last 6 months</p>
+        <p class="panel-sub">Income vs expense, last 6 months</p>
         ${renderMonthlyBars(monthlyAggregate(enriched).slice(-6))}
         <div class="chart-legend">
           <div class="legend-item"><span class="legend-swatch" style="background:var(--income)"></span>Income</div>
@@ -786,7 +779,7 @@ function renderSubcategoryBarBlock(monthTx){
   const max = top[0][1];
   
   let html = '<div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 12px;">';
-  html += '<p class="panel-title" style="font-size:13.5px; margin-bottom:4px;">Details</p>';
+  html += '<p class="panel-title" style="font-size:13.5px; margin-bottom:4px;">Comparison Details</p>';
   
   top.forEach(([sub,val], i) => {
     const parts = splitSub(sub);
@@ -820,7 +813,11 @@ function renderTransactions(){
   }
   if(filters.account) list = list.filter(t=>t.account===filters.account);
   if(filters.category) list = list.filter(t=>t.category===filters.category);
-  if(filters.date) list = list.filter(t=>t.date===filters.date);
+  
+  // Date Range Logic
+  if(filters.dateFrom) list = list.filter(t=>t.date >= filters.dateFrom);
+  if(filters.dateTo) list = list.filter(t=>t.date <= filters.dateTo);
+
   if(filters.q){
     const q = filters.q.toLowerCase();
     list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q) || (t.transferTo||'').toLowerCase().includes(q));
@@ -842,41 +839,74 @@ function renderTransactions(){
       <table>
         <thead>
           <tr>
-            <th>Date</th><th>Day</th><th>Account</th><th>Category</th><th>Note</th>
-            <th style="text-align:right">Type</th><th style="text-align:right">Amount</th>
+            <th style="min-width: 250px;">Date Range</th>
+            <th>Day</th>
+            <th style="min-width: 160px;">Account</th>
+            <th style="min-width: 180px;">Category</th>
+            <th>Note</th>
+            <th style="text-align:right; min-width: 140px;">Type</th>
+            <th style="text-align:right">Amount</th>
             <th></th>
           </tr>
           <tr class="table-filter-row">
             <td>
-              <div class="date-picker-wrap" style="min-width: 140px;">
-                <button type="button" class="input date-picker-btn" id="btnFilterDate" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
-                  <span id="lblFilterDate">${filters.date ? fmtDateShort(filters.date) : 'All Dates'}</span>
-                </button>
-                <input type="hidden" id="fDate" value="${filters.date}">
-                <div class="date-popover" id="filterDatePopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <div class="date-picker-wrap" style="flex:1;">
+                  <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+                    <span id="lblFilterDateFrom">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start'}</span>
+                  </button>
+                  <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
+                  <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+                </div>
+                <span style="color:var(--ink-muted); font-size:12px;">to</span>
+                <div class="date-picker-wrap" style="flex:1;">
+                  <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+                    <span id="lblFilterDateTo">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End'}</span>
+                  </button>
+                  <input type="hidden" id="fDateTo" value="${filters.dateTo}">
+                  <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+                </div>
               </div>
             </td>
             <td></td>
             <td>
-              <select class="input" id="fAccount">
-                <option value="">All</option>
-                ${state.accounts.map(a=>`<option value="${esc(a.name)}" ${filters.account===a.name?'selected':''}>${esc(a.name)}</option>`).join('')}
-              </select>
+              <div class="date-picker-wrap">
+                <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+                  <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All Accounts'}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="select-popover" id="filterAccountPopover">
+                   <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
+                   ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
+                </div>
+              </div>
             </td>
             <td>
-              <select class="input" id="fCategory">
-                <option value="">All</option>
-                ${state.categories.map(c=>`<option value="${esc(c.category)}" ${filters.category===c.category?'selected':''}>${esc(c.category)}</option>`).join('')}
-              </select>
+              <div class="date-picker-wrap">
+                <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+                  <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="select-popover" id="filterCategoryPopover">
+                   <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
+                   ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
+                </div>
+              </div>
             </td>
             <td><input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}"></td>
             <td style="text-align:right">
-              <select class="input" id="fType">
-                <option value="">All</option>
-                <option value="income" ${filters.type==='income'?'selected':''}>Income</option>
-                <option value="expense" ${filters.type==='expense'?'selected':''}>Expense</option>
-                <option value="transfer" ${filters.type==='transfer'?'selected':''}>Transfer</option>
-              </select>
+              <div class="date-picker-wrap">
+                <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: flex-end;">
+                  <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All Types'))}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="select-popover" id="filterTypePopover" style="text-align: right;">
+                   <button class="select-item ${!filters.type ? 'active' : ''}" data-val="" style="text-align: right;">All Types</button>
+                   <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income" style="text-align: right;">Income</button>
+                   <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense" style="text-align: right;">Expense</button>
+                   <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer" style="text-align: right;">Transfer</button>
+                </div>
+              </div>
             </td>
             <td></td>
             <td><button class="btn btn-ghost btn-sm" id="fClear" style="padding:4px 6px;">Reset</button></td>
@@ -897,22 +927,51 @@ function renderTransactions(){
   `;
 
   document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
-  document.getElementById('fType').addEventListener('change', e=>{ filters.type=e.target.value; txnPage=0; renderTransactions(); });
-  document.getElementById('fAccount').addEventListener('change', e=>{ filters.account=e.target.value; txnPage=0; renderTransactions(); });
-  document.getElementById('fCategory').addEventListener('change', e=>{ filters.category=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
-  document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',date:''}; txnPage=0; renderTransactions(); });
+  document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',dateFrom:'',dateTo:''}; txnPage=0; renderTransactions(); });
   document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
   
-  // Custom Filter Date Picker Listener
-  document.getElementById('btnFilterDate').addEventListener('click', (e) => {
+  // Setup Popover Toggles for Custom Selects
+  const setupCustomSelect = (btnId, popoverId, propName) => {
+    document.getElementById(btnId).addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pop = document.getElementById(popoverId);
+        const isShowing = pop.classList.contains('show');
+        document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
+        if (!isShowing) pop.classList.add('show');
+    });
+
+    document.querySelectorAll(`#${popoverId} .select-item`).forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filters[propName] = btn.dataset.val;
+            txnPage = 0; renderTransactions();
+        });
+    });
+  };
+
+  setupCustomSelect('btnFilterAccount', 'filterAccountPopover', 'account');
+  setupCustomSelect('btnFilterCategory', 'filterCategoryPopover', 'category');
+  setupCustomSelect('btnFilterType', 'filterTypePopover', 'type');
+
+  // Custom Filter Date Picker Listener (Start)
+  document.getElementById('btnFilterDateFrom').addEventListener('click', (e) => {
     e.stopPropagation();
-    document.getElementById('filterDatePopover').classList.toggle('show');
-    renderDatePickerPopover('filterDatePopover', 'fDate', 'lblFilterDate', 'filter', (newDate) => {
-        filters.date = newDate;
-        txnPage = 0;
-        renderTransactions();
+    document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
+    document.getElementById('filterDateFromPopover').classList.add('show');
+    renderDatePickerPopover('filterDateFromPopover', 'fDateFrom', 'lblFilterDateFrom', 'filterFrom', (newDate) => {
+        filters.dateFrom = newDate; txnPage = 0; renderTransactions();
+    });
+  });
+
+  // Custom Filter Date Picker Listener (End)
+  document.getElementById('btnFilterDateTo').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
+    document.getElementById('filterDateToPopover').classList.add('show');
+    renderDatePickerPopover('filterDateToPopover', 'fDateTo', 'lblFilterDateTo', 'filterTo', (newDate) => {
+        filters.dateTo = newDate; txnPage = 0; renderTransactions();
     });
   });
 
@@ -967,7 +1026,6 @@ function openTxnModal(id, isDuplicate = false){
 
   document.getElementById('txnModalTitle').textContent = isDuplicate ? 'Duplicate Transaction' : (id ? 'Edit Transaction' : 'Add Transaction');
   
-  // Date Picker Initialization
   const targetDate = t ? t.date : todayStr();
   document.getElementById('txnDate').value = targetDate;
   document.getElementById('lblTxnDate').textContent = fmtDateShort(targetDate);
@@ -1096,7 +1154,7 @@ function renderBalance(){
   const el = document.getElementById('view-balance');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Monthly Balance</h2><p class="sub">Automatically calculated monthly cash flow summary</p></div>
+      <div><h2>Monthly Balance</h2><p class="sub">Cash flow summary per month, automatically calculated</p></div>
     </div>
     <div class="card card-pad" style="margin-bottom:18px;">
       <p class="panel-title">End of Month Balance Trend</p>
@@ -1153,7 +1211,7 @@ function renderBudgets() {
 
     <div class="card card-pad" style="margin-bottom:20px;">
       <p class="panel-title">Active Budgets</p>
-      <p class="panel-sub">Track total category spending or target specific subcategories</p>
+      <p class="panel-sub">Track total category spending or target specific subcategories.</p>
       <div class="budget-list">
         ${budgetKeys.length > 0 ? budgetKeys.map(k=>{
           const budget = state.budgets[k];
@@ -1580,7 +1638,7 @@ function renderAccounts(){
   const el = document.getElementById('view-accounts');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Accounts</h2><p class="sub">Balances are auto-calculated</p></div>
+      <div><h2>Accounts</h2><p class="sub">Balances are auto-calculated. Editing current balance offsets opening data.</p></div>
       <div class="section-head-actions">
         <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Add Account</button>
       </div>
@@ -1828,12 +1886,14 @@ function init(){
     }
     if (!e.target.closest('.date-picker-wrap')) {
       document.querySelectorAll('.date-popover').forEach(p => p.classList.remove('show'));
+      document.querySelectorAll('.select-popover').forEach(p => p.classList.remove('show'));
     }
   });
 
   // Listener Date Picker Button (Memunculkan kalender harian di Add Transaction)
   document.getElementById('btnTxnDate').addEventListener('click', (e) => {
     e.stopPropagation();
+    document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
     document.getElementById('datePopover').classList.toggle('show');
   });
 
@@ -1875,6 +1935,7 @@ function init(){
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
       document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
       document.querySelectorAll('.date-popover').forEach(p => p.classList.remove('show'));
+      document.querySelectorAll('.select-popover').forEach(p => p.classList.remove('show'));
     }
   });
 }
