@@ -999,6 +999,42 @@ function renderTransactions(){
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
 
+function txnRowHtml(t){
+  const isTransfer = !!t.transferTo;
+  const isIncome = !isTransfer && t.income > 0;
+  const amt = isTransfer ? t.expense : (isIncome ? t.income : t.expense);
+  const color = isTransfer ? '' : (isIncome ? 'pos' : 'neg');
+  const typeLabel = isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense');
+  
+  let displayNote = esc(t.note) || esc(t.subcategory) || '—';
+  if (isTransfer) {
+    displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
+  }
+  
+  return `<tr>
+    <td>${fmtDateShort(t.date)}</td>
+    <td>${dayName(t.date)}</td>
+    <td>${esc(t.account)}</td>
+    <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
+    <td class="note-cell" title="${displayNote}">${displayNote}</td>
+    <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
+    <td class="num ${color}">${fmtCurrency(amt)}</td>
+    <td><div class="row-actions">
+      <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
+      <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
+      <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
+    </div></td>
+  </tr>`;
+}
+
+function deleteTxn(id){
+  if(!confirm('Delete this transaction? This action cannot be undone.')) return;
+  state.transactions = state.transactions.filter(t=>t.id!==id);
+  saveState();
+  renderTransactions();
+  toast('Transaction deleted');
+}
+
 /* ============ TRANSACTION MODAL ============ */
 function openTxnModal(id, isDuplicate = false){
   if(state.accounts.length === 0) { toast('Create an account first'); return; }
