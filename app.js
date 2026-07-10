@@ -100,6 +100,15 @@ let editingCatOldName = null;
 let duplicatingCatName = null;
 let editingSubOldName = null;
 let targetCatForSub = null;
+let selectedDashMonth = null;
+
+function shiftMonth(yyyyMM, offset) {
+  let [y, m] = yyyyMM.split('-').map(Number);
+  m += offset;
+  if (m < 1) { m = 12; y -= 1; }
+  if (m > 12) { m = 1; y += 1; }
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
