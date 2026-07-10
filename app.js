@@ -35,14 +35,14 @@ const SEED = {
   "categories": [
     {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
     {"category": "Transportation", "icon": "🚗", "type": "expense", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
-    {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
+    {"category": "Lifestyle", "icon": "🎯", "type": "both", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
     {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
     {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
     {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
     {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
-    {"category": "Present", "icon": "🎁", "type": "expense", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
+    {"category": "Present", "icon": "🎁", "type": "both", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
     {"category": "Accounts Payable", "icon": "💳", "type": "expense", "subcategories": ["💰 Debt"]},
     {"category": "Accounts Receivable", "icon": "🧾", "type": "income", "subcategories": ["🧾 Receivable"]},
     {"category": "Allowance", "icon": "💵", "type": "income", "subcategories": ["💵 Allowance"]},
@@ -1153,7 +1153,7 @@ function renderBudgets() {
 
     <div class="card card-pad" style="margin-bottom:20px;">
       <p class="panel-title">Active Budgets</p>
-      <p class="panel-sub">Track total category spending or target specific subcategories.</p>
+      <p class="panel-sub">Track total category spending or target specific subcategories</p>
       <div class="budget-list">
         ${budgetKeys.length > 0 ? budgetKeys.map(k=>{
           const budget = state.budgets[k];
@@ -1580,7 +1580,7 @@ function renderAccounts(){
   const el = document.getElementById('view-accounts');
   el.innerHTML = `
     <div class="section-head">
-      <div><h2>Accounts</h2><p class="sub">Balances are auto-calculated. Editing current balance offsets opening data.</p></div>
+      <div><h2>Accounts</h2><p class="sub">Balances are auto-calculated</p></div>
       <div class="section-head-actions">
         <button class="btn btn-primary" id="btnAddAcct">${icon('plus')}Add Account</button>
       </div>
