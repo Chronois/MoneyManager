@@ -1,5 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
+/* ---------- Native Input Theming (Untuk Kalender Bawaan Browser) ---------- */
+:root { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
+/* ---------- Desain Tombol Pemilih Bulan ---------- */
+.month-picker-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  border-radius: 100px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  outline: none;
+  transition: .15s ease;
+  box-shadow: var(--shadow-sm);
+}
+.month-picker-btn:hover {
+  background: var(--paper-2);
+  border-color: var(--primary);
+}
+
 :root{
   --paper:#F5FAF3;
   --paper-2:#EBF4E8;
