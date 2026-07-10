@@ -461,13 +461,14 @@ function renderDashboard(){
         <p class="panel-title">Expenses by Subcategory</p>
         <p class="panel-sub">Extra details for ${fmtMonthLabel(nowKey)}</p>
         ${renderSubcategoryDonutBlock(monthTx)}
+        ${renderSubcategoryBarBlock(monthTx)}
       </div>
       <div class="card card-pad">
         <p class="panel-title">Balance per Account</p>
         <p class="panel-sub">Manage accounts in the 'Accounts' menu</p>
         <div class="acct-grid" style="grid-template-columns:repeat(2,1fr)">
           ${state.accounts.slice(0,6).map(a=>`
-            <div class="acct-card" style="padding:12px 14px;">
+            <div class="acct-card dash-acct-card" style="padding:12px 14px; cursor:pointer;" title="Go to Accounts">
               <div class="acct-top">
                 <div class="acct-icon">${ACCOUNT_ICONS[a.type]||'💳'}</div>
                 <span class="acct-type-tag">${a.type}</span>
@@ -490,6 +491,11 @@ function renderDashboard(){
       </div>
     </div>
   `;
+  
+  // Attach event listener for the new clickable account cards
+  el.querySelectorAll('.dash-acct-card').forEach(card => {
+    card.addEventListener('click', () => switchTab('accounts'));
+  });
   document.getElementById('btnAddTxnDash').addEventListener('click', ()=> openTxnModal());
 }
 
@@ -561,6 +567,40 @@ function renderSubcategoryDonutBlock(monthTx){
       </div>`}).join('')}
     </div>
   </div>`;
+}
+
+function renderSubcategoryBarBlock(monthTx){
+  const bySubCat = {};
+  monthTx.filter(t=>!t.transferTo && t.expense>0).forEach(t=>{
+    const key = t.subcategory || t.category;
+    bySubCat[key] = (bySubCat[key]||0) + t.expense;
+  });
+  const entries = Object.entries(bySubCat).sort((a,b)=>b[1]-a[1]);
+  if(entries.length===0) return '';
+  const top = entries.slice(0,7);
+  const max = top[0][1];
+  
+  let html = '<div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 12px;">';
+  html += '<p class="panel-title" style="font-size:13.5px; margin-bottom:4px;">Comparison Details</p>';
+  
+  top.forEach(([sub,val], i) => {
+    const parts = splitSub(sub);
+    const pct = max > 0 ? Math.round((val/max)*100) : 0;
+    const color = CHART_PALETTE[(i+5)%CHART_PALETTE.length];
+    html += `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight: 500;">
+          <span>${parts.icon} ${esc(parts.name)}</span>
+          <span style="font-family:var(--font-mono); color:var(--ink);">${fmtCurrency(val)}</span>
+        </div>
+        <div class="bar-track" style="height:6px; background:var(--paper-2); border-radius:3px; overflow:hidden;">
+          <div style="height:100%; width:${pct}%; background:${color}; border-radius:3px; transition: width 0.4s ease;"></div>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  return html;
 }
 
 /* ============ TRANSACTIONS ============ */
