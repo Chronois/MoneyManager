@@ -54,6 +54,7 @@
       }
     }catch(e){ console.warn('Failed to load saved data', e); }
     
+    // Migration: ensure every category has an icon
     if(parsed.categories){
       parsed.categories.forEach(c => {
         if(!c.icon) c.icon = CATEGORY_ICONS_FALLBACK[c.category] || '📁';
@@ -726,6 +727,35 @@
     document.getElementById(btnId).textContent = emoji;
   }
 
+  function initEmojiPicker() {
+    // Instantiate EmojiMart pickers for both modals
+    if(window.EmojiMart) {
+      const catPickerOptions = {
+        onEmojiSelect: (e) => {
+          setEmojiPicker('btnCatIcon', 'catIconValue', e.native);
+          document.getElementById('catEmojiPopover').classList.remove('show');
+        },
+        theme: 'light',
+        previewPosition: 'none',
+        skinTonePosition: 'none'
+      };
+      const catPicker = new EmojiMart.Picker(catPickerOptions);
+      document.getElementById('catEmojiPopover').appendChild(catPicker);
+
+      const subPickerOptions = {
+        onEmojiSelect: (e) => {
+          setEmojiPicker('btnSubIcon', 'subIconValue', e.native);
+          document.getElementById('subEmojiPopover').classList.remove('show');
+        },
+        theme: 'light',
+        previewPosition: 'none',
+        skinTonePosition: 'none'
+      };
+      const subPicker = new EmojiMart.Picker(subPickerOptions);
+      document.getElementById('subEmojiPopover').appendChild(subPicker);
+    }
+  }
+
   function openCatModal(name = null, isDuplicate = false) {
     editingCatOldName = isDuplicate ? null : name;
     duplicatingCatName = isDuplicate ? name : null;
@@ -1007,21 +1037,15 @@
     document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+currentTab));
     renderCurrentTab();
     
+    // Setup EmojiMart instances once the library is loaded
+    setTimeout(initEmojiPicker, 500); 
+
     // Emoji Popover Toggles
     document.getElementById('btnCatIcon').addEventListener('click', () => {
       document.getElementById('catEmojiPopover').classList.toggle('show');
     });
-    document.querySelector('#catEmojiPopover emoji-picker').addEventListener('emoji-click', e => {
-      setEmojiPicker('btnCatIcon', 'catIconValue', e.detail.unicode);
-      document.getElementById('catEmojiPopover').classList.remove('show');
-    });
-    
     document.getElementById('btnSubIcon').addEventListener('click', () => {
       document.getElementById('subEmojiPopover').classList.toggle('show');
-    });
-    document.querySelector('#subEmojiPopover emoji-picker').addEventListener('emoji-click', e => {
-      setEmojiPicker('btnSubIcon', 'subIconValue', e.detail.unicode);
-      document.getElementById('subEmojiPopover').classList.remove('show');
     });
 
     document.addEventListener('click', e => {
@@ -1029,7 +1053,7 @@
         document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
       }
     });
-
+  
     // Export/Import/Reset
     document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
@@ -1069,4 +1093,5 @@
       }
     });
   }
+  
   document.addEventListener('DOMContentLoaded', init);
