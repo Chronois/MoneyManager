@@ -258,7 +258,7 @@ tbody tr:hover{ background:var(--paper-2); }
 .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border-soft); }
 .modal-head h3{ margin:0; font-family:var(--font-display); font-size:18px; font-weight:600; }
 .modal-body{ padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
-.modal-foot{ padding:16px 22px 20px; display:flex; justify-content:flex-end; gap:10px; }
+.modal-foot{ padding:16px 22px 20px; display:flex; justify-content:flex-end; gap:10px; border-top: 1px solid var(--border-soft); }
 .form-row{ display:flex; gap:12px; }
 .form-row .field{ flex:1; }
 .field .input, .field select{ width:100%; }
@@ -271,7 +271,6 @@ tbody tr:hover{ background:var(--paper-2); }
 
 /* ---------- Budget bars ---------- */
 .budget-list{ display:flex; flex-direction:column; gap:16px; }
-.budget-row .budget-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
 .budget-row .cat-label{ font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:8px; }
 .budget-row .amounts{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-muted); }
 .bar-track{ height:9px; border-radius:100px; background:var(--paper-2); overflow:hidden; }
