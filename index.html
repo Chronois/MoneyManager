@@ -107,7 +107,7 @@
 
 <!-- Category Modal -->
 <div class="modal-overlay" id="catModalOverlay">
-  <div class="modal">
+  <div class="modal" style="overflow: visible;">
     <div class="modal-head">
       <h3 id="catModalTitle">Add Category</h3>
       <button class="icon-btn" id="btnCatClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -116,8 +116,13 @@
       <div class="field"><label>Category Name</label><input type="text" class="input" id="catName" placeholder="e.g. Shopping"></div>
       <div class="field">
         <label>Category Icon</label>
-        <div class="emoji-picker" id="catIconPicker"></div>
-        <input type="hidden" id="catIconValue" value="📁">
+        <div class="emoji-dropdown-wrap">
+          <button type="button" class="input emoji-selector-btn" id="btnCatIcon">📁</button>
+          <input type="hidden" id="catIconValue" value="📁">
+          <div class="emoji-popover" id="catEmojiPopover">
+            <emoji-picker></emoji-picker>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -129,7 +134,7 @@
 
 <!-- Subcategory Modal -->
 <div class="modal-overlay" id="subModalOverlay">
-  <div class="modal">
+  <div class="modal" style="overflow: visible;">
     <div class="modal-head">
       <h3 id="subModalTitle">Add Subcategory</h3>
       <button class="icon-btn" id="btnSubClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -138,8 +143,13 @@
       <div class="field"><label>Subcategory Name</label><input type="text" class="input" id="subName" placeholder="e.g. Groceries"></div>
       <div class="field">
         <label>Subcategory Icon</label>
-        <div class="emoji-picker" id="subIconPicker"></div>
-        <input type="hidden" id="subIconValue" value="📁">
+        <div class="emoji-dropdown-wrap">
+          <button type="button" class="input emoji-selector-btn" id="btnSubIcon">📁</button>
+          <input type="hidden" id="subIconValue" value="📁">
+          <div class="emoji-popover" id="subEmojiPopover">
+            <emoji-picker></emoji-picker>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -151,6 +161,8 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Mengambil Web Component Emoji Picker asli -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
