@@ -858,97 +858,95 @@ function renderTransactions(){
       </div>
     </div>
 
-    <div style="display:flex; flex-wrap:nowrap; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow-x:auto;">
-        <div style="min-width: 950px; width: 100%; display: flex; gap: 0;">
-          
-          <div style="width: 210px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div class="date-picker-wrap" style="flex:1; min-width:0;">
-                <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
-                  <span id="lblFilterDateFrom" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
-                </button>
-                <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
-                <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
-              </div>
-              <div class="date-picker-wrap" style="flex:1; min-width:0;">
-                <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
-                  <span id="lblFilterDateTo" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
-                </button>
-                <input type="hidden" id="fDateTo" value="${filters.dateTo}">
-                <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
-              </div>
-            </div>
-          </div>
-
-          <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
-            <div class="date-picker-wrap">
-              <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
-                <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All'}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+    <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow:visible;">
+        
+        <div style="width: 210px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="date-picker-wrap" style="flex:1; min-width:0;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
+                <span id="lblFilterDateFrom" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
               </button>
-              <div class="select-popover" id="filterAccountPopover">
-                 <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
-                 ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
-              </div>
+              <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
+              <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
             </div>
-          </div>
-
-          <div style="width: 170px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
-            <div class="date-picker-wrap">
-              <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
-                <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+            <div class="date-picker-wrap" style="flex:1; min-width:0;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
+                <span id="lblFilterDateTo" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
               </button>
-              <div class="select-popover" id="filterCategoryPopover">
-                 <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
-                 ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
-              </div>
+              <input type="hidden" id="fDateTo" value="${filters.dateTo}">
+              <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
             </div>
           </div>
-
-          <div style="flex: 1; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
-             <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
-             <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); width:100%;">
-          </div>
-
-          <div style="width: 110px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
-            <div class="date-picker-wrap">
-              <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:center; gap:4px; width:100%;">
-                <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All'))}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-              <div class="select-popover" id="filterTypePopover">
-                 <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
-                 <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
-                 <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
-                 <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
-              </div>
-            </div>
-          </div>
-
-          <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
-             <button class="btn btn-ghost" id="fClear" style="padding: 0 24px; font-size:12.5px; height: 36px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
-          </div>
-          
         </div>
+
+        <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
+          <div class="date-picker-wrap">
+            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
+              <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All'}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="select-popover" id="filterAccountPopover">
+               <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
+               ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 170px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
+          <div class="date-picker-wrap">
+            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
+              <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="select-popover" id="filterCategoryPopover">
+               <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
+               ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 140px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
+           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
+           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); width:100%;">
+        </div>
+
+        <div style="width: 110px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Type</label>
+          <div class="date-picker-wrap">
+            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:center; gap:4px; width:100%;">
+              <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All'))}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="select-popover" id="filterTypePopover">
+               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
+               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
+               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
+               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
+           <button class="btn btn-ghost" id="fClear" style="padding: 0 24px; font-size:12.5px; height: 36px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
+        </div>
+        
     </div>
 
     <div class="table-wrap" style="overflow-x:auto;">
       <table style="table-layout: fixed; width: 100%; min-width: 950px;">
         <thead>
           <tr>
-            <th style="width: 110px;">Date</th>
+            <th style="width: 110px; padding-left: 14px;">Date</th>
             <th style="width: 100px;">Day</th>
             <th style="width: 130px;">Account</th>
             <th style="width: 170px;">Category</th>
             <th style="width: auto;">Note</th>
             <th style="width: 110px; text-align:center;">Type</th>
             <th style="width: 130px; text-align:right;">Amount</th>
-            <th style="width: 120px; text-align:right;">Actions</th>
+            <th style="width: 120px; text-align:right; padding-right: 14px;">Actions</th>
           </tr>
         </thead>
         <tbody>
