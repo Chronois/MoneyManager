@@ -37,7 +37,7 @@ const SEED = {
     {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
     {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
-    {"constants": "Accessory", "category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
+    {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
     {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
     {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
@@ -57,10 +57,9 @@ const SEED = {
 const STORAGE_KEY = 'mm_money_manager_v1';
 const ACCOUNT_ICONS = { bank:'🏦', digital: '📱', ewallet:'💳', cash:'💵' };
 const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA8','#4B85A6','#B0784F','#6D8C63','#A6555F','#5E9C8C','#9C8A5C','#7A9E4C','#C97F9E','#5A7DA6','#A88B4C'];
-const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-// Static baseline conversion rates (Used as fallback if API fails)
 const CURRENCIES = {
   IDR: { rate: 1, locale: 'id-ID' },
   USD: { rate: 16200, locale: 'en-US' },
@@ -143,7 +142,6 @@ async function fetchExchangeRates() {
     if (data && data.rates) {
       Object.keys(CURRENCIES).forEach(curr => {
         if (curr !== 'IDR' && data.rates[curr]) {
-          // 1 unit of foreign currency = 1 / rate_against_idr
           CURRENCIES[curr].rate = 1 / data.rates[curr];
         }
       });
@@ -151,7 +149,7 @@ async function fetchExchangeRates() {
       renderCurrentTab(); 
     }
   } catch (e) {
-    console.warn('⚠️ Network standard error or API down. Live rates fallback applied:', e);
+    console.warn('⚠️ Network or API error. Live rates fallback applied:', e);
   }
 }
 
@@ -844,10 +842,8 @@ function renderTransactions(){
       </div>
     </div>
 
-    <!-- ADVANCED FILTER PANEL -->
     <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
-        <!-- Date Range (Spans Date & Day columns = 130 + 120 = 250px) -->
         <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
           <div style="display:flex; align-items:center; gap:6px;">
@@ -869,7 +865,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Account -->
         <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
@@ -884,7 +879,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Category -->
         <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
@@ -899,13 +893,11 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Note -->
         <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
            <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
         </div>
 
-        <!-- Type -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
@@ -922,10 +914,8 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Empty Space For Amount (130px) -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
-        <!-- Reset Button -->
         <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end;">
            <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 36px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
@@ -1764,7 +1754,7 @@ function init(){
   }
 
   renderCurrentTab();
-  fetchExchangeRates(); // Dynamic API call right on load
+  fetchExchangeRates(); 
   setTimeout(initEmojiPicker, 500); 
 
   document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
