@@ -57,7 +57,7 @@ const SEED = {
 const STORAGE_KEY = 'mm_money_manager_v1';
 const ACCOUNT_ICONS = { bank:'🏦', digital: '📱', ewallet:'💳', cash:'💵' };
 const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA8','#4B85A6','#B0784F','#6D8C63','#A6555F','#5E9C8C','#9C8A5C','#7A9E4C','#C97F9E','#5A7DA6','#A88B4C'];
-const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct Nov','Dec'];
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 const CURRENCIES = {
@@ -68,6 +68,21 @@ const CURRENCIES = {
   KRW: { rate: 12, locale: 'ko-KR' },
   CNY: { rate: 2250, locale: 'zh-CN' }
 };
+
+const ICONS = {
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  download:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>',
+  upload:'<path d="M12 21V9m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>',
+  refresh:'<path d="M3 12a9 9 0 0115.36-6.36M21 12a9 9 0 01-15.36 6.36"/><path d="M3 4v5h5M21 20v-5h-5"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v14a1 1 0 01-1 1H7a1 1 0 01-1-1V6h12z"/>',
+  close:'<path d="M18 6L6 18M6 6l12 12"/>',
+  wallet:'<path d="M3 7a2 2 0 012-2h13a1 1 0 011 1v2M3 7v10a2 2 0 002 2h14a1 1 0 001-1V9a1 1 0 00-1-1H5a2 2 0 01-2-2z"/><circle cx="16" cy="14" r="1.4"/>',
+  copy:'<path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
+  sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
+};
+function icon(name, cls){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls||''}">${ICONS[name]}</svg>`; }
 
 /* ============ STATE ============ */
 let state = loadStateLocal();
@@ -131,25 +146,6 @@ function saveState(){
         .then(() => console.log('✅ Synced with Cloud'))
         .catch(e => console.error("Cloud sync error:", e));
     }, 1500);
-  }
-}
-
-/* ============ DYNAMIC EXCHANGE RATES API ============ */
-async function fetchExchangeRates() {
-  try {
-    const response = await fetch('https://open.er-api.com/v6/latest/IDR');
-    const data = await response.json();
-    if (data && data.rates) {
-      Object.keys(CURRENCIES).forEach(curr => {
-        if (curr !== 'IDR' && data.rates[curr]) {
-          CURRENCIES[curr].rate = 1 / data.rates[curr];
-        }
-      });
-      console.log('🔄 Live currency exchange rates synchronized successfully:', CURRENCIES);
-      renderCurrentTab(); 
-    }
-  } catch (e) {
-    console.warn('⚠️ Network or API error. Live rates fallback applied:', e);
   }
 }
 
@@ -516,14 +512,14 @@ function toast(msg){
   toastTimer = setTimeout(()=> el.classList.remove('show'), 2600);
 }
 
-/* ============ NAV ============ */
+/* ============ NAV (Mendukung Penukaran Posisi) ============ */
 const TABS = [
   { id:'dashboard', label:'Dashboard' },
   { id:'transactions', label:'Transactions' },
   { id:'balance', label:'Balance' },
   { id:'budgets', label:'Budgets' },
-  { id:'accounts', label:'Accounts' },
-  { id:'categories', label:'Categories' },
+  { id:'accounts', label:'Accounts' },     // ---> Accounts bergeser ke atas
+  { id:'categories', label:'Categories' }, // ---> Categories bergeser ke bawah
 ];
 function renderNav(){
   const nav = document.getElementById('tabNav');
@@ -1738,6 +1734,63 @@ function saveAcctForm(){
   saveState(); closeAcctModal(); renderCurrentTab();
 }
 
+/* ============ IMPORT / EXPORT / RESET ============ */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `money-manager-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Data exported');
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!Array.isArray(parsed.transactions) || !Array.isArray(parsed.accounts)) throw new Error('Invalid format');
+      state = parsed;
+      if(!state.currency) state.currency = 'IDR';
+      document.getElementById('currencySelect').value = state.currency;
+      saveState(); renderCurrentTab(); toast('Data successfully imported');
+    }catch(e){ toast('Failed to import: invalid file'); }
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  if(!confirm('Reset this data? Transactions and accounts will be deleted.')) return;
+  state = JSON.parse(JSON.stringify(SEED));
+  document.getElementById('currencySelect').value = state.currency;
+  saveState(); renderCurrentTab(); toast('Data reset');
+}
+
+/* ============ AUTH UI ACTIONS ============ */
+function openAuthModal() { document.getElementById('authModalOverlay').classList.add('open'); }
+function closeAuthModal() { document.getElementById('authModalOverlay').classList.remove('open'); }
+
+async function handleLoginEmail() {
+  const email = document.getElementById('authEmail').value;
+  const pass = document.getElementById('authPassword').value;
+  if(!email || !pass) return toast('Please fill in Email & Password');
+  try { await signInWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Login Failed: ' + e.message); }
+}
+
+async function handleRegisterEmail() {
+  const email = document.getElementById('authEmail').value;
+  const pass = document.getElementById('authPassword').value;
+  if(!email || !pass) return toast('Please fill in Email & Password');
+  try { await createUserWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Signup Failed: ' + e.message); }
+}
+
+async function handleLoginGoogle() {
+  try { await signInWithPopup(auth, googleProvider); closeAuthModal(); } catch(e) { toast('Google Login Failed: ' + e.message); }
+}
+
+async function handleLogout() {
+  try { await signOut(auth); toast('Logged out successfully'); closeAuthModal(); } catch(e) { console.error(e); }
+}
+
 /* ============ INIT ============ */
 function init(){
   initTheme();
@@ -1754,7 +1807,6 @@ function init(){
   }
 
   renderCurrentTab();
-  fetchExchangeRates(); 
   setTimeout(initEmojiPicker, 500); 
 
   document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
@@ -1774,6 +1826,7 @@ function init(){
     document.getElementById('subEmojiPopover').classList.toggle('show');
   });
 
+  // Global listener for closing custom popovers
   document.addEventListener('click', e => {
     if (!e.target.closest('.emoji-dropdown-wrap')) {
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
@@ -1787,6 +1840,7 @@ function init(){
     }
   });
 
+  // Listener Date Picker Button (Memunculkan kalender harian di Add Transaction)
   document.getElementById('btnTxnDate').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
