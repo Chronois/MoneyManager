@@ -7,6 +7,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA55-zN6AE4jP8JaARRPVtNA9Xdk4PVSQA",
   authDomain: "money-manager-7777.firebaseapp.com",
@@ -26,6 +27,7 @@ const googleProvider = new GoogleAuthProvider();
 let currentUser = null;
 let cloudSyncTimeout = null;
 
+// --- Default Data / Initial Data ---
 const SEED = {
   "currency": "IDR",
   "transactions": [], 
@@ -510,14 +512,14 @@ function toast(msg){
   toastTimer = setTimeout(()=> el.classList.remove('show'), 2600);
 }
 
-/* ============ NAV ============ */
+/* ============ NAV (Mendukung Penukaran Posisi) ============ */
 const TABS = [
   { id:'dashboard', label:'Dashboard' },
   { id:'transactions', label:'Transactions' },
   { id:'balance', label:'Balance' },
   { id:'budgets', label:'Budgets' },
-  { id:'categories', label:'Categories' },
-  { id:'accounts', label:'Accounts' },
+  { id:'accounts', label:'Accounts' },     // ---> Accounts bergeser ke atas
+  { id:'categories', label:'Categories' }, // ---> Categories bergeser ke bawah
 ];
 function renderNav(){
   const nav = document.getElementById('tabNav');
@@ -836,10 +838,8 @@ function renderTransactions(){
       </div>
     </div>
 
-    <!-- ADVANCED FILTER PANEL -->
     <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
-        <!-- Date Range (Spans Date & Day columns = 130 + 120 = 250px) -->
         <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
           <div style="display:flex; align-items:center; gap:6px;">
@@ -861,7 +861,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Account -->
         <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
@@ -876,7 +875,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Category -->
         <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
@@ -891,13 +889,11 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Note -->
         <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
            <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
         </div>
 
-        <!-- Type -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
@@ -914,12 +910,9 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Empty Space For Amount (130px) -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
-        <!-- Reset Button -->
         <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end;">
-           <label style="font-size:11px; visibility:hidden; user-select:none;">Reset</label>
            <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 36px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
     </div>
@@ -1131,48 +1124,6 @@ function setTxnType(type){
   }
 }
 
-function saveTxnForm(){
-  const date = document.getElementById('txnDate').value;
-  const account = document.getElementById('txnAccount').value;
-  const note = document.getElementById('txnNote').value.trim();
-  
-  const rate = CURRENCIES[state.currency || 'IDR'].rate;
-  const amount = (Number(document.getElementById('txnAmount').value) || 0) * rate;
-
-  if(!date){ toast('Date is required'); return; }
-  if(amount<=0){ toast('Amount must be greater than 0'); return; }
-
-  let payload = { date, account, note, category:'', subcategory:'', expense:0, income:0, transferTo:'' };
-  if(txnType==='transfer'){
-    const to = document.getElementById('txnTransferTo').value;
-    if(to===account){ toast('Destination account must be different from source account'); return; }
-    payload.category = 'Lifestyle';
-    payload.subcategory = '🔁 Transfer Between Accounts';
-    payload.expense = amount;
-    payload.transferTo = to;
-  } else if(txnType==='income'){
-    payload.category = document.getElementById('txnCategory').value;
-    payload.subcategory = document.getElementById('txnSubcategory').value;
-    payload.income = amount;
-  } else {
-    payload.category = document.getElementById('txnCategory').value;
-    payload.subcategory = document.getElementById('txnSubcategory').value;
-    payload.expense = amount;
-  }
-
-  if(editingTxnId){
-    const idx = state.transactions.findIndex(t=>t.id===editingTxnId);
-    state.transactions[idx] = Object.assign({id:editingTxnId}, payload);
-    toast('Transaction updated');
-  } else {
-    state.transactions.push(Object.assign({id:uid()}, payload));
-    toast('Transaction added');
-  }
-  saveState();
-  closeTxnModal();
-  renderCurrentTab();
-}
-
 /* ============ BALANCE (MONTHLY) ============ */
 function renderBalance(){
   const { enriched } = computeLedger();
@@ -1303,7 +1254,6 @@ function openBudgetModal(key = null) {
     } else {
         targetCat = key;
     }
-    
     const rawAmt = state.budgets[key] || 0;
     const val = rawAmt / rate;
     amount = val % 1 === 0 ? val : val.toFixed(2);
@@ -1320,7 +1270,6 @@ function openBudgetModal(key = null) {
   
   popSub(targetCat);
   if (targetSub) document.getElementById('budgetSubcategory').value = targetSub;
-  
   selCat.onchange = (e) => popSub(e.target.value);
   
   document.getElementById('budgetAmount').value = amount;
@@ -1340,7 +1289,6 @@ function saveBudgetForm() {
   const amount = (Number(document.getElementById('budgetAmount').value) || 0) * rate;
   
   if (amount <= 0) { toast('Amount must be greater than 0'); return; }
-  
   const newKey = sub ? `${cat}|${sub}` : cat;
   if (!state.budgets) state.budgets = {};
   
@@ -1441,7 +1389,6 @@ function setEmojiPicker(btnId, inputId, emoji) {
 function renderRecentEmojis() {
   const recents = state.recentEmojis || ['📁', '🍽️', '🚗', '🎯', '🧺', '👕', '💵', '✏️'];
   const html = recents.map(e => `<button type="button" class="recent-btn" onclick="window.selectRecentEmoji('${e}')">${e}</button>`).join('');
-  
   const catList = document.getElementById('catRecentList');
   const subList = document.getElementById('subRecentList');
   if (catList) catList.innerHTML = html;
@@ -1494,7 +1441,6 @@ function initEmojiPicker() {
     };
     const subPicker = new EmojiMart.Picker(subPickerOptions);
     document.getElementById('subPickerContainer').appendChild(subPicker);
-
     renderRecentEmojis();
   }
 }
@@ -1502,7 +1448,6 @@ function initEmojiPicker() {
 function openCatModal(name = null, isDuplicate = false) {
   editingCatOldName = isDuplicate ? null : name;
   duplicatingCatName = isDuplicate ? name : null;
-
   const c = name ? state.categories.find(x => x.category === name) : null;
   document.getElementById('catModalTitle').textContent = isDuplicate ? 'Duplicate Category' : (name ? 'Edit Category' : 'Add Category');
   
@@ -1514,7 +1459,6 @@ function openCatModal(name = null, isDuplicate = false) {
   const icon = c ? c.icon : '📁';
   document.getElementById('catIconValue').value = icon;
   document.getElementById('btnCatIcon').textContent = icon;
-
   document.getElementById('catModalOverlay').classList.add('open');
   document.getElementById('catName').focus();
   renderRecentEmojis();
@@ -1525,7 +1469,6 @@ function saveCatForm() {
   const newName = document.getElementById('catName').value.trim();
   const newIcon = document.getElementById('catIconValue').value;
   const newType = document.getElementById('catType').value;
-
   if (!newName) { toast('Category name is required'); return; }
 
   if (editingCatOldName) {
@@ -1564,29 +1507,24 @@ function saveCatForm() {
     state.categories.push({ category: newName, icon: newIcon, type: newType, subcategories: subs });
     toast(duplicatingCatName ? 'Category duplicated' : 'Category added');
   }
-
   saveState(); renderCategories(); closeCatModal();
 }
 
 function openSubModal(catName, subName = null) {
   targetCatForSub = catName;
   editingSubOldName = subName;
-
   document.getElementById('subModalTitle').textContent = subName ? 'Edit Subcategory' : 'Add Subcategory';
   
   let icon = '📁';
   let name = '';
-  
   if (subName) {
     const parts = splitSub(subName);
     icon = parts.icon;
     name = parts.name;
   }
-
   document.getElementById('subName').value = name;
   document.getElementById('subIconValue').value = icon;
   document.getElementById('btnSubIcon').textContent = icon;
-  
   document.getElementById('subModalOverlay').classList.add('open');
   document.getElementById('subName').focus();
   renderRecentEmojis();
@@ -1607,14 +1545,12 @@ function saveSubForm() {
       toast('Subcategory already exists'); return; 
     }
     cat.subcategories = cat.subcategories.map(s => s === editingSubOldName ? newSub : s);
-    
     const oldKey = targetCatForSub + '|' + editingSubOldName;
     const newKey = targetCatForSub + '|' + newSub;
     if (state.budgets && state.budgets[oldKey] !== undefined) {
         state.budgets[newKey] = state.budgets[oldKey];
         delete state.budgets[oldKey];
     }
-
     state.transactions.forEach(t => {
         if (t.category === targetCatForSub && t.subcategory === editingSubOldName) t.subcategory = newSub;
     });
@@ -1624,7 +1560,6 @@ function saveSubForm() {
     cat.subcategories.push(newSub);
     toast('Subcategory added');
   }
-
   saveState(); renderCategories(); closeSubModal();
 }
 
@@ -1632,7 +1567,6 @@ function deleteCategory(name) {
   const used = state.transactions.some(t => t.category === name);
   if (used) { toast('Failed: Category is currently used in transactions'); return; }
   if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
-  
   state.categories = state.categories.filter(c => c.category !== name);
   if (state.budgets) {
       delete state.budgets[name];
@@ -1640,7 +1574,6 @@ function deleteCategory(name) {
           if (k.startsWith(name + '|')) delete state.budgets[k];
       });
   }
-  
   saveState(); renderCategories(); toast('Category deleted');
 }
 
@@ -1648,13 +1581,10 @@ function deleteSubcategory(catName, subName) {
   const used = state.transactions.some(t => t.category === catName && t.subcategory === subName);
   if (used) { toast('Failed: Subcategory is currently used in transactions'); return; }
   if (!confirm(`Are you sure you want to delete subcategory "${subName}"?`)) return;
-  
   const cat = state.categories.find(c => c.category === catName);
   if (cat) cat.subcategories = cat.subcategories.filter(s => s !== subName);
-  
   const key = catName + '|' + subName;
   if (state.budgets) delete state.budgets[key];
-
   saveState(); renderCategories(); toast('Subcategory deleted');
 }
 
@@ -1765,7 +1695,6 @@ function openAcctModal(name){
   } else {
     document.getElementById('acctBalance').value = 0;
   }
-  
   document.getElementById('acctModalOverlay').classList.add('open');
   document.getElementById('acctName').focus();
 }
@@ -1776,17 +1705,14 @@ function saveAcctForm(){
   const type = document.getElementById('acctType').value;
   const rate = CURRENCIES[state.currency || 'IDR'].rate;
   const currentBalanceTarget = (Number(document.getElementById('acctBalance').value) || 0) * rate;
-  
   if(!name){ toast('Account name is required'); return; }
   
   if(editingAcctName){
     const { accBal } = computeLedger();
     const idx = state.accounts.findIndex(a=>a.name===editingAcctName);
-    
     if(editingAcctName!==name && state.accounts.some(a=>a.name===name)){
        toast('Account name already exists'); return; 
     }
-    
     const oldCurrentBalance = accBal[editingAcctName] || 0;
     const difference = currentBalanceTarget - oldCurrentBalance;
 
@@ -1796,7 +1722,6 @@ function saveAcctForm(){
         if(t.transferTo===editingAcctName) t.transferTo=name;
       });
     }
-    
     state.accounts[idx].name = name;
     state.accounts[idx].type = type;
     state.accounts[idx].opening = (Number(state.accounts[idx].opening) || 0) + difference;
@@ -1806,7 +1731,6 @@ function saveAcctForm(){
     state.accounts.push({ name, type, opening: currentBalanceTarget });
     toast('Account added');
   }
-  
   saveState(); closeAcctModal(); renderCurrentTab();
 }
 
