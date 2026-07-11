@@ -60,10 +60,18 @@ const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
+const CURRENCIES = {
+  IDR: { rate: 1, locale: 'id-ID' },
+  USD: { rate: 16200, locale: 'en-US' },
+  EUR: { rate: 17500, locale: 'de-DE' },
+  JPY: { rate: 105, locale: 'ja-JP' },
+  KRW: { rate: 12, locale: 'ko-KR' },
+  CNY: { rate: 2250, locale: 'zh-CN' }
+};
+
 /* ============ DYNAMIC CURRENCY API ============ */
 async function fetchLatestRates() {
   try {
-    // Fetch real-time exchange rates based on IDR
     const res = await fetch('https://open.er-api.com/v6/latest/IDR');
     const data = await res.json();
     if (data && data.rates) {
@@ -74,7 +82,6 @@ async function fetchLatestRates() {
       if (CURRENCIES.CNY) CURRENCIES.CNY.rate = 1 / data.rates.CNY;
       console.log('✅ Real-time currency rates updated successfully.');
       
-      // Refresh view to apply new rates
       renderCurrentTab(); 
     }
   } catch (e) {
