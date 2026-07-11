@@ -936,18 +936,18 @@ function renderTransactions(){
         </div>
     </div>
 
-    <div class="table-wrap">
-      <table style="table-layout: fixed; width: 100%; min-width: 900px;">
+   <div class="table-wrap">
+      <table style="table-layout: fixed; width: 100%; min-width: 780px;">
         <thead>
           <tr>
-            <th style="width: 125px; padding-left: 14px;">Date</th>
-            <th style="width: 115px;">Day</th>
-            <th style="width: 150px;">Account</th>
-            <th style="width: 180px;">Category</th>
+            <th style="width: 105px; padding-left: 14px;">Date</th>
+            <th style="width: 95px;">Day</th>
+            <th style="width: 130px;">Account</th>
+            <th style="width: 160px;">Category</th>
             <th style="width: auto;">Note</th>
-            <th style="width: 120px; text-align:center;">Type</th>
-            <th style="width: 130px; text-align:right;">Amount</th>
-            <th style="width: 70px; padding-right: 14px;"></th>
+            <th style="width: 90px; text-align:center;">Type</th>
+            <th style="width: 120px; text-align:right;">Amount</th>
+            <th style="width: 80px; padding-right: 14px;"></th>
           </tr>
         </thead>
         <tbody>
