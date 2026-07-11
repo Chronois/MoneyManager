@@ -1105,6 +1105,66 @@ function openTxnModal(id, isDuplicate = false){
 
 function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.remove('open'); }
 
+function saveTxnForm() {
+  const date = document.getElementById('txnDate').value;
+  const account = document.getElementById('txnAccount').value;
+  const note = document.getElementById('txnNote').value.trim();
+  
+  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  const rawAmt = Number(document.getElementById('txnAmount').value) || 0;
+  const amount = rawAmt * rate;
+
+  if (!date) { toast('Date is required'); return; }
+  if (!account) { toast('Account is required'); return; }
+  if (amount <= 0) { toast('Amount must be greater than 0'); return; }
+
+  let obj = {
+    id: editingTxnId || uid(),
+    date: date,
+    account: account,
+    note: note
+  };
+
+  if (txnType === 'transfer') {
+    const transferTo = document.getElementById('txnTransferTo').value;
+    if (account === transferTo) { toast('Cannot transfer to the same account'); return; }
+    if (!transferTo) { toast('Destination account is required'); return; }
+    
+    obj.transferTo = transferTo;
+    obj.expense = amount;
+    obj.income = 0;
+    obj.category = 'Transfer Between Accounts';
+  } else {
+    const cat = document.getElementById('txnCategory').value;
+    const sub = document.getElementById('txnSubcategory').value;
+    if (!cat) { toast('Category is required'); return; }
+    
+    obj.category = cat;
+    obj.subcategory = sub;
+    
+    if (txnType === 'income') {
+      obj.income = amount;
+      obj.expense = 0;
+    } else {
+      obj.income = 0;
+      obj.expense = amount;
+    }
+  }
+
+  if (editingTxnId) {
+    const idx = state.transactions.findIndex(t => t.id === editingTxnId);
+    if(idx !== -1) state.transactions[idx] = obj;
+    toast('Transaction updated');
+  } else {
+    state.transactions.push(obj);
+    toast('Transaction added');
+  }
+
+  saveState();
+  closeTxnModal();
+  renderCurrentTab();
+}
+
 function populateCategorySelect(selected, type = txnType){
   const sel = document.getElementById('txnCategory');
   let filtered = state.categories;
