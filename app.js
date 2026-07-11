@@ -37,7 +37,7 @@ const SEED = {
     {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
     {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
-    {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
+    {"constants": "Accessory", "category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
     {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
     {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
@@ -60,6 +60,7 @@ const CHART_PALETTE = ['#5C9A66','#3C7247','#8FAE6A','#C4A24B','#BD5B3C','#8B6BA
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
+// Static baseline conversion rates (Used as fallback if API fails)
 const CURRENCIES = {
   IDR: { rate: 1, locale: 'id-ID' },
   USD: { rate: 16200, locale: 'en-US' },
@@ -68,21 +69,6 @@ const CURRENCIES = {
   KRW: { rate: 12, locale: 'ko-KR' },
   CNY: { rate: 2250, locale: 'zh-CN' }
 };
-
-const ICONS = {
-  plus:'<path d="M12 5v14M5 12h14"/>',
-  download:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>',
-  upload:'<path d="M12 21V9m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>',
-  refresh:'<path d="M3 12a9 9 0 0115.36-6.36M21 12a9 9 0 01-15.36 6.36"/><path d="M3 4v5h5M21 20v-5h-5"/>',
-  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
-  trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v14a1 1 0 01-1 1H7a1 1 0 01-1-1V6h12z"/>',
-  close:'<path d="M18 6L6 18M6 6l12 12"/>',
-  wallet:'<path d="M3 7a2 2 0 012-2h13a1 1 0 011 1v2M3 7v10a2 2 0 002 2h14a1 1 0 001-1V9a1 1 0 00-1-1H5a2 2 0 01-2-2z"/><circle cx="16" cy="14" r="1.4"/>',
-  copy:'<path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
-  sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
-  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
-};
-function icon(name, cls){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls||''}">${ICONS[name]}</svg>`; }
 
 /* ============ STATE ============ */
 let state = loadStateLocal();
@@ -146,6 +132,26 @@ function saveState(){
         .then(() => console.log('✅ Synced with Cloud'))
         .catch(e => console.error("Cloud sync error:", e));
     }, 1500);
+  }
+}
+
+/* ============ DYNAMIC EXCHANGE RATES API ============ */
+async function fetchExchangeRates() {
+  try {
+    const response = await fetch('https://open.er-api.com/v6/latest/IDR');
+    const data = await response.json();
+    if (data && data.rates) {
+      Object.keys(CURRENCIES).forEach(curr => {
+        if (curr !== 'IDR' && data.rates[curr]) {
+          // 1 unit of foreign currency = 1 / rate_against_idr
+          CURRENCIES[curr].rate = 1 / data.rates[curr];
+        }
+      });
+      console.log('🔄 Live currency exchange rates synchronized successfully:', CURRENCIES);
+      renderCurrentTab(); 
+    }
+  } catch (e) {
+    console.warn('⚠️ Network standard error or API down. Live rates fallback applied:', e);
   }
 }
 
@@ -512,14 +518,14 @@ function toast(msg){
   toastTimer = setTimeout(()=> el.classList.remove('show'), 2600);
 }
 
-/* ============ NAV (Mendukung Penukaran Posisi) ============ */
+/* ============ NAV ============ */
 const TABS = [
   { id:'dashboard', label:'Dashboard' },
   { id:'transactions', label:'Transactions' },
   { id:'balance', label:'Balance' },
   { id:'budgets', label:'Budgets' },
-  { id:'accounts', label:'Accounts' },     // ---> Accounts bergeser ke atas
-  { id:'categories', label:'Categories' }, // ---> Categories bergeser ke bawah
+  { id:'accounts', label:'Accounts' },
+  { id:'categories', label:'Categories' },
 ];
 function renderNav(){
   const nav = document.getElementById('tabNav');
@@ -838,8 +844,10 @@ function renderTransactions(){
       </div>
     </div>
 
+    <!-- ADVANCED FILTER PANEL -->
     <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
+        <!-- Date Range (Spans Date & Day columns = 130 + 120 = 250px) -->
         <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
           <div style="display:flex; align-items:center; gap:6px;">
@@ -861,6 +869,7 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Account -->
         <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
@@ -875,6 +884,7 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Category -->
         <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
@@ -889,11 +899,13 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Note -->
         <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
            <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
         </div>
 
+        <!-- Type -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
@@ -910,8 +922,10 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Empty Space For Amount (130px) -->
         <div style="width: 130px; padding: 0 14px; flex-shrink:0;"></div>
 
+        <!-- Reset Button -->
         <div style="width: 70px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end;">
            <button class="btn btn-ghost" id="fClear" style="padding: 0; justify-content:center; font-size:12.5px; height: 36px; color: var(--ink-muted); width: 100%; border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
@@ -1734,63 +1748,6 @@ function saveAcctForm(){
   saveState(); closeAcctModal(); renderCurrentTab();
 }
 
-/* ============ IMPORT / EXPORT / RESET ============ */
-function exportData(){
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `money-manager-${todayStr()}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  toast('Data exported');
-}
-function importData(file){
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      const parsed = JSON.parse(reader.result);
-      if(!Array.isArray(parsed.transactions) || !Array.isArray(parsed.accounts)) throw new Error('Invalid format');
-      state = parsed;
-      if(!state.currency) state.currency = 'IDR';
-      document.getElementById('currencySelect').value = state.currency;
-      saveState(); renderCurrentTab(); toast('Data successfully imported');
-    }catch(e){ toast('Failed to import: invalid file'); }
-  };
-  reader.readAsText(file);
-}
-function resetData(){
-  if(!confirm('Reset this data? Transactions and accounts will be deleted.')) return;
-  state = JSON.parse(JSON.stringify(SEED));
-  document.getElementById('currencySelect').value = state.currency;
-  saveState(); renderCurrentTab(); toast('Data reset');
-}
-
-/* ============ AUTH UI ACTIONS ============ */
-function openAuthModal() { document.getElementById('authModalOverlay').classList.add('open'); }
-function closeAuthModal() { document.getElementById('authModalOverlay').classList.remove('open'); }
-
-async function handleLoginEmail() {
-  const email = document.getElementById('authEmail').value;
-  const pass = document.getElementById('authPassword').value;
-  if(!email || !pass) return toast('Please fill in Email & Password');
-  try { await signInWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Login Failed: ' + e.message); }
-}
-
-async function handleRegisterEmail() {
-  const email = document.getElementById('authEmail').value;
-  const pass = document.getElementById('authPassword').value;
-  if(!email || !pass) return toast('Please fill in Email & Password');
-  try { await createUserWithEmailAndPassword(auth, email, pass); closeAuthModal(); } catch(e) { toast('Signup Failed: ' + e.message); }
-}
-
-async function handleLoginGoogle() {
-  try { await signInWithPopup(auth, googleProvider); closeAuthModal(); } catch(e) { toast('Google Login Failed: ' + e.message); }
-}
-
-async function handleLogout() {
-  try { await signOut(auth); toast('Logged out successfully'); closeAuthModal(); } catch(e) { console.error(e); }
-}
-
 /* ============ INIT ============ */
 function init(){
   initTheme();
@@ -1807,6 +1764,7 @@ function init(){
   }
 
   renderCurrentTab();
+  fetchExchangeRates(); // Dynamic API call right on load
   setTimeout(initEmojiPicker, 500); 
 
   document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
@@ -1826,7 +1784,6 @@ function init(){
     document.getElementById('subEmojiPopover').classList.toggle('show');
   });
 
-  // Global listener for closing custom popovers
   document.addEventListener('click', e => {
     if (!e.target.closest('.emoji-dropdown-wrap')) {
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
@@ -1840,7 +1797,6 @@ function init(){
     }
   });
 
-  // Listener Date Picker Button (Memunculkan kalender harian di Add Transaction)
   document.getElementById('btnTxnDate').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
