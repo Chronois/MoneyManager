@@ -861,10 +861,10 @@ function renderTransactions(){
     <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm);">
         
         <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Date Range</label>
+          <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
             <div class="date-picker-wrap" style="flex:1;">
-              <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; justify-content: center; gap: 6px;">
                 <span id="lblFilterDateFrom">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
               </button>
               <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
@@ -872,7 +872,7 @@ function renderTransactions(){
             </div>
             <span style="color:var(--ink-muted); font-size:12px; font-weight:500;">to</span>
             <div class="date-picker-wrap" style="flex:1;">
-              <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none;">
+              <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; justify-content: center; gap: 6px;">
                 <span id="lblFilterDateTo">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
               </button>
               <input type="hidden" id="fDateTo" value="${filters.dateTo}">
@@ -882,50 +882,50 @@ function renderTransactions(){
         </div>
 
         <div style="width: 160px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Account</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: center; gap: 6px;">
               <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All Accounts'}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <div class="select-popover" id="filterAccountPopover">
-               <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
-               ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
+               <button class="select-item ${!filters.account ? 'active' : ''}" data-val="" style="text-align:center;">All Accounts</button>
+               ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}" style="text-align:center;">${esc(a.name)}</button>`).join('')}
             </div>
           </div>
         </div>
 
         <div style="width: 190px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Category</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: center; gap: 6px;">
               <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <div class="select-popover" id="filterCategoryPopover">
-               <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
-               ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
+               <button class="select-item ${!filters.category ? 'active' : ''}" data-val="" style="text-align:center;">All Categories</button>
+               ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}" style="text-align:center;">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
             </div>
           </div>
         </div>
 
         <div style="flex: 1; min-width: 150px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
-           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
-           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body);">
+           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Note</label>
+           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); text-align:center;">
         </div>
 
         <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none;">
+            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content: center; gap: 6px;">
               <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All Types'))}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <div class="select-popover" id="filterTypePopover">
-               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
-               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
-               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
-               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
+               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="" style="text-align:center;">All Types</button>
+               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income" style="text-align:center;">Income</button>
+               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense" style="text-align:center;">Expense</button>
+               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer" style="text-align:center;">Transfer</button>
             </div>
           </div>
         </div>
@@ -938,17 +938,17 @@ function renderTransactions(){
     </div>
 
     <div class="table-wrap">
-      <table style="table-layout: fixed; width: 100%; min-width: 1060px;">
+      <table style="table-layout: fixed; width: 100%; min-width: 900px;">
         <thead>
           <tr>
-            <th style="width: 130px; padding-left: 14px;">Date</th>
-            <th style="width: 120px;">Day</th>
-            <th style="width: 160px;">Account</th>
-            <th style="width: 190px;">Category</th>
-            <th style="width: auto;">Note</th>
-            <th style="width: 130px; text-align:center;">Type</th>
-            <th style="width: 130px; text-align:right;">Amount</th>
-            <th style="width: 70px; padding-right: 14px;"></th>
+            <th style="width: 110px; text-align:center;">Date</th>
+            <th style="width: 100px; text-align:center;">Day</th>
+            <th style="width: 130px; text-align:center;">Account</th>
+            <th style="width: 170px; text-align:center;">Category</th>
+            <th style="width: auto; text-align:center;">Note</th>
+            <th style="width: 110px; text-align:center;">Type</th>
+            <th style="width: 130px; text-align:center;">Amount</th>
+            <th style="width: 90px; text-align:center;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -964,7 +964,7 @@ function renderTransactions(){
       </div>
     </div>
   `;
-
+   
   document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
   document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
   document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',dateFrom:'',dateTo:''}; txnPage=0; renderTransactions(); });
@@ -1032,14 +1032,14 @@ function txnRowHtml(t){
   }
   
   return `<tr>
-    <td>${fmtDateShort(t.date)}</td>
-    <td>${dayName(t.date)}</td>
-    <td>${esc(t.account)}</td>
-    <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
-    <td class="note-cell" title="${displayNote}">${displayNote}</td>
-    <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
-    <td class="num ${color}">${fmtCurrency(amt)}</td>
-    <td><div class="row-actions">
+    <td style="text-align:center;">${fmtDateShort(t.date)}</td>
+    <td style="text-align:center;">${dayName(t.date)}</td>
+    <td style="text-align:center;">${esc(t.account)}</td>
+    <td><div class="cell-cat" style="justify-content:center;"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
+    <td class="note-cell" style="text-align:center; margin: 0 auto;" title="${displayNote}">${displayNote}</td>
+    <td style="text-align:center;"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
+    <td class="num ${color}" style="text-align:center;">${fmtCurrency(amt)}</td>
+    <td><div class="row-actions" style="justify-content:center;">
       <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
       <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
       <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
