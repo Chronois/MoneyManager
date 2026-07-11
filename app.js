@@ -62,11 +62,11 @@ const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sa
 
 const CURRENCIES = {
   IDR: { rate: 1, locale: 'id-ID' },
-  USD: { rate: 16200, locale: 'en-US' },
-  EUR: { rate: 17500, locale: 'de-DE' },
-  JPY: { rate: 105, locale: 'ja-JP' },
+  USD: { rate: 18075, locale: 'en-US' },
+  EUR: { rate: 20625, locale: 'de-DE' },
+  JPY: { rate: 111, locale: 'ja-JP' },
   KRW: { rate: 12, locale: 'ko-KR' },
-  CNY: { rate: 2250, locale: 'zh-CN' }
+  CNY: { rate: 2666, locale: 'zh-CN' }
 };
 
 /* ============ DYNAMIC CURRENCY API ============ */
