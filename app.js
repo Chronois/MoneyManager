@@ -1861,7 +1861,6 @@ function init(){
     }
   });
 
-  // Listener Date Picker Button (Memunculkan kalender harian di Add Transaction)
   document.getElementById('btnTxnDate').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
@@ -1875,6 +1874,7 @@ function init(){
 
   document.getElementById('txnCategory').addEventListener('change', e=> populateSubcategorySelect(e.target.value));
   document.querySelectorAll('.type-toggle button').forEach(b=> b.addEventListener('click', ()=> setTxnType(b.dataset.type)));
+  
   document.getElementById('btnTxnSave').addEventListener('click', saveTxnForm);
   document.getElementById('btnTxnCancel').addEventListener('click', closeTxnModal);
   document.getElementById('btnTxnClose').addEventListener('click', closeTxnModal);
