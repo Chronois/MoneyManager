@@ -915,7 +915,7 @@ function renderTransactions(){
     <div class="section-head">
       <div><h2>Transactions</h2><p class="sub">${list.length} transactions found</p></div>
       <div class="section-head-actions">
-        <button class="btn btn-primary" id="btnAddTxn">${icon('plus')}Add Transaction</button>
+        <button class="btn btn-primary fab-mobile" id="btnAddTxn">${icon('plus')}Add Transaction</button>
       </div>
     </div>
 
@@ -994,7 +994,6 @@ function renderTransactions(){
            <button class="btn btn-ghost" id="fClear" style="padding: 0 16px; font-size:12.5px; height: 34px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 6px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
     </div>
-
     <div class="table-wrap" style="overflow-x:auto;">
       <table style="table-layout: fixed; width: 100%; min-width: 950px;">
         <thead>
@@ -1071,7 +1070,7 @@ function renderTransactions(){
   });
 
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
-  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
+  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true))));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
 
