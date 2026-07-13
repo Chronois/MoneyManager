@@ -422,6 +422,24 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
   .table-wrap { margin-left: -16px; margin-right: -16px; width: calc(100% + 32px); border-left: none; border-right: none; border-radius: 0; }
   .budget-row .budget-top { flex-direction: column; align-items: flex-start !important; gap: 8px; }
   .acct-grid { grid-template-columns: 1fr; }
+  /* FAB (Floating Action Button) UI Mobile */
+  .fab-mobile {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(92, 154, 102, 0.45); /* Efek cahaya / glow elegan */
+    border-radius: 100px;
+    padding: 14px 22px;
+    font-size: 14.5px;
+  }
+  html[data-theme="dark"] .fab-mobile {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Perbaikan Filter Wrap */
+  .filters-container { padding: 14px !important; }
+  .filters-container > div { flex-basis: 100% !important; }
 }
 
 @media (max-width: 380px) {
