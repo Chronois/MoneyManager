@@ -942,7 +942,7 @@ function renderTransactions(){
             <th style="width: 110px; padding-left: 14px;">Date</th>
             <th style="width: 100px;">Day</th>
             <th style="width: 130px;">Account</th>
-            <th style="width: 170px;">Category</th>
+            <th style="width: 170px; text-align:center;">Category</th>
             <th style="width: auto;">Note</th>
             <th style="width: 110px; text-align:center;">Type</th>
             <th style="width: 130px; text-align:right;">Amount</th>
@@ -1053,7 +1053,7 @@ function txnRowHtml(t){
     <td>${fmtDateShort(t.date)}</td>
     <td>${dayName(t.date)}</td>
     <td>${esc(t.account)}</td>
-    <td><div class="cell-cat">${catCellHtml}</div></td>
+    <td><div class="cell-cat" style="justify-content:center;">${catCellHtml}</div></td>
     <td class="note-cell" title="${displayNote}">${displayNote}</td>
     <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
     <td class="num ${color}">${fmtCurrency(amt)}</td>
