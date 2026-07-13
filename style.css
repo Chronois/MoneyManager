@@ -843,3 +843,14 @@ main, .container, .app-container {
   .stat-card.hero .value { font-size: 26px; }
   .amount-input-huge { font-size: 24px !important; }
 }
+
+/* ---------- Drag and Drop Categories ---------- */
+.cat-section { cursor: grab; padding: 10px; border: 2px solid transparent; border-radius: 12px; transition: all 0.2s ease; margin-bottom: 12px; }
+.cat-section:active { cursor: grabbing; }
+.cat-section.dragging { opacity: 0.4; border: 2px dashed var(--primary); background: var(--paper-2); }
+.cat-section.drag-over { border: 2px solid var(--primary); transform: scale(1.01); }
+
+.sub-chip { cursor: grab; transition: all 0.2s ease; }
+.sub-chip:active { cursor: grabbing; }
+.sub-chip.dragging { opacity: 0.4; border: 1px dashed var(--primary); }
+.sub-chip.drag-over { border: 1px solid var(--primary); transform: scale(1.05); }
