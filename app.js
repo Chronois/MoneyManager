@@ -722,6 +722,7 @@ function renderDashboard(){
     </div>
   `;
   
+  // === BAGIAN INI YANG KITA PERBAIKI ===
   document.getElementById('dashBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('dashPopover').classList.toggle('show');
@@ -731,7 +732,15 @@ function renderDashboard(){
 
   document.getElementById('catBtn').addEventListener('click', (e) => {
     e.stopPropagation();
+    document.getElementById('catPopover').classList.toggle('show');
+    document.getElementById('dashPopover').classList.remove('show');
+    document.getElementById('subCatPopover').classList.remove('show');
+  });
+
+  document.getElementById('subCatBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
     document.getElementById('subCatPopover').classList.toggle('show');
+    document.getElementById('dashPopover').classList.remove('show');
     document.getElementById('catPopover').classList.remove('show');
   });
 
