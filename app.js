@@ -1030,15 +1030,30 @@ function txnRowHtml(t){
     displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
   }
 
-  // Teks visual & Hover logic
+  // Visual text untuk Category
   const catDisplay = isTransfer ? '🔄️ Transfer' : `${catIcon(t.category)} ${esc(t.category)}`;
-  const tooltip = t.subcategory ? esc(t.subcategory) : (isTransfer ? 'Transfer' : esc(t.category));
   
+  // LOGIC HOVER SWAP: Membuat container yang menampung 2 teks sekaligus
+  let catCellHtml = '';
+  if (t.subcategory && !isTransfer) {
+    const subParts = splitSub(t.subcategory);
+    const subDisplay = `${subParts.icon} ${esc(subParts.name)}`;
+    catCellHtml = `
+      <span class="cat-chip hover-swap" style="cursor:pointer;" title="${esc(t.subcategory)}">
+        <span class="swap-default">${catDisplay}</span>
+        <span class="swap-hover">${subDisplay}</span>
+      </span>
+    `;
+  } else {
+    // Jika tipe Transfer atau tidak ada subkategori, tampilkan normal
+    catCellHtml = `<span class="cat-chip">${catDisplay}</span>`;
+  }
+
   return `<tr>
     <td>${fmtDateShort(t.date)}</td>
     <td>${dayName(t.date)}</td>
     <td>${esc(t.account)}</td>
-    <td><div class="cell-cat"><span class="cat-chip" title="${tooltip}" style="cursor:help;">${catDisplay}</span></div></td>
+    <td><div class="cell-cat">${catCellHtml}</div></td>
     <td class="note-cell" title="${displayNote}">${displayNote}</td>
     <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
     <td class="num ${color}">${fmtCurrency(amt)}</td>
@@ -1049,7 +1064,6 @@ function txnRowHtml(t){
     </div></td>
   </tr>`;
 }
-
 function deleteTxn(id){
   if(!confirm('Delete this transaction? This action cannot be undone.')) return;
   state.transactions = state.transactions.filter(t=>t.id!==id);
