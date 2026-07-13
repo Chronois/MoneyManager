@@ -34,14 +34,14 @@ const SEED = {
   "categories": [
     {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
     {"category": "Transportation", "icon": "🚗", "type": "expense", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
-    {"category": "Lifestyle", "icon": "🎯", "type": "expense", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Transfer Between Accounts", "🔁 Subscription"]},
+    {"category": "Lifestyle", "icon": "🎯", "type": "both", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Subscription"]},
     {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
     {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
     {"category": "Health", "icon": "🩺", "type": "expense", "subcategories": ["💆 Massage", "🏥 Pharmacy", "🩺 Medical Service"]},
     {"category": "Education", "icon": "📚", "type": "expense", "subcategories": ["📚 Book"]},
-    {"category": "Present", "icon": "🎁", "type": "expense", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
+    {"category": "Present", "icon": "🎁", "type": "both", "subcategories": ["👨‍👩‍👦‍👦 For Family", "🎁 Gift"]},
     {"category": "Accounts Payable", "icon": "💳", "type": "expense", "subcategories": ["💰 Debt"]},
     {"category": "Accounts Receivable", "icon": "🧾", "type": "income", "subcategories": ["🧾 Receivable"]},
     {"category": "Allowance", "icon": "💵", "type": "income", "subcategories": ["💵 Allowance"]},
@@ -1029,6 +1029,26 @@ function txnRowHtml(t){
   if (isTransfer) {
     displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
   }
+
+  // Teks visual & Hover logic
+  const catDisplay = isTransfer ? '🔄️ Transfer' : `${catIcon(t.category)} ${esc(t.category)}`;
+  const tooltip = t.subcategory ? esc(t.subcategory) : (isTransfer ? 'Transfer' : esc(t.category));
+  
+  return `<tr>
+    <td>${fmtDateShort(t.date)}</td>
+    <td>${dayName(t.date)}</td>
+    <td>${esc(t.account)}</td>
+    <td><div class="cell-cat"><span class="cat-chip" title="${tooltip}" style="cursor:help;">${catDisplay}</span></div></td>
+    <td class="note-cell" title="${displayNote}">${displayNote}</td>
+    <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
+    <td class="num ${color}">${fmtCurrency(amt)}</td>
+    <td><div class="row-actions" style="justify-content:flex-end;">
+      <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
+      <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
+      <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
+    </div></td>
+  </tr>`;
+}
   
   return `<tr>
     <td>${fmtDateShort(t.date)}</td>
@@ -1132,7 +1152,7 @@ function saveTxnForm() {
     obj.transferTo = transferTo;
     obj.expense = amount;
     obj.income = 0;
-    obj.category = 'Transfer Between Accounts';
+    obj.category = 'Transfer'; // Teks kategori diubah
   } else {
     const cat = document.getElementById('txnCategory').value;
     const sub = document.getElementById('txnSubcategory').value;
@@ -1397,7 +1417,6 @@ function deleteBudget(key) {
   toast('Budget deleted');
 }
 
-/* ============ CATEGORIES ============ */
 function renderCategories(){
   const el = document.getElementById('view-categories');
   el.innerHTML = `
@@ -1409,10 +1428,10 @@ function renderCategories(){
     </div>
 
     <div id="catList" class="card card-pad">
-      ${state.categories.map(c=>{
+      ${state.categories.map((c, i)=>{
         let typeLabel = c.type === 'expense' ? 'Expense' : (c.type === 'income' ? 'Income' : 'Both');
         return `
-        <div class="cat-section">
+        <div class="cat-section" data-catidx="${i}" draggable="true">
           <h4>
             <span class="cat-icon-edit" data-editcat="${esc(c.category)}" title="Edit Category">${catIcon(c.category)}</span>
             ${esc(c.category)} <span class="cat-type-tag">${typeLabel}</span>
@@ -1424,16 +1443,16 @@ function renderCategories(){
             </div>
           </h4>
           <div class="sub-grid">
-            ${c.subcategories.map(s=>{
+            ${c.subcategories.map((s, j)=>{
               const parts = splitSub(s);
               return `
-              <span class="sub-chip">
+              <span class="sub-chip" data-catidx="${i}" data-subidx="${j}" draggable="true">
                 <span class="cat-icon-edit" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit Subcategory">${parts.icon}</span>
                 ${esc(parts.name)}
                 <button class="icon-btn-micro" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit">${icon('edit')}</button>
                 <button class="icon-btn-micro del" data-delsub="${esc(c.category)}|${esc(s)}" title="Delete">${icon('trash')}</button>
               </span>
-            `}).join('') || '<span class="sub-chip" style="opacity:.6">No subcategories yet</span>'}
+            `}).join('') || '<span class="sub-chip empty-sub" style="opacity:.6">No subcategories yet</span>'}
           </div>
         </div>
       `}).join('')}
@@ -1456,6 +1475,82 @@ function renderCategories(){
     b.addEventListener('click', ()=> {
       const [cat, sub] = b.dataset.delsub.split('|');
       deleteSubcategory(cat, sub);
+    });
+  });
+
+  /* --- DRAG AND DROP LOGIC --- */
+  let dragCatIdx = null;
+  let dragSub = { cIdx: null, sIdx: null };
+
+  // Category Drag
+  const catSections = el.querySelectorAll('.cat-section');
+  catSections.forEach(sec => {
+    sec.addEventListener('dragstart', e => {
+      if (e.target.closest('.sub-chip')) return; // Abaikan jika yg ditarik adalah sub-chip
+      dragCatIdx = Number(sec.dataset.catidx);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => sec.classList.add('dragging'), 0);
+    });
+    sec.addEventListener('dragend', () => {
+      sec.classList.remove('dragging');
+      catSections.forEach(c => c.classList.remove('drag-over'));
+      dragCatIdx = null;
+    });
+    sec.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragCatIdx !== null && Number(sec.dataset.catidx) !== dragCatIdx) {
+        sec.classList.add('drag-over');
+      }
+    });
+    sec.addEventListener('dragleave', () => sec.classList.remove('drag-over'));
+    sec.addEventListener('drop', e => {
+      e.stopPropagation();
+      const targetIdx = Number(sec.dataset.catidx);
+      if (dragCatIdx !== null && dragCatIdx !== targetIdx) {
+        const dragged = state.categories.splice(dragCatIdx, 1)[0];
+        state.categories.splice(targetIdx, 0, dragged);
+        saveState(); renderCategories();
+      }
+    });
+  });
+
+  // Subcategory Drag (Reorder di dalam kategori yang sama)
+  const subChips = el.querySelectorAll('.sub-chip[draggable="true"]');
+  subChips.forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      e.stopPropagation(); // Stop agar tidak ikut menarik Category
+      dragSub = { cIdx: Number(chip.dataset.catidx), sIdx: Number(chip.dataset.subidx) };
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => chip.classList.add('dragging'), 0);
+    });
+    chip.addEventListener('dragend', e => {
+      e.stopPropagation();
+      chip.classList.remove('dragging');
+      subChips.forEach(c => c.classList.remove('drag-over'));
+      dragSub = { cIdx: null, sIdx: null };
+    });
+    chip.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      const tCIdx = Number(chip.dataset.catidx);
+      const tSIdx = Number(chip.dataset.subidx);
+      if (dragSub.cIdx !== null && dragSub.cIdx === tCIdx && dragSub.sIdx !== tSIdx) {
+        chip.classList.add('drag-over');
+      }
+    });
+    chip.addEventListener('dragleave', e => {
+      e.stopPropagation();
+      chip.classList.remove('drag-over');
+    });
+    chip.addEventListener('drop', e => {
+      e.stopPropagation();
+      const tCIdx = Number(chip.dataset.catidx);
+      const tSIdx = Number(chip.dataset.subidx);
+      if (dragSub.cIdx !== null && dragSub.cIdx === tCIdx && dragSub.sIdx !== tSIdx) {
+        const cat = state.categories[tCIdx];
+        const draggedSubItem = cat.subcategories.splice(dragSub.sIdx, 1)[0];
+        cat.subcategories.splice(tSIdx, 0, draggedSubItem);
+        saveState(); renderCategories();
+      }
     });
   });
 }
