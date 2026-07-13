@@ -861,7 +861,8 @@ main, .container, .app-container {
   overflow: hidden;
   vertical-align: middle;
   align-items: center;
-  justify-items: left; /* Teks rata kiri */
+  justify-items: center; /* <-- UBAH BAGIAN INI JADI CENTER */
+  text-align: center;    /* <-- TAMBAHKAN BARIS INI */
 }
 
 .cat-chip.hover-swap > span {
