@@ -418,21 +418,6 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
   });
 }
 
-  popover.querySelectorAll('.mp-month').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (targetId === 'cat') {
-        selectedCatMonth = btn.dataset.val;
-        catPickerYear = parseInt(selectedCatMonth.split('-')[0]); 
-      } else {
-        selectedSubCatMonth = btn.dataset.val;
-        subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); 
-      }
-      renderDashboard();
-    });
-  });
-}
-
 /* ============ THEME ENGINE ============ */
 function initTheme() {
   const saved = localStorage.getItem('mm_theme');
