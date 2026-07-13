@@ -854,3 +854,37 @@ main, .container, .app-container {
 .sub-chip:active { cursor: grabbing; }
 .sub-chip.dragging { opacity: 0.4; border: 1px dashed var(--primary); }
 .sub-chip.drag-over { border: 1px solid var(--primary); transform: scale(1.05); }
+
+/* ---------- Category Hover Swap Transition ---------- */
+.cat-chip.hover-swap {
+  display: inline-grid;
+  overflow: hidden;
+  vertical-align: middle;
+  align-items: center;
+  justify-items: left; /* Teks rata kiri */
+}
+
+.cat-chip.hover-swap > span {
+  grid-area: 1 / 1;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Posisi Awal (Tampil: Category, Sembunyi: Subcategory) */
+.hover-swap .swap-default {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hover-swap .swap-hover {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+/* Posisi Saat di-Hover (Tampil: Subcategory, Sembunyi: Category) */
+.hover-swap:hover .swap-default {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+.hover-swap:hover .swap-hover {
+  opacity: 1;
+  transform: translateY(0);
+}
