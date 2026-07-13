@@ -7,7 +7,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA55-zN6AE4jP8JaARRPVtNA9Xdk4PVSQA",
   authDomain: "money-manager-7777.firebaseapp.com",
@@ -27,7 +26,6 @@ const googleProvider = new GoogleAuthProvider();
 let currentUser = null;
 let cloudSyncTimeout = null;
 
-// --- Default Data / Initial Data ---
 const SEED = {
   "currency": "IDR",
   "transactions": [], 
@@ -81,7 +79,6 @@ async function fetchLatestRates() {
       if (CURRENCIES.KRW) CURRENCIES.KRW.rate = 1 / data.rates.KRW;
       if (CURRENCIES.CNY) CURRENCIES.CNY.rate = 1 / data.rates.CNY;
       console.log('✅ Real-time currency rates updated successfully.');
-      
       renderCurrentTab(); 
     }
   } catch (e) {
@@ -102,7 +99,10 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
   moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
 };
-function icon(name, cls){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls||''}">${ICONS[name]}</svg>`; }
+
+function icon(name, cls){ 
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls||''}">${ICONS[name]}</svg>`; 
+}
 
 /* ============ STATE ============ */
 let state = loadStateLocal();
@@ -129,13 +129,15 @@ let dpViewMonth = { txn: null, filterFrom: null, filterTo: null };
 
 function loadStateLocal(){
   let parsed = JSON.parse(JSON.stringify(SEED));
-  try{
+  try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
+    if(raw) {
       const userState = JSON.parse(raw);
       if(userState && Array.isArray(userState.transactions)) parsed = userState;
     }
-  }catch(e){ console.warn('Failed to load saved data', e); }
+  } catch(e) { 
+    console.warn('Failed to load saved data', e); 
+  }
   
   if(!parsed.currency) parsed.currency = 'IDR';
 
@@ -143,11 +145,11 @@ function loadStateLocal(){
     parsed.categories.forEach(c => {
       if(!c.icon) c.icon = '📁';
       if(!c.type) {
-          const inc = ['Accounts Receivable', 'Allowance', 'Salary', 'Bonus'];
-          const both = ['Adjustment'];
-          if(inc.includes(c.category)) c.type = 'income';
-          else if(both.includes(c.category)) c.type = 'both';
-          else c.type = 'expense';
+        const inc = ['Accounts Receivable', 'Allowance', 'Salary', 'Bonus'];
+        const both = ['Adjustment'];
+        if(inc.includes(c.category)) c.type = 'income';
+        else if(both.includes(c.category)) c.type = 'both';
+        else c.type = 'expense';
       }
     });
   }
@@ -187,12 +189,12 @@ onAuthStateChanged(auth, async (user) => {
       if (docSnap.exists() && docSnap.data().appData) {
         const cloudData = JSON.parse(docSnap.data().appData);
         if(cloudData && Array.isArray(cloudData.transactions)) {
-           state = cloudData;
-           if(!state.currency) state.currency = 'IDR';
-           localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
-           document.getElementById('currencySelect').value = state.currency;
-           renderCurrentTab();
-           toast('Data successfully fetched from Cloud ☁️');
+          state = cloudData;
+          if(!state.currency) state.currency = 'IDR';
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
+          document.getElementById('currencySelect').value = state.currency;
+          renderCurrentTab();
+          toast('Data successfully fetched from Cloud ☁️');
         }
       } else {
         await setDoc(docRef, { appData: JSON.stringify(state) });
@@ -237,6 +239,7 @@ function dayName(d){ return DAYS_EN[new Date(d+'T00:00:00').getDay()]; }
 function todayStr(){ const d = new Date(); return d.toISOString().slice(0,10); }
 function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function catIcon(cat){ 
   const c = state.categories.find(x => x.category === cat);
   return c && c.icon ? c.icon : '📁'; 
@@ -253,10 +256,10 @@ function splitSub(str) {
   }
   const firstCharArr = Array.from(s);
   if (firstCharArr.length > 0) {
-     const firstChar = firstCharArr[0];
-     if (!/[a-zA-Z0-9]/.test(firstChar)) {
-         return { icon: firstChar, name: s.slice(firstChar.length).trim() };
-     }
+    const firstChar = firstCharArr[0];
+    if (!/[a-zA-Z0-9]/.test(firstChar)) {
+      return { icon: firstChar, name: s.slice(firstChar.length).trim() };
+    }
   }
   return { icon: '📁', name: s };
 }
@@ -272,30 +275,30 @@ function getDatePickerHTML(year, month, selectedDateStr, targetPrefix) {
   for (let i = 0; i < firstDay; i++) gridHtml += `<div class="dp-day empty"></div>`;
   
   for (let i = 1; i <= daysInMonth; i++) {
-      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      const isActive = (dateStr === selectedDateStr);
-      const isToday = (dateStr === todayStr);
-      let classes = 'dp-day';
-      if (isActive) classes += ' active';
-      if (isToday) classes += ' today';
-      gridHtml += `<button type="button" class="${classes}" data-date="${dateStr}">${i}</button>`;
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    const isActive = (dateStr === selectedDateStr);
+    const isToday = (dateStr === todayStr);
+    let classes = 'dp-day';
+    if (isActive) classes += ' active';
+    if (isToday) classes += ' today';
+    gridHtml += `<button type="button" class="${classes}" data-date="${dateStr}">${i}</button>`;
   }
 
   const daysHeader = DAYS_EN.map(d => `<div class="dp-day-name">${d.slice(0,2)}</div>`).join('');
   const clearBtnTxt = targetPrefix.includes('filter') ? 'All Dates' : 'Clear';
 
   return `
-      <div class="dp-header">
-          <button type="button" class="dp-nav-btn dp-prev-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <span class="dp-month-year">${MONTHS_EN[month - 1]} ${year}</span>
-          <button type="button" class="dp-nav-btn dp-next-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
-      </div>
-      <div class="dp-days">${daysHeader}</div>
-      <div class="dp-grid">${gridHtml}</div>
-      <div style="display:flex; justify-content:space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);">
-         <button type="button" class="dp-clear-btn" style="background:transparent; border:none; color:var(--expense); font-size:12px; font-weight:600; cursor:pointer;">${clearBtnTxt}</button>
-         <button type="button" class="dp-today-btn" style="background:transparent; border:none; color:var(--primary); font-size:12px; font-weight:600; cursor:pointer;">Today</button>
-      </div>
+    <div class="dp-header">
+      <button type="button" class="dp-nav-btn dp-prev-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="dp-month-year">${MONTHS_EN[month - 1]} ${year}</span>
+      <button type="button" class="dp-nav-btn dp-next-month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div class="dp-days">${daysHeader}</div>
+    <div class="dp-grid">${gridHtml}</div>
+    <div style="display:flex; justify-content:space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);">
+      <button type="button" class="dp-clear-btn" style="background:transparent; border:none; color:var(--expense); font-size:12px; font-weight:600; cursor:pointer;">${clearBtnTxt}</button>
+      <button type="button" class="dp-today-btn" style="background:transparent; border:none; color:var(--primary); font-size:12px; font-weight:600; cursor:pointer;">Today</button>
+    </div>
   `;
 }
 
@@ -305,53 +308,53 @@ function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onCh
   const selectedDate = document.getElementById(inputId).value;
 
   if (!dpViewYear[targetPrefix]) {
-      const d = selectedDate ? new Date(selectedDate) : new Date();
-      dpViewYear[targetPrefix] = d.getFullYear();
-      dpViewMonth[targetPrefix] = d.getMonth() + 1;
+    const d = selectedDate ? new Date(selectedDate) : new Date();
+    dpViewYear[targetPrefix] = d.getFullYear();
+    dpViewMonth[targetPrefix] = d.getMonth() + 1;
   }
 
   popover.innerHTML = getDatePickerHTML(dpViewYear[targetPrefix], dpViewMonth[targetPrefix], selectedDate, targetPrefix);
 
   popover.querySelector('.dp-prev-month').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dpViewMonth[targetPrefix]--;
-      if(dpViewMonth[targetPrefix] < 1) { dpViewMonth[targetPrefix] = 12; dpViewYear[targetPrefix]--; }
-      renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
+    e.stopPropagation();
+    dpViewMonth[targetPrefix]--;
+    if(dpViewMonth[targetPrefix] < 1) { dpViewMonth[targetPrefix] = 12; dpViewYear[targetPrefix]--; }
+    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
   });
   
   popover.querySelector('.dp-next-month').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dpViewMonth[targetPrefix]++;
-      if(dpViewMonth[targetPrefix] > 12) { dpViewMonth[targetPrefix] = 1; dpViewYear[targetPrefix]++; }
-      renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
+    e.stopPropagation();
+    dpViewMonth[targetPrefix]++;
+    if(dpViewMonth[targetPrefix] > 12) { dpViewMonth[targetPrefix] = 1; dpViewYear[targetPrefix]++; }
+    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
   });
 
   popover.querySelectorAll('.dp-day:not(.empty)').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const selDate = btn.dataset.date;
-          document.getElementById(inputId).value = selDate;
-          document.getElementById(labelId).textContent = fmtDateShort(selDate);
-          popover.classList.remove('show');
-          if (onChangeCallback) onChangeCallback(selDate);
-      });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const selDate = btn.dataset.date;
+      document.getElementById(inputId).value = selDate;
+      document.getElementById(labelId).textContent = fmtDateShort(selDate);
+      popover.classList.remove('show');
+      if (onChangeCallback) onChangeCallback(selDate);
+    });
   });
 
   popover.querySelector('.dp-clear-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      document.getElementById(inputId).value = '';
-      document.getElementById(labelId).textContent = targetPrefix === 'filterFrom' ? 'Start Date' : (targetPrefix === 'filterTo' ? 'End Date' : 'Select Date');
-      popover.classList.remove('show');
-      if (onChangeCallback) onChangeCallback('');
+    e.stopPropagation();
+    document.getElementById(inputId).value = '';
+    document.getElementById(labelId).textContent = targetPrefix === 'filterFrom' ? 'Start Date' : (targetPrefix === 'filterTo' ? 'End Date' : 'Select Date');
+    popover.classList.remove('show');
+    if (onChangeCallback) onChangeCallback('');
   });
 
   popover.querySelector('.dp-today-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const todayStr = new Date().toISOString().slice(0,10);
-      document.getElementById(inputId).value = todayStr;
-      document.getElementById(labelId).textContent = fmtDateShort(todayStr);
-      popover.classList.remove('show');
-      if (onChangeCallback) onChangeCallback(todayStr);
+    e.stopPropagation();
+    const todayStr = new Date().toISOString().slice(0,10);
+    document.getElementById(inputId).value = todayStr;
+    document.getElementById(labelId).textContent = fmtDateShort(todayStr);
+    popover.classList.remove('show');
+    if (onChangeCallback) onChangeCallback(todayStr);
   });
 }
 
@@ -360,17 +363,17 @@ function getPickerHTML(targetId, selectedMonth, viewYear) {
   const [selY, selM] = selectedMonth.split('-').map(Number);
   let gridHtml = '';
   for(let i=1; i<=12; i++) {
-      const isActive = (viewYear === selY && i === selM);
-      const val = `${viewYear}-${String(i).padStart(2, '0')}`;
-      gridHtml += `<button class="mp-month ${isActive ? 'active' : ''}" data-val="${val}">${MONTHS_EN[i-1]}</button>`;
+    const isActive = (viewYear === selY && i === selM);
+    const val = `${viewYear}-${String(i).padStart(2, '0')}`;
+    gridHtml += `<button class="mp-month ${isActive ? 'active' : ''}" data-val="${val}">${MONTHS_EN[i-1]}</button>`;
   }
   return `
-       <div class="mp-header">
-         <button class="mp-nav-btn" data-dir="-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-         <span class="mp-year">${viewYear}</span>
-         <button class="mp-nav-btn" data-dir="1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
-       </div>
-       <div class="mp-grid">${gridHtml}</div>
+    <div class="mp-header">
+      <button class="mp-nav-btn" data-dir="-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="mp-year">${viewYear}</span>
+      <button class="mp-nav-btn" data-dir="1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div class="mp-grid">${gridHtml}</div>
   `;
 }
 
@@ -379,30 +382,30 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
   if(!popover) return;
   
   popover.querySelectorAll('.mp-nav-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const dir = parseInt(btn.dataset.dir);
-          if (targetId === 'cat') catPickerYear += dir;
-          else subPickerYear += dir;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dir = parseInt(btn.dataset.dir);
+      if (targetId === 'cat') catPickerYear += dir;
+      else subPickerYear += dir;
 
-          const newYear = targetId === 'cat' ? catPickerYear : subPickerYear;
-          popover.innerHTML = getPickerHTML(targetId, selectedMonth, newYear);
-          bindPopoverEvents(popoverId, targetId, selectedMonth);
-      });
+      const newYear = targetId === 'cat' ? catPickerYear : subPickerYear;
+      popover.innerHTML = getPickerHTML(targetId, selectedMonth, newYear);
+      bindPopoverEvents(popoverId, targetId, selectedMonth);
+    });
   });
 
   popover.querySelectorAll('.mp-month').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (targetId === 'cat') {
-              selectedCatMonth = btn.dataset.val;
-              catPickerYear = parseInt(selectedCatMonth.split('-')[0]); 
-          } else {
-              selectedSubCatMonth = btn.dataset.val;
-              subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); 
-          }
-          renderDashboard();
-      });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (targetId === 'cat') {
+        selectedCatMonth = btn.dataset.val;
+        catPickerYear = parseInt(selectedCatMonth.split('-')[0]); 
+      } else {
+        selectedSubCatMonth = btn.dataset.val;
+        subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); 
+      }
+      renderDashboard();
+    });
   });
 }
 
@@ -416,6 +419,7 @@ function initTheme() {
   }
   updateThemeIcon();
 }
+
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const target = current === 'dark' ? 'light' : 'dark';
@@ -423,6 +427,7 @@ function toggleTheme() {
   localStorage.setItem('mm_theme', target);
   updateThemeIcon();
 }
+
 function updateThemeIcon() {
   const btn = document.getElementById('btnThemeToggle');
   if(!btn) return;
@@ -437,9 +442,11 @@ function computeLedger(){
   let total = state.accounts.reduce((s,a)=> s + (Number(a.opening)||0), 0);
   const sorted = [...state.transactions].sort((a,b)=> a.date===b.date ? a.id-b.id : a.date.localeCompare(b.date));
   const enriched = [];
+  
   for(const t of sorted){
     if(!(t.account in accBal)) accBal[t.account] = 0;
     const expense = Number(t.expense)||0, income = Number(t.income)||0;
+    
     if(t.transferTo){
       accBal[t.account] -= expense;
       if(!(t.transferTo in accBal)) accBal[t.transferTo] = 0;
@@ -460,14 +467,18 @@ function monthlyAggregate(enriched){
   const now = todayStr().slice(0,7);
   const last = enriched[enriched.length-1].date.slice(0,7) > now ? enriched[enriched.length-1].date.slice(0,7) : now;
   const keys = [];
+  
   let [y,m] = first.split('-').map(Number);
   const [ly,lm] = last.split('-').map(Number);
+  
   while(y < ly || (y===ly && m<=lm)){
     keys.push(`${y}-${String(m).padStart(2,'0')}`);
     m++; if(m>12){m=1;y++;}
   }
+  
   const byMonth = {};
   keys.forEach(k=> byMonth[k] = { key:k, income:0, expense:0, endBalance:null });
+  
   enriched.forEach(t=>{
     const k = t.date.slice(0,7);
     if(!byMonth[k]) byMonth[k] = { key:k, income:0, expense:0, endBalance:null };
@@ -477,6 +488,7 @@ function monthlyAggregate(enriched){
     }
     byMonth[k].endBalance = t.runningBalance;
   });
+  
   let runningEnd = openingTotal;
   const out = keys.map(k=>{
     const row = byMonth[k];
@@ -532,20 +544,22 @@ function toast(msg){
   toastTimer = setTimeout(()=> el.classList.remove('show'), 2600);
 }
 
-/* ============ NAV (Mendukung Penukaran Posisi) ============ */
+/* ============ NAV ============ */
 const TABS = [
   { id:'dashboard', label:'Dashboard' },
   { id:'transactions', label:'Transactions' },
   { id:'balance', label:'Balance' },
   { id:'budgets', label:'Budgets' },
-  { id:'accounts', label:'Accounts' },     // ---> Accounts bergeser ke atas
-  { id:'categories', label:'Categories' }, // ---> Categories bergeser ke bawah
+  { id:'accounts', label:'Accounts' },     
+  { id:'categories', label:'Categories' }, 
 ];
+
 function renderNav(){
   const nav = document.getElementById('tabNav');
   nav.innerHTML = TABS.map(t=> `<button class="tab-btn ${t.id===currentTab?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('');
   nav.querySelectorAll('.tab-btn').forEach(b=> b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
 }
+
 function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id === 'view-'+tab));
@@ -553,6 +567,7 @@ function switchTab(tab){
   renderCurrentTab();
   window.scrollTo({top:0, behavior:'smooth'});
 }
+
 function renderCurrentTab(){
   if(currentTab==='dashboard') renderDashboard();
   else if(currentTab==='transactions') renderTransactions();
@@ -740,6 +755,7 @@ function recentItemHtmlDash(t){
     <div class="recent-amt ${color}">${sign}${fmtCurrency(amt)}</div>
   </div>`;
 }
+
 function emptyHtml(msg){
   return `<div class="empty">${icon('wallet')}<div>${esc(msg)}</div></div>`;
 }
@@ -751,9 +767,11 @@ function renderCategoryDonutBlock(monthTx){
   });
   const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   if(entries.length===0) return emptyHtml('No expenses in this month');
+  
   const top = entries.slice(0,7);
   const data = top.map(([cat,val],i)=> ({label:cat, value:val, color:CHART_PALETTE[i%CHART_PALETTE.length]}));
   const total = entries.reduce((s,[,v])=>s+v,0);
+  
   return `<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
     ${renderDonut(data,140)}
     <div style="flex:1; min-width:160px;">
@@ -773,9 +791,11 @@ function renderSubcategoryDonutBlock(monthTx){
   });
   const entries = Object.entries(bySubCat).sort((a,b)=>b[1]-a[1]);
   if(entries.length===0) return emptyHtml('No expenses in this month');
+  
   const top = entries.slice(0,7);
   const data = top.map(([sub,val],i)=> ({label:sub, value:val, color:CHART_PALETTE[(i+5)%CHART_PALETTE.length]}));
   const total = entries.reduce((s,[,v])=>s+v,0);
+  
   return `<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
     ${renderDonut(data,140)}
     <div style="flex:1; min-width:160px;">
@@ -797,6 +817,7 @@ function renderSubcategoryBarBlock(monthTx){
   });
   const entries = Object.entries(bySubCat).sort((a,b)=>b[1]-a[1]);
   if(entries.length===0) return '';
+  
   const top = entries.slice(0,7);
   const max = top[0][1];
   
@@ -836,7 +857,6 @@ function renderTransactions(){
   if(filters.account) list = list.filter(t=>t.account===filters.account);
   if(filters.category) list = list.filter(t=>t.category===filters.category);
   
-  // Date Range Logic
   if(filters.dateFrom) list = list.filter(t=>t.date >= filters.dateFrom);
   if(filters.dateTo) list = list.filter(t=>t.date <= filters.dateTo);
 
@@ -858,95 +878,97 @@ function renderTransactions(){
       </div>
     </div>
 
-    <div style="display:flex; flex-wrap:wrap; row-gap:16px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow:visible;">
-        
-        <div style="width: 210px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <div class="date-picker-wrap" style="flex:1; min-width:0;">
-              <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
-                <span id="lblFilterDateFrom" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
+    <div style="display:flex; flex-wrap:nowrap; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow-x:auto;">
+        <div style="min-width: 950px; width: 100%; display: flex; gap: 0;">
+          
+          <div style="width: 210px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="date-picker-wrap" style="flex:1; min-width:0;">
+                <button type="button" class="input date-picker-btn" id="btnFilterDateFrom" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
+                  <span id="lblFilterDateFrom" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateFrom ? fmtDateShort(filters.dateFrom) : 'Start Date'}</span>
+                </button>
+                <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
+                <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              </div>
+              <div class="date-picker-wrap" style="flex:1; min-width:0;">
+                <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
+                  <span id="lblFilterDateTo" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
+                </button>
+                <input type="hidden" id="fDateTo" value="${filters.dateTo}">
+                <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
+            <div class="date-picker-wrap">
+              <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
+                <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All'}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
               </button>
-              <input type="hidden" id="fDateFrom" value="${filters.dateFrom}">
-              <div class="date-popover" id="filterDateFromPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              <div class="select-popover" id="filterAccountPopover">
+                 <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
+                 ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
+              </div>
             </div>
-            <div class="date-picker-wrap" style="flex:1; min-width:0;">
-              <button type="button" class="input date-picker-btn" id="btnFilterDateTo" style="padding: 6px 8px; font-size: 12px; border-radius: 6px; box-shadow: none; width:100%;">
-                <span id="lblFilterDateTo" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.dateTo ? fmtDateShort(filters.dateTo) : 'End Date'}</span>
+          </div>
+
+          <div style="width: 170px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
+            <div class="date-picker-wrap">
+              <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
+                <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
               </button>
-              <input type="hidden" id="fDateTo" value="${filters.dateTo}">
-              <div class="date-popover" id="filterDateToPopover" style="width: 260px; top: calc(100% + 4px);"></div>
+              <div class="select-popover" id="filterCategoryPopover">
+                 <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
+                 ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
-          <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
-              <span id="lblFilterAccount" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.account ? esc(filters.account) : 'All'}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="select-popover" id="filterAccountPopover">
-               <button class="select-item ${!filters.account ? 'active' : ''}" data-val="">All Accounts</button>
-               ${state.accounts.map(a => `<button class="select-item ${filters.account === a.name ? 'active' : ''}" data-val="${esc(a.name)}">${esc(a.name)}</button>`).join('')}
+          <div style="flex: 1; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
+             <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
+             <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); width:100%;">
+          </div>
+
+          <div style="width: 110px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
+            <div class="date-picker-wrap">
+              <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:center; gap:4px; width:100%;">
+                <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All'))}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="select-popover" id="filterTypePopover">
+                 <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
+                 <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
+                 <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
+                 <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style="width: 170px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
-          <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
-              <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="select-popover" id="filterCategoryPopover">
-               <button class="select-item ${!filters.category ? 'active' : ''}" data-val="">All Categories</button>
-               ${state.categories.map(c => `<button class="select-item ${filters.category === c.category ? 'active' : ''}" data-val="${esc(c.category)}">${catIcon(c.category)} ${esc(c.category)}</button>`).join('')}
-            </div>
+          <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
+             <button class="btn btn-ghost" id="fClear" style="padding: 0 24px; font-size:12.5px; height: 36px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
           </div>
+          
         </div>
-
-        <div style="flex: 1; min-width: 140px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
-           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
-           <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); width:100%;">
-        </div>
-
-        <div style="width: 110px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Type</label>
-          <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:center; gap:4px; width:100%;">
-              <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All'))}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="select-popover" id="filterTypePopover">
-               <button class="select-item ${!filters.type ? 'active' : ''}" data-val="">All Types</button>
-               <button class="select-item ${filters.type === 'income' ? 'active' : ''}" data-val="income">Income</button>
-               <button class="select-item ${filters.type === 'expense' ? 'active' : ''}" data-val="expense">Expense</button>
-               <button class="select-item ${filters.type === 'transfer' ? 'active' : ''}" data-val="transfer">Transfer</button>
-            </div>
-          </div>
-        </div>
-
-        <div style="width: 250px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
-           <button class="btn btn-ghost" id="fClear" style="padding: 0 24px; font-size:12.5px; height: 36px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 8px; background: transparent;" title="Reset Filters">Reset</button>
-        </div>
-        
     </div>
 
     <div class="table-wrap" style="overflow-x:auto;">
       <table style="table-layout: fixed; width: 100%; min-width: 950px;">
         <thead>
           <tr>
-            <th style="width: 110px; padding-left: 14px;">Date</th>
+            <th style="width: 110px;">Date</th>
             <th style="width: 100px;">Day</th>
             <th style="width: 130px;">Account</th>
             <th style="width: 170px; text-align:center;">Category</th>
             <th style="width: auto;">Note</th>
             <th style="width: 110px; text-align:center;">Type</th>
             <th style="width: 130px; text-align:right;">Amount</th>
-            <th style="width: 120px; text-align:right; padding-right: 14px;">Actions</th>
+            <th style="width: 120px; text-align:right;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -970,22 +992,21 @@ function renderTransactions(){
   document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
   
-  // Setup Popover Toggles for Custom Selects
   const setupCustomSelect = (btnId, popoverId, propName) => {
     document.getElementById(btnId).addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pop = document.getElementById(popoverId);
-        const isShowing = pop.classList.contains('show');
-        document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
-        if (!isShowing) pop.classList.add('show');
+      e.stopPropagation();
+      const pop = document.getElementById(popoverId);
+      const isShowing = pop.classList.contains('show');
+      document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
+      if (!isShowing) pop.classList.add('show');
     });
 
     document.querySelectorAll(`#${popoverId} .select-item`).forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            filters[propName] = btn.dataset.val;
-            txnPage = 0; renderTransactions();
-        });
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filters[propName] = btn.dataset.val;
+        txnPage = 0; renderTransactions();
+      });
     });
   };
 
@@ -993,23 +1014,21 @@ function renderTransactions(){
   setupCustomSelect('btnFilterCategory', 'filterCategoryPopover', 'category');
   setupCustomSelect('btnFilterType', 'filterTypePopover', 'type');
 
-  // Custom Filter Date Picker Listener (Start)
   document.getElementById('btnFilterDateFrom').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
     document.getElementById('filterDateFromPopover').classList.add('show');
     renderDatePickerPopover('filterDateFromPopover', 'fDateFrom', 'lblFilterDateFrom', 'filterFrom', (newDate) => {
-        filters.dateFrom = newDate; txnPage = 0; renderTransactions();
+      filters.dateFrom = newDate; txnPage = 0; renderTransactions();
     });
   });
 
-  // Custom Filter Date Picker Listener (End)
   document.getElementById('btnFilterDateTo').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => p.classList.remove('show'));
     document.getElementById('filterDateToPopover').classList.add('show');
     renderDatePickerPopover('filterDateToPopover', 'fDateTo', 'lblFilterDateTo', 'filterTo', (newDate) => {
-        filters.dateTo = newDate; txnPage = 0; renderTransactions();
+      filters.dateTo = newDate; txnPage = 0; renderTransactions();
     });
   });
 
@@ -1030,10 +1049,8 @@ function txnRowHtml(t){
     displayNote = t.note ? `${esc(t.note)} (To: ${esc(t.transferTo)})` : `Transfer to ${esc(t.transferTo)}`;
   }
 
-  // Visual text untuk Category
   const catDisplay = isTransfer ? '🔄️ Transfer' : `${catIcon(t.category)} ${esc(t.category)}`;
   
-  // LOGIC HOVER SWAP: Membuat container yang menampung 2 teks sekaligus
   let catCellHtml = '';
   if (t.subcategory && !isTransfer) {
     const subParts = splitSub(t.subcategory);
@@ -1045,7 +1062,6 @@ function txnRowHtml(t){
       </span>
     `;
   } else {
-    // Jika tipe Transfer atau tidak ada subkategori, tampilkan normal
     catCellHtml = `<span class="cat-chip">${catDisplay}</span>`;
   }
 
@@ -1064,6 +1080,7 @@ function txnRowHtml(t){
     </div></td>
   </tr>`;
 }
+
 function deleteTxn(id){
   if(!confirm('Delete this transaction? This action cannot be undone.')) return;
   state.transactions = state.transactions.filter(t=>t.id!==id);
@@ -1150,7 +1167,7 @@ function saveTxnForm() {
     obj.transferTo = transferTo;
     obj.expense = amount;
     obj.income = 0;
-    obj.category = 'Transfer'; // Teks kategori diubah
+    obj.category = 'Transfer'; 
   } else {
     const cat = document.getElementById('txnCategory').value;
     const sub = document.getElementById('txnSubcategory').value;
@@ -1480,11 +1497,10 @@ function renderCategories(){
   let dragCatIdx = null;
   let dragSub = { cIdx: null, sIdx: null };
 
-  // Category Drag
   const catSections = el.querySelectorAll('.cat-section');
   catSections.forEach(sec => {
     sec.addEventListener('dragstart', e => {
-      if (e.target.closest('.sub-chip')) return; // Abaikan jika yg ditarik adalah sub-chip
+      if (e.target.closest('.sub-chip')) return; 
       dragCatIdx = Number(sec.dataset.catidx);
       e.dataTransfer.effectAllowed = 'move';
       setTimeout(() => sec.classList.add('dragging'), 0);
@@ -1512,11 +1528,10 @@ function renderCategories(){
     });
   });
 
-  // Subcategory Drag (Reorder di dalam kategori yang sama)
   const subChips = el.querySelectorAll('.sub-chip[draggable="true"]');
   subChips.forEach(chip => {
     chip.addEventListener('dragstart', e => {
-      e.stopPropagation(); // Stop agar tidak ikut menarik Category
+      e.stopPropagation(); 
       dragSub = { cIdx: Number(chip.dataset.catidx), sIdx: Number(chip.dataset.subidx) };
       e.dataTransfer.effectAllowed = 'move';
       setTimeout(() => chip.classList.add('dragging'), 0);
@@ -1635,6 +1650,7 @@ function openCatModal(name = null, isDuplicate = false) {
   document.getElementById('catName').focus();
   renderRecentEmojis();
 }
+
 function closeCatModal() { document.getElementById('catModalOverlay').classList.remove('open'); }
 
 function saveCatForm() {
@@ -1701,6 +1717,7 @@ function openSubModal(catName, subName = null) {
   document.getElementById('subName').focus();
   renderRecentEmojis();
 }
+
 function closeSubModal() { document.getElementById('subModalOverlay').classList.remove('open'); }
 
 function saveSubForm() {
@@ -1870,6 +1887,7 @@ function openAcctModal(name){
   document.getElementById('acctModalOverlay').classList.add('open');
   document.getElementById('acctName').focus();
 }
+
 function closeAcctModal(){ document.getElementById('acctModalOverlay').classList.remove('open'); }
 
 function saveAcctForm(){
@@ -1916,6 +1934,7 @@ function exportData(){
   URL.revokeObjectURL(url);
   toast('Data exported');
 }
+
 function importData(file){
   const reader = new FileReader();
   reader.onload = ()=>{
@@ -1930,6 +1949,7 @@ function importData(file){
   };
   reader.readAsText(file);
 }
+
 function resetData(){
   if(!confirm('Reset this data? Transactions and accounts will be deleted.')) return;
   state = JSON.parse(JSON.stringify(SEED));
@@ -1999,7 +2019,6 @@ function init(){
     document.getElementById('subEmojiPopover').classList.toggle('show');
   });
 
-  // Global listener for closing custom popovers
   document.addEventListener('click', e => {
     if (!e.target.closest('.emoji-dropdown-wrap')) {
       document.querySelectorAll('.emoji-popover').forEach(p => p.classList.remove('show'));
