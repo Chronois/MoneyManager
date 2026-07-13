@@ -123,6 +123,7 @@ let selectedCatMonth = null;
 let selectedSubCatMonth = null;
 let catPickerYear = null;
 let subPickerYear = null;
+let catViewType = 'expense';
 
 let dpViewYear = { txn: null, filterFrom: null, filterTo: null };
 let dpViewMonth = { txn: null, filterFrom: null, filterTo: null };
@@ -1434,19 +1435,30 @@ function deleteBudget(key) {
 
 function renderCategories(){
   const el = document.getElementById('view-categories');
+
+  // Filter kategori berdasarkan tab yang aktif. Tipe 'both' selalu muncul.
+  const displayedCats = state.categories.filter(c => c.type === catViewType || c.type === 'both');
+
   el.innerHTML = `
     <div class="section-head">
       <div><h2>Categories</h2><p class="sub">Manage and organize your transaction categories</p></div>
-      <div class="section-head-actions">
+      <div class="section-head-actions" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div class="type-toggle modern-toggle" id="catViewToggle" style="margin:0; min-width:180px;">
+          <button type="button" class="${catViewType === 'expense' ? 'active' : ''}" data-cattype="expense">Expense</button>
+          <button type="button" class="${catViewType === 'income' ? 'active' : ''}" data-cattype="income">Income</button>
+        </div>
         <button class="btn btn-primary" id="btnAddCat">${icon('plus')}Add Category</button>
       </div>
     </div>
 
     <div id="catList" class="card card-pad">
-      ${state.categories.map((c, i)=>{
+      ${displayedCats.length > 0 ? displayedCats.map((c)=>{
+        // Cari indeks aslinya di dalam state utama agar Drag & Drop tidak meleset
+        const trueIdx = state.categories.findIndex(x => x.category === c.category);
         let typeLabel = c.type === 'expense' ? 'Expense' : (c.type === 'income' ? 'Income' : 'Both');
+        
         return `
-        <div class="cat-section" data-catidx="${i}" draggable="true">
+        <div class="cat-section" data-catidx="${trueIdx}" draggable="true">
           <h4>
             <span class="cat-icon-edit" data-editcat="${esc(c.category)}" title="Edit Category">${catIcon(c.category)}</span>
             ${esc(c.category)} <span class="cat-type-tag">${typeLabel}</span>
@@ -1461,7 +1473,7 @@ function renderCategories(){
             ${c.subcategories.map((s, j)=>{
               const parts = splitSub(s);
               return `
-              <span class="sub-chip" data-catidx="${i}" data-subidx="${j}" draggable="true">
+              <span class="sub-chip" data-catidx="${trueIdx}" data-subidx="${j}" draggable="true">
                 <span class="cat-icon-edit" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit Subcategory">${parts.icon}</span>
                 ${esc(parts.name)}
                 <button class="icon-btn-micro" data-editsub="${esc(c.category)}|${esc(s)}" title="Edit">${icon('edit')}</button>
@@ -1470,9 +1482,17 @@ function renderCategories(){
             `}).join('') || '<span class="sub-chip empty-sub" style="opacity:.6">No subcategories yet</span>'}
           </div>
         </div>
-      `}).join('')}
+      `}).join('') : '<div class="empty">No categories found in this tab.</div>'}
     </div>
   `;
+
+  // Event listener untuk Toggle Tab Expense/Income
+  document.querySelectorAll('#catViewToggle button').forEach(b => {
+    b.addEventListener('click', (e) => {
+      catViewType = e.target.dataset.cattype;
+      renderCategories();
+    });
+  });
 
   document.getElementById('btnAddCat').addEventListener('click', ()=> openCatModal());
   el.querySelectorAll('[data-editcat]').forEach(b=> b.addEventListener('click', ()=> openCatModal(b.dataset.editcat)));
@@ -1641,7 +1661,7 @@ function openCatModal(name = null, isDuplicate = false) {
   let defaultName = '';
   if(c) defaultName = isDuplicate ? c.category + ' Copy' : c.category;
   document.getElementById('catName').value = defaultName;
-  document.getElementById('catType').value = c ? (c.type || 'expense') : 'expense';
+  document.getElementById('catType').value = c ? (c.type || 'expense') : catViewType;
   
   const icon = c ? c.icon : '📁';
   document.getElementById('catIconValue').value = icon;
