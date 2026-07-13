@@ -1049,22 +1049,6 @@ function txnRowHtml(t){
     </div></td>
   </tr>`;
 }
-  
-  return `<tr>
-    <td>${fmtDateShort(t.date)}</td>
-    <td>${dayName(t.date)}</td>
-    <td>${esc(t.account)}</td>
-    <td><div class="cell-cat"><span class="cat-chip">${catIcon(t.category)} ${esc(t.category)}</span></div></td>
-    <td class="note-cell" title="${displayNote}">${displayNote}</td>
-    <td style="text-align:center"><span class="cat-chip" style="opacity:0.8">${typeLabel}</span></td>
-    <td class="num ${color}">${fmtCurrency(amt)}</td>
-    <td><div class="row-actions" style="justify-content:flex-end;">
-      <button data-edit="${t.id}" title="Edit">${icon('edit')}</button>
-      <button data-dup="${t.id}" title="Duplicate">${icon('copy')}</button>
-      <button data-del="${t.id}" class="del" title="Delete">${icon('trash')}</button>
-    </div></td>
-  </tr>`;
-}
 
 function deleteTxn(id){
   if(!confirm('Delete this transaction? This action cannot be undone.')) return;
