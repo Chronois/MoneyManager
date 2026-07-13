@@ -398,24 +398,6 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
       bindPopoverEvents(popoverId, targetId, selectedMonth);
     });
   });
-
-  popover.querySelectorAll('.mp-month').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      
-      if (targetId === 'cat') {
-        selectedCatMonth = btn.dataset.val;
-        catPickerYear = parseInt(selectedCatMonth.split('-')[0]); 
-      } else if (targetId === 'dash') {
-        dashboardMonth = btn.dataset.val;
-        dashPickerYear = parseInt(dashboardMonth.split('-')[0]);
-      } else {
-        selectedSubCatMonth = btn.dataset.val;
-        subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]); 
-      }
-      renderDashboard();
-    });
-  });
 }
 
 /* ============ THEME ENGINE ============ */
@@ -1055,7 +1037,7 @@ function renderTransactions(){
   });
 
   el.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.edit))));
-  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true))));
+  el.querySelectorAll('[data-dup]').forEach(b=> b.addEventListener('click', ()=> openTxnModal(Number(b.dataset.dup), true)));
   el.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> deleteTxn(Number(b.dataset.del))));
 }
 
