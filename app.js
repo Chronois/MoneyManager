@@ -111,6 +111,7 @@ let editingAcctName = null;
 let txnType = 'expense';
 let currentTab = 'dashboard';
 let filters = { account:'', category:'', type:'', q:'', dateFrom:'', dateTo:'' };
+let sortConfig = { column: 'date', direction: 'desc' };
 let txnPage = 0;
 const PAGE_SIZE = 40;
 
@@ -932,7 +933,8 @@ function renderSubcategoryBarBlock(monthTx){
 /* ============ TRANSACTIONS ============ */
 function renderTransactions(){
   const { enriched } = computeLedger();
-  let list = [...enriched].reverse();
+  // Hilangkan reverse() karena akan di-sort secara manual
+  let list = [...enriched]; 
 
   if(filters.type) {
     if(filters.type === 'income') list = list.filter(t => !t.transferTo && t.income > 0);
@@ -950,9 +952,45 @@ function renderTransactions(){
     list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q) || (t.transferTo||'').toLowerCase().includes(q));
   }
 
+  // --- LOGIKA SORTING BARU ---
+  list.sort((a, b) => {
+    let valA, valB;
+    const amtA = a.transferTo ? a.expense : (a.income > 0 ? a.income : a.expense);
+    const typeA = a.transferTo ? 'Transfer' : (a.income > 0 ? 'Income' : 'Expense');
+    
+    const amtB = b.transferTo ? b.expense : (b.income > 0 ? b.income : b.expense);
+    const typeB = b.transferTo ? 'Transfer' : (b.income > 0 ? 'Income' : 'Expense');
+
+    switch(sortConfig.column) {
+      case 'date': 
+        valA = a.date + (a.time || '00:00') + a.id; 
+        valB = b.date + (b.time || '00:00') + b.id; 
+        break;
+      case 'account': valA = (a.account || '').toLowerCase(); valB = (b.account || '').toLowerCase(); break;
+      case 'category': valA = (a.subcategory || a.category || '').toLowerCase(); valB = (b.subcategory || b.category || '').toLowerCase(); break;
+      case 'note': valA = (a.note || '').toLowerCase(); valB = (b.note || '').toLowerCase(); break;
+      case 'type': valA = typeA; valB = typeB; break;
+      case 'amount': valA = amtA; valB = amtB; break;
+      default: valA = a.date; valB = b.date;
+    }
+
+    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  // ---------------------------
+
   const totalPages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
   txnPage = Math.min(txnPage, totalPages-1);
   const pageList = list.slice(txnPage*PAGE_SIZE, txnPage*PAGE_SIZE+PAGE_SIZE);
+
+  // Helper pembuat Icon Panah
+  const getSortIcon = (col) => {
+    if (sortConfig.column === col) {
+      return `<span class="sort-icon active ${sortConfig.direction === 'desc' ? 'desc' : ''}">▲</span>`;
+    }
+    return `<span class="sort-icon">▲</span>`;
+  };
 
   const el = document.getElementById('view-transactions');
   el.innerHTML = `
@@ -999,6 +1037,7 @@ function renderTransactions(){
           </div>
         </div>
 
+        <!-- Kolom Category diperlebar menjadi 220px -->
         <div class="filter-col" style="width: 220px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Category</label>
           <div class="date-picker-wrap">
@@ -1043,13 +1082,13 @@ function renderTransactions(){
       <table style="table-layout: fixed; width: 100%; min-width: 1020px;">
         <thead>
           <tr>
-            <th style="width: 110px; padding-left: 14px;">Date</th>
+            <th class="sortable-th" data-sort="date" style="width: 110px; padding-left: 14px;" title="Sort by Date">Date ${getSortIcon('date')}</th>
             <th style="width: 100px;">Day</th>
-            <th style="width: 130px;">Account</th>
-            <th style="width: 220px; text-align:center;">Category</th>
-            <th style="width: auto;">Note</th>
-            <th style="width: 110px; text-align:center;">Type</th>
-            <th style="width: 130px; text-align:right;">Amount</th>
+            <th class="sortable-th" data-sort="account" style="width: 130px;" title="Sort by Account">Account ${getSortIcon('account')}</th>
+            <th class="sortable-th" data-sort="category" style="width: 220px; text-align:center;" title="Sort by Category">Category ${getSortIcon('category')}</th>
+            <th class="sortable-th" data-sort="note" style="width: auto;" title="Sort by Note">Note ${getSortIcon('note')}</th>
+            <th class="sortable-th" data-sort="type" style="width: 110px; text-align:center;" title="Sort by Type">Type ${getSortIcon('type')}</th>
+            <th class="sortable-th" data-sort="amount" style="width: 130px; text-align:right;" title="Sort by Amount">Amount ${getSortIcon('amount')}</th>
             <th style="width: 120px; text-align:right; padding-right: 14px;">Actions</th>
           </tr>
         </thead>
@@ -1068,6 +1107,23 @@ function renderTransactions(){
     </div>
   `;
    
+  // Trigger Sorting ketika header ditekan
+  el.querySelectorAll('.sortable-th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortConfig.column === col) {
+        // Balik arah sort jika kolom yang sama diklik lagi
+        sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // Kolom baru, default ke desc untuk date/amount, sisanya asc
+        sortConfig.column = col;
+        sortConfig.direction = (col === 'date' || col === 'amount') ? 'desc' : 'asc';
+      }
+      txnPage = 0; // Reset ke halaman 1 setiap kali di-sort
+      renderTransactions();
+    });
+  });
+
   document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
   
   document.getElementById('fSearch').addEventListener('input', e => { 
