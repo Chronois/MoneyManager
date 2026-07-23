@@ -958,14 +958,31 @@ function renderTransactions(){
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
       <span style="font-size:12.5px; color:var(--ink-muted)">Page ${txnPage+1} of ${totalPages}</span>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-sm" id="pgPrev" ${txnPage===0?'disabled':''}>← Previous</button>
-        <button class="btn btn-sm" id="pgNext" ${txnPage>=totalPages-1?'disabled':''}>Next →</button>
+        <button class="btn btn-sm" id="pgPrev" ${txnPage===0?'disabled':''}>Previous</button>
+        <button class="btn btn-sm" id="pgNext" ${txnPage>=totalPages-1?'disabled':''}>Next</button>
       </div>
     </div>
   `;
    
   document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
-  document.getElementById('fSearch').addEventListener('input', e=>{ filters.q=e.target.value; txnPage=0; renderTransactions(); });
+  
+  // BAGIAN INI YANG KITA PERBAIKI
+  document.getElementById('fSearch').addEventListener('input', e => { 
+    filters.q = e.target.value; 
+    txnPage = 0; 
+    renderTransactions(); 
+    
+    // Kembalikan fokus kursor ke kolom pencarian setelah render ulang
+    const searchInput = document.getElementById('fSearch');
+    if (searchInput) {
+      searchInput.focus();
+      // Trik agar kursor selalu berada di akhir teks, bukan di depan
+      const val = searchInput.value;
+      searchInput.value = '';
+      searchInput.value = val;
+    }
+  });
+
   document.getElementById('fClear').addEventListener('click', ()=>{ filters={account:'',category:'',type:'',q:'',dateFrom:'',dateTo:''}; txnPage=0; renderTransactions(); });
   document.getElementById('pgPrev').addEventListener('click', ()=>{ txnPage=Math.max(0,txnPage-1); renderTransactions(); });
   document.getElementById('pgNext').addEventListener('click', ()=>{ txnPage=txnPage+1; renderTransactions(); });
