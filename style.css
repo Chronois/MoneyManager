@@ -463,6 +463,7 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
 @media (max-width: 980px) {
   .dash-grid { grid-template-columns: 1fr; }
   main { padding: 20px 16px 80px !important; }
+  .budget-list { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -512,6 +513,7 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
   /* Perbaikan Filter Wrap */
   .filters-container { padding: 14px !important; }
   .filters-container > div { flex-basis: 100% !important; }
+  .budget-list { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 380px) {
