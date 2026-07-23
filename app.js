@@ -857,9 +857,9 @@ function renderTransactions(){
       </div>
     </div>
 
-    <div class="filters-container" style="display:flex; flex-wrap:nowrap; gap:0; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px 0; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow-x:auto;">
+    <div class="filters-container" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); padding:16px; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); overflow:visible;">
         
-        <div style="width: 210px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+        <div style="flex: 1 1 200px; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Date Range</label>
           <div style="display:flex; align-items:center; gap:6px;">
             <div class="date-picker-wrap" style="flex:1; min-width:0;">
@@ -879,7 +879,7 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="width: 130px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+        <div style="flex: 1 1 120px; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Account</label>
           <div class="date-picker-wrap">
             <button type="button" class="input date-picker-btn" id="btnFilterAccount" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%;">
@@ -893,10 +893,10 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="width: 170px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Category</label>
+        <div style="flex: 1 1 160px; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Category</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%; justify-content:center;">
+            <button type="button" class="input date-picker-btn" id="btnFilterCategory" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; width:100%; justify-content:space-between;">
               <span id="lblFilterCategory" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filters.category ? esc(filters.category) : 'All Categories'}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
@@ -907,15 +907,15 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="flex: 1; min-width: 140px; padding: 0 14px; display:flex; flex-direction:column; gap:6px;">
+        <div style="flex: 2 1 160px; display:flex; flex-direction:column; gap:6px;">
            <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Note</label>
            <input type="text" class="input" id="fSearch" placeholder="Search notes..." value="${esc(filters.q)}" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; font-family:var(--font-body); width:100%;">
         </div>
 
-        <div style="width: 110px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
-          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Type</label>
+        <div style="flex: 1 1 110px; display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Type</label>
           <div class="date-picker-wrap">
-            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:center; gap:4px; width:100%;">
+            <button type="button" class="input date-picker-btn" id="btnFilterType" style="padding: 6px 8px; font-size: 12.5px; border-radius: 6px; box-shadow: none; justify-content:space-between; gap:4px; width:100%;">
               <span id="lblFilterType">${filters.type === 'income' ? 'Income' : (filters.type === 'expense' ? 'Expense' : (filters.type === 'transfer' ? 'Transfer' : 'All'))}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
             </button>
@@ -928,8 +928,8 @@ function renderTransactions(){
           </div>
         </div>
 
-        <div style="width: 250px; padding: 0 14px 0 0; flex-shrink:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
-           <button class="btn btn-ghost" id="fClear" style="padding: 0 24px; font-size:12.5px; height: 34px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 6px; background: transparent;" title="Reset Filters">Reset</button>
+        <div style="flex: 0 0 auto; display:flex; flex-direction:column; justify-content:flex-end;">
+           <button class="btn btn-ghost" id="fClear" style="padding: 0 16px; font-size:12.5px; height: 34px; color: var(--ink-muted); border: 1px solid var(--border); border-radius: 6px; background: transparent;" title="Reset Filters">Reset</button>
         </div>
     </div>
 
