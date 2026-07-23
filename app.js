@@ -314,6 +314,62 @@ function getDatePickerHTML(year, month, selectedDateStr, targetPrefix) {
   `;
 }
 
+function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback = null) {
+  const popover = document.getElementById(popoverId);
+  if(!popover) return;
+  const selectedDate = document.getElementById(inputId).value;
+
+  if (!dpViewYear[targetPrefix]) {
+    const d = selectedDate ? new Date(selectedDate) : new Date();
+    dpViewYear[targetPrefix] = d.getFullYear();
+    dpViewMonth[targetPrefix] = d.getMonth() + 1;
+  }
+
+  popover.innerHTML = getDatePickerHTML(dpViewYear[targetPrefix], dpViewMonth[targetPrefix], selectedDate, targetPrefix);
+
+  popover.querySelector('.dp-prev-month').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dpViewMonth[targetPrefix]--;
+    if(dpViewMonth[targetPrefix] < 1) { dpViewMonth[targetPrefix] = 12; dpViewYear[targetPrefix]--; }
+    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
+  });
+  
+  popover.querySelector('.dp-next-month').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dpViewMonth[targetPrefix]++;
+    if(dpViewMonth[targetPrefix] > 12) { dpViewMonth[targetPrefix] = 1; dpViewYear[targetPrefix]++; }
+    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
+  });
+
+  popover.querySelectorAll('.dp-day:not(.empty)').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const selDate = btn.dataset.date;
+      document.getElementById(inputId).value = selDate;
+      document.getElementById(labelId).textContent = fmtDateShort(selDate);
+      popover.classList.remove('show');
+      if (onChangeCallback) onChangeCallback(selDate);
+    });
+  });
+
+  popover.querySelector('.dp-clear-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById(inputId).value = '';
+    document.getElementById(labelId).textContent = targetPrefix === 'filterFrom' ? 'Start Date' : (targetPrefix === 'filterTo' ? 'End Date' : 'Select Date');
+    popover.classList.remove('show');
+    if (onChangeCallback) onChangeCallback('');
+  });
+
+  popover.querySelector('.dp-today-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const todayStr = new Date().toISOString().slice(0,10);
+    document.getElementById(inputId).value = todayStr;
+    document.getElementById(labelId).textContent = fmtDateShort(todayStr);
+    popover.classList.remove('show');
+    if (onChangeCallback) onChangeCallback(todayStr);
+  });
+}
+
 /* ============ CUSTOM TIME PICKER LOGIC ============ */
 function renderTimePickerPopover(popoverId, inputId, labelId) {
   const popover = document.getElementById(popoverId);
@@ -373,6 +429,7 @@ function renderTimePickerPopover(popoverId, inputId, labelId) {
     });
   });
 }
+
 /* ============ CUSTOM MONTH PICKER LOGIC ============ */
 function getPickerHTML(targetId, selectedMonth, viewYear) {
   const [selY, selM] = selectedMonth.split('-').map(Number);
@@ -905,7 +962,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Kolom Category diperlebar menjadi 220px -->
         <div class="filter-col" style="width: 220px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Category</label>
           <div class="date-picker-wrap">
@@ -953,7 +1009,6 @@ function renderTransactions(){
             <th style="width: 110px; padding-left: 14px;">Date</th>
             <th style="width: 100px;">Day</th>
             <th style="width: 130px;">Account</th>
-            <!-- Kolom Category Tabel diperlebar menjadi 220px -->
             <th style="width: 220px; text-align:center;">Category</th>
             <th style="width: auto;">Note</th>
             <th style="width: 110px; text-align:center;">Type</th>
@@ -978,17 +1033,14 @@ function renderTransactions(){
    
   document.getElementById('btnAddTxn').addEventListener('click', ()=> openTxnModal());
   
-  // BAGIAN INI YANG KITA PERBAIKI
   document.getElementById('fSearch').addEventListener('input', e => { 
     filters.q = e.target.value; 
     txnPage = 0; 
     renderTransactions(); 
     
-    // Kembalikan fokus kursor ke kolom pencarian setelah render ulang
     const searchInput = document.getElementById('fSearch');
     if (searchInput) {
       searchInput.focus();
-      // Trik agar kursor selalu berada di akhir teks, bukan di depan
       const val = searchInput.value;
       searchInput.value = '';
       searchInput.value = val;
@@ -1114,13 +1166,11 @@ function openTxnModal(id, isDuplicate = false){
   dpViewMonth.txn = m;
   renderDatePickerPopover('datePopover', 'txnDate', 'lblTxnDate', 'txn');
 
-  // Generate Waktu (Jam:Menit) secara Real-Time
   const now = new Date();
   const currentHours = String(now.getHours()).padStart(2, '0');
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHours}:${currentMinutes}`;
   
-  // Jika sedang edit, ambil waktu lama. Jika baru, pakai waktu saat ini.
   const finalTime = (t && t.time && !isDuplicate) ? t.time : currentTime;
   document.getElementById('txnTime').value = finalTime;
   document.getElementById('lblTxnTime').textContent = finalTime;
@@ -1129,7 +1179,6 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
 
-  // Menampilkan Simbol Mata Uang yang Benar (Rp / € / $)
   const currConfig = CURRENCIES[state.currency || 'IDR'] || CURRENCIES['IDR'];
   document.getElementById('amountCurrencyPrefix').textContent = currConfig.symbol;
 
@@ -1176,50 +1225,10 @@ function saveTxnForm() {
   let obj = {
     id: editingTxnId || uid(),
     date: date,
-    time: time, // Menyimpan format waktu secara aman ke backend
+    time: time, 
     account: account,
     note: note
   };
-
-  if (txnType === 'transfer') {
-    const transferTo = document.getElementById('txnTransferTo').value;
-    if (account === transferTo) { toast('Cannot transfer to the same account'); return; }
-    if (!transferTo) { toast('Destination account is required'); return; }
-    
-    obj.transferTo = transferTo;
-    obj.expense = amount;
-    obj.income = 0;
-    obj.category = 'Transfer'; 
-  } else {
-    const cat = document.getElementById('txnCategory').value;
-    const sub = document.getElementById('txnSubcategory').value;
-    if (!cat) { toast('Category is required'); return; }
-    
-    obj.category = cat;
-    obj.subcategory = sub;
-    
-    if (txnType === 'income') {
-      obj.income = amount;
-      obj.expense = 0;
-    } else {
-      obj.income = 0;
-      obj.expense = amount;
-    }
-  }
-
-  if (editingTxnId) {
-    const idx = state.transactions.findIndex(t => t.id === editingTxnId);
-    if(idx !== -1) state.transactions[idx] = obj;
-    toast('Transaction updated');
-  } else {
-    state.transactions.push(obj);
-    toast('Transaction added');
-  }
-
-  saveState();
-  closeTxnModal();
-  renderCurrentTab();
-}
 
   if (txnType === 'transfer') {
     const transferTo = document.getElementById('txnTransferTo').value;
