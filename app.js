@@ -2183,6 +2183,20 @@ function init(){
     document.getElementById('datePopover').classList.toggle('show');
   });
 
+  document.getElementById('btnTxnTime').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.date-popover, .select-popover, .emoji-popover, .month-popover').forEach(p => {
+      if(p.id !== 'timePopover') p.classList.remove('show');
+    });
+    
+    const timePopover = document.getElementById('timePopover');
+    timePopover.classList.toggle('show');
+    
+    if (timePopover.classList.contains('show')) {
+      renderTimePickerPopover('timePopover', 'txnTime', 'lblTxnTime');
+    }
+  });
+
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
   document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
