@@ -320,7 +320,13 @@ function renderTimePickerPopover(popoverId, inputId, labelId) {
   if(!popover) return;
   
   let selectedTime = document.getElementById(inputId).value || "00:00";
+  // Cegah error jika format waktu lama menggunakan titik (.)
+  selectedTime = selectedTime.replace('.', ':');
   let [selH, selM] = selectedTime.split(':');
+  
+  // Perlindungan ekstra jika waktu gagal dibaca
+  if (!selH || selH === "undefined") selH = "00";
+  if (!selM || selM === "undefined") selM = "00";
   
   let hHtml = '';
   for(let i=0; i<24; i++) {
@@ -367,7 +373,6 @@ function renderTimePickerPopover(popoverId, inputId, labelId) {
     });
   });
 }
-
 /* ============ CUSTOM MONTH PICKER LOGIC ============ */
 function getPickerHTML(targetId, selectedMonth, viewYear) {
   const [selY, selM] = selectedMonth.split('-').map(Number);
@@ -1109,7 +1114,7 @@ function openTxnModal(id, isDuplicate = false){
   dpViewMonth.txn = m;
   renderDatePickerPopover('datePopover', 'txnDate', 'lblTxnDate', 'txn');
 
-  // Generate Waktu (Jam:Menit) secara *Real-Time*
+  // Generate Waktu (Jam:Menit) secara Real-Time
   const now = new Date();
   const currentHours = String(now.getHours()).padStart(2, '0');
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
@@ -1124,9 +1129,11 @@ function openTxnModal(id, isDuplicate = false){
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
 
-  document.getElementById('amountCurrencyPrefix').textContent = state.currency || 'IDR';
+  // Menampilkan Simbol Mata Uang yang Benar (Rp / € / $)
+  const currConfig = CURRENCIES[state.currency || 'IDR'] || CURRENCIES['IDR'];
+  document.getElementById('amountCurrencyPrefix').textContent = currConfig.symbol;
 
-  const rate = CURRENCIES[state.currency || 'IDR'].rate;
+  const rate = currConfig.rate;
   if(t) {
     const rawAmt = t.transferTo ? t.expense : (t.income || t.expense || 0);
     const val = rawAmt / rate;
@@ -1154,7 +1161,7 @@ function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.r
 
 function saveTxnForm() {
   const date = document.getElementById('txnDate').value;
-  const time = document.getElementById('txnTime').value || "00:00"; // Tangkap nilai waktu
+  const time = document.getElementById('txnTime').value || "00:00"; 
   const account = document.getElementById('txnAccount').value;
   const note = document.getElementById('txnNote').value.trim();
   
@@ -1169,10 +1176,50 @@ function saveTxnForm() {
   let obj = {
     id: editingTxnId || uid(),
     date: date,
-    time: time, // Simpan waktu ke dalam data backend
+    time: time, // Menyimpan format waktu secara aman ke backend
     account: account,
     note: note
   };
+
+  if (txnType === 'transfer') {
+    const transferTo = document.getElementById('txnTransferTo').value;
+    if (account === transferTo) { toast('Cannot transfer to the same account'); return; }
+    if (!transferTo) { toast('Destination account is required'); return; }
+    
+    obj.transferTo = transferTo;
+    obj.expense = amount;
+    obj.income = 0;
+    obj.category = 'Transfer'; 
+  } else {
+    const cat = document.getElementById('txnCategory').value;
+    const sub = document.getElementById('txnSubcategory').value;
+    if (!cat) { toast('Category is required'); return; }
+    
+    obj.category = cat;
+    obj.subcategory = sub;
+    
+    if (txnType === 'income') {
+      obj.income = amount;
+      obj.expense = 0;
+    } else {
+      obj.income = 0;
+      obj.expense = amount;
+    }
+  }
+
+  if (editingTxnId) {
+    const idx = state.transactions.findIndex(t => t.id === editingTxnId);
+    if(idx !== -1) state.transactions[idx] = obj;
+    toast('Transaction updated');
+  } else {
+    state.transactions.push(obj);
+    toast('Transaction added');
+  }
+
+  saveState();
+  closeTxnModal();
+  renderCurrentTab();
+}
 
   if (txnType === 'transfer') {
     const transferTo = document.getElementById('txnTransferTo').value;
