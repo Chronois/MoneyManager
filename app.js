@@ -1317,22 +1317,27 @@ function renderBudgets() {
           }
 
           return `<div class="budget-row" data-budgetkey="${esc(k)}" draggable="true">
-            <div class="budget-top" style="align-items: center;">
-              <span class="cat-label">${cIcon} ${esc(label)}</span>
-              <div style="display:flex; align-items:center;">
-                <span class="amounts">${fmtCurrency(spend)} / ${fmtCurrency(budget)}</span>
-                <div class="row-actions">
-                  <button data-editbudget="${esc(k)}" title="Edit Limit">${icon('edit')}</button>
-                  <button data-delbudget="${esc(k)}" class="del" title="Delete Budget">${icon('trash')}</button>
-                </div>
+            <div class="budget-top">
+              <span class="cat-label">
+                ${cIcon} 
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;" title="${esc(label)}">${esc(label)}</span>
+              </span>
+              <div class="row-actions">
+                <button data-editbudget="${esc(k)}" title="Edit Limit">${icon('edit')}</button>
+                <button data-delbudget="${esc(k)}" class="del" title="Delete Budget">${icon('trash')}</button>
               </div>
             </div>
-            <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top: 6px;">
+              <div class="budget-info">
+                <div style="display:flex; flex-direction:column;">
+                  <span class="amounts ${over ? 'neg' : ''}">${fmtCurrency(spend)}</span>
+                  <span class="limit">of ${fmtCurrency(budget)}</span>
+                </div>
+                <span style="font-size:11.5px; font-family:var(--font-mono); font-weight:700; color:${over ? 'var(--expense)' : 'var(--ink-muted)'}">${pct}%</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+            </div>
           </div>`;
-        }).join('') : emptyHtml('No budgets yet. Click "Add Budget" to start.')}
-      </div>
-    </div>
-  `;
   
   document.getElementById('btnAddBudget').addEventListener('click', () => openBudgetModal());
   el.querySelectorAll('[data-editbudget]').forEach(b => b.addEventListener('click', () => openBudgetModal(b.dataset.editbudget)));
