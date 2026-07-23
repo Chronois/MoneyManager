@@ -548,3 +548,10 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
 .time-item { padding: 8px 0; text-align: center; border-radius: 6px; cursor: pointer; color: var(--ink); font-family: var(--font-mono); font-size: 13px; background: transparent; border: none; transition: .15s ease; }
 .time-item:hover { background: var(--paper-2); color: var(--primary-dark); }
 .time-item.active { background: var(--primary); color: #fff; font-weight: 700; }
+
+/* ---------- Sorting Table ---------- */
+.sortable-th { cursor: pointer; user-select: none; transition: background 0.15s ease; }
+.sortable-th:hover { background: var(--paper-2); color: var(--primary-dark); }
+.sort-icon { display: inline-block; margin-left: 4px; font-size: 10px; opacity: 0.3; transition: transform 0.2s ease; }
+.sort-icon.active { opacity: 1; color: var(--primary); font-weight: 800; }
+.sort-icon.desc { transform: rotate(180deg); }
