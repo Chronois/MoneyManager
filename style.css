@@ -162,9 +162,32 @@ main { flex:1; padding:26px clamp(16px,4vw,40px) 60px; max-width: 1280px; width:
 .acct-balance { font-family:var(--font-mono); font-size:19px; font-weight:600; }
 
 /* ---------- Table ---------- */
-.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); }
+.table-wrap { 
+  overflow-x: auto; 
+  overflow-y: auto; /* Mengizinkan tabel untuk di-scroll ke bawah */
+  max-height: 65vh; /* Membatasi tinggi maksimum tabel di layar */
+  border: 1px solid var(--border); 
+  border-radius: var(--radius-md); 
+  background: var(--surface); 
+}
+
 table { width:100%; border-collapse:collapse; min-width:920px; }
-thead th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); font-weight:700; padding:11px 14px; background:var(--paper-2); border-bottom:1px solid var(--border); position:sticky; top:0; white-space:nowrap; }
+
+thead th { 
+  text-align:left; 
+  font-size:11px; 
+  text-transform:uppercase; 
+  letter-spacing:.05em; 
+  color:var(--ink-muted); 
+  font-weight:700; 
+  padding:11px 14px; 
+  background:var(--paper-2); 
+  border-bottom:1px solid var(--border); 
+  position:sticky; 
+  top:0; 
+  z-index:10; /* Angka z-index mencegah baris tabel meluap menutupi header */
+  white-space:nowrap; 
+}
 tbody td { padding:11px 14px; border-bottom:1px solid var(--border-soft); font-size:13.5px; vertical-align:middle; white-space:nowrap; }
 tbody tr:last-child td { border-bottom:none; }
 tbody tr:hover { background:var(--paper-2); transition: background 0.15s ease; }
