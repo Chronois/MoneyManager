@@ -389,13 +389,23 @@ function bindPopoverEvents(popoverId, targetId, selectedMonth) {
       e.stopPropagation();
       const dir = parseInt(btn.dataset.dir);
       
-      if (targetId === 'cat') catPickerYear += dir;
-      else if (targetId === 'dash') dashPickerYear += dir;
-      else subPickerYear += dir;
+      if (targetId === 'dash') dashPickerYear += dir;
 
-      const newYear = targetId === 'cat' ? catPickerYear : (targetId === 'dash' ? dashPickerYear : subPickerYear);
+      const newYear = dashPickerYear;
       popover.innerHTML = getPickerHTML(targetId, selectedMonth, newYear);
       bindPopoverEvents(popoverId, targetId, selectedMonth);
+    });
+  });
+
+  popover.querySelectorAll('.mp-month').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      if (targetId === 'dash') {
+        dashboardMonth = btn.dataset.val;
+        dashPickerYear = parseInt(dashboardMonth.split('-')[0]);
+      }
+      renderDashboard();
     });
   });
 }
@@ -573,22 +583,15 @@ function renderDashboard(){
   const { enriched, accBal, total } = computeLedger();
   const nowKey = todayStr().slice(0,7);
   
-  // Setup Default Bulan
+  // Setup Default Bulan untuk Global Dashboard
   if (!dashboardMonth) dashboardMonth = nowKey;
   if (!dashPickerYear) dashPickerYear = parseInt(dashboardMonth.split('-')[0]);
-  if (!selectedCatMonth) selectedCatMonth = nowKey;
-  if (!selectedSubCatMonth) selectedSubCatMonth = nowKey;
-  if (!catPickerYear) catPickerYear = parseInt(selectedCatMonth.split('-')[0]);
-  if (!subPickerYear) subPickerYear = parseInt(selectedSubCatMonth.split('-')[0]);
 
-  // Hitung berdasarkan dashboardMonth (Bukan nowKey)
+  // Hitung semua data berdasarkan dashboardMonth yang dipilih
   const monthTx = enriched.filter(t=> t.date.slice(0,7) === dashboardMonth);
   const income = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.income||0),0);
   const expense = monthTx.filter(t=>!t.transferTo).reduce((s,t)=>s+(t.expense||0),0);
   const net = income-expense;
-
-  const catMonthTx = enriched.filter(t=> t.date.slice(0,7) === selectedCatMonth);
-  const subCatMonthTx = enriched.filter(t=> t.date.slice(0,7) === selectedSubCatMonth);
 
   const el = document.getElementById('view-dashboard');
   el.innerHTML = `
@@ -643,44 +646,22 @@ function renderDashboard(){
         </div>
       </div>
       <div class="card card-pad">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-          <div>
-            <p class="panel-title">Expenses by Category</p>
-            <p class="panel-sub">Select month to view details</p>
-          </div>
-          <div class="month-picker-wrap">
-            <button class="month-picker-btn" id="catBtn">
-              ${fmtMonthLabel(selectedCatMonth)}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="month-popover" id="catPopover">
-              ${getPickerHTML('cat', selectedCatMonth, catPickerYear)}
-            </div>
-          </div>
+        <div style="margin-bottom:14px;">
+          <p class="panel-title">Expenses by Category</p>
+          <p class="panel-sub">${fmtMonthLabel(dashboardMonth)} details</p>
         </div>
-        ${renderCategoryDonutBlock(catMonthTx)}
+        ${renderCategoryDonutBlock(monthTx)}
       </div>
     </div>
 
     <div class="dash-grid">
       <div class="card card-pad">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-          <div>
-            <p class="panel-title">Expenses by Subcategory</p>
-            <p class="panel-sub">Select month to view details</p>
-          </div>
-          <div class="month-picker-wrap">
-            <button class="month-picker-btn" id="subCatBtn">
-              ${fmtMonthLabel(selectedSubCatMonth)}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="month-popover" id="subCatPopover">
-              ${getPickerHTML('sub', selectedSubCatMonth, subPickerYear)}
-            </div>
-          </div>
+        <div style="margin-bottom:14px;">
+          <p class="panel-title">Expenses by Subcategory</p>
+          <p class="panel-sub">${fmtMonthLabel(dashboardMonth)} details</p>
         </div>
-        ${renderSubcategoryDonutBlock(subCatMonthTx)}
-        ${renderSubcategoryBarBlock(subCatMonthTx)}
+        ${renderSubcategoryDonutBlock(monthTx)}
+        ${renderSubcategoryBarBlock(monthTx)}
       </div>
       <div class="card card-pad">
         <p class="panel-title">Balance per Account</p>
@@ -722,31 +703,12 @@ function renderDashboard(){
     </div>
   `;
   
-  // === BAGIAN INI YANG KITA PERBAIKI ===
   document.getElementById('dashBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('dashPopover').classList.toggle('show');
-    document.getElementById('catPopover').classList.remove('show');
-    document.getElementById('subCatPopover').classList.remove('show');
-  });
-
-  document.getElementById('catBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('catPopover').classList.toggle('show');
-    document.getElementById('dashPopover').classList.remove('show');
-    document.getElementById('subCatPopover').classList.remove('show');
-  });
-
-  document.getElementById('subCatBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('subCatPopover').classList.toggle('show');
-    document.getElementById('dashPopover').classList.remove('show');
-    document.getElementById('catPopover').classList.remove('show');
   });
 
   bindPopoverEvents('dashPopover', 'dash', dashboardMonth);
-  bindPopoverEvents('catPopover', 'cat', selectedCatMonth);
-  bindPopoverEvents('subCatPopover', 'sub', selectedSubCatMonth);
 
   el.querySelectorAll('.dash-acct-card').forEach(card => {
     card.addEventListener('click', () => switchTab('accounts'));
