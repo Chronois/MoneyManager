@@ -314,59 +314,57 @@ function getDatePickerHTML(year, month, selectedDateStr, targetPrefix) {
   `;
 }
 
-function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback = null) {
+/* ============ CUSTOM TIME PICKER LOGIC ============ */
+function renderTimePickerPopover(popoverId, inputId, labelId) {
   const popover = document.getElementById(popoverId);
   if(!popover) return;
-  const selectedDate = document.getElementById(inputId).value;
-
-  if (!dpViewYear[targetPrefix]) {
-    const d = selectedDate ? new Date(selectedDate) : new Date();
-    dpViewYear[targetPrefix] = d.getFullYear();
-    dpViewMonth[targetPrefix] = d.getMonth() + 1;
-  }
-
-  popover.innerHTML = getDatePickerHTML(dpViewYear[targetPrefix], dpViewMonth[targetPrefix], selectedDate, targetPrefix);
-
-  popover.querySelector('.dp-prev-month').addEventListener('click', (e) => {
-    e.stopPropagation();
-    dpViewMonth[targetPrefix]--;
-    if(dpViewMonth[targetPrefix] < 1) { dpViewMonth[targetPrefix] = 12; dpViewYear[targetPrefix]--; }
-    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
-  });
   
-  popover.querySelector('.dp-next-month').addEventListener('click', (e) => {
-    e.stopPropagation();
-    dpViewMonth[targetPrefix]++;
-    if(dpViewMonth[targetPrefix] > 12) { dpViewMonth[targetPrefix] = 1; dpViewYear[targetPrefix]++; }
-    renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onChangeCallback);
-  });
-
-  popover.querySelectorAll('.dp-day:not(.empty)').forEach(btn => {
+  let selectedTime = document.getElementById(inputId).value || "00:00";
+  let [selH, selM] = selectedTime.split(':');
+  
+  let hHtml = '';
+  for(let i=0; i<24; i++) {
+    let val = String(i).padStart(2, '0');
+    let active = (val === selH) ? 'active' : '';
+    hHtml += `<button type="button" class="time-item ${active}" data-type="h" data-val="${val}">${val}</button>`;
+  }
+  
+  let mHtml = '';
+  for(let i=0; i<60; i++) {
+    let val = String(i).padStart(2, '0');
+    let active = (val === selM) ? 'active' : '';
+    mHtml += `<button type="button" class="time-item ${active}" data-type="m" data-val="${val}">${val}</button>`;
+  }
+  
+  popover.innerHTML = `
+    <div class="time-col" style="border-right: 1px solid var(--border-soft);" id="colHours">${hHtml}</div>
+    <div class="time-col" id="colMinutes">${mHtml}</div>
+  `;
+  
+  // Mengarahkan scrollbar langsung ke waktu yang sedang aktif
+  setTimeout(() => {
+    const activeH = popover.querySelector('#colHours .active');
+    const activeM = popover.querySelector('#colMinutes .active');
+    if(activeH) activeH.scrollIntoView({ block: 'center' });
+    if(activeM) activeM.scrollIntoView({ block: 'center' });
+  }, 10);
+  
+  // Event ketika jam / menit ditekan
+  popover.querySelectorAll('.time-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const selDate = btn.dataset.date;
-      document.getElementById(inputId).value = selDate;
-      document.getElementById(labelId).textContent = fmtDateShort(selDate);
-      popover.classList.remove('show');
-      if (onChangeCallback) onChangeCallback(selDate);
+      let type = btn.dataset.type;
+      let val = btn.dataset.val;
+      
+      if (type === 'h') selH = val;
+      else if (type === 'm') selM = val;
+      
+      let newTime = `${selH}:${selM}`;
+      document.getElementById(inputId).value = newTime;
+      document.getElementById(labelId).textContent = newTime;
+      
+      renderTimePickerPopover(popoverId, inputId, labelId);
     });
-  });
-
-  popover.querySelector('.dp-clear-btn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById(inputId).value = '';
-    document.getElementById(labelId).textContent = targetPrefix === 'filterFrom' ? 'Start Date' : (targetPrefix === 'filterTo' ? 'End Date' : 'Select Date');
-    popover.classList.remove('show');
-    if (onChangeCallback) onChangeCallback('');
-  });
-
-  popover.querySelector('.dp-today-btn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    const todayStr = new Date().toISOString().slice(0,10);
-    document.getElementById(inputId).value = todayStr;
-    document.getElementById(labelId).textContent = fmtDateShort(todayStr);
-    popover.classList.remove('show');
-    if (onChangeCallback) onChangeCallback(todayStr);
   });
 }
 
@@ -1117,8 +1115,10 @@ function openTxnModal(id, isDuplicate = false){
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHours}:${currentMinutes}`;
   
-  // Jika sedang edit, ambil waktu lama. Jika baru/duplikat, pakai waktu saat ini.
-  document.getElementById('txnTime').value = (t && t.time && !isDuplicate) ? t.time : currentTime;
+  // Jika sedang edit, ambil waktu lama. Jika baru, pakai waktu saat ini.
+  const finalTime = (t && t.time && !isDuplicate) ? t.time : currentTime;
+  document.getElementById('txnTime').value = finalTime;
+  document.getElementById('lblTxnTime').textContent = finalTime;
 
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
