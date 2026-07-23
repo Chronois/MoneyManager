@@ -230,8 +230,11 @@ tbody tr:hover { background:var(--paper-2); transition: background 0.15s ease; }
 
 /* ---------- Budget bars ---------- */
 .budget-list { display:flex; flex-direction:column; gap:16px; }
-.budget-row { margin-bottom: 20px; transition: all 0.15s ease; }
-.budget-row:hover { background: var(--paper-2); border-radius: 8px; padding: 2px 4px; }
+.budget-row { margin-bottom: 12px; transition: all 0.15s ease; cursor: grab; padding: 10px; border: 2px solid transparent; border-radius: 12px; }
+.budget-row:active { cursor: grabbing; }
+.budget-row.dragging { opacity: 0.4; border: 2px dashed var(--primary); background: var(--paper-2); }
+.budget-row.drag-over { border: 2px solid var(--primary); transform: scale(1.01); }
+.budget-row:hover { background: var(--paper-2); border-color: var(--border-focus); }
 .budget-row .budget-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .budget-row .cat-label { font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:8px; }
 .budget-row .amounts { font-family:var(--font-mono); font-size:12.5px; color:var(--ink-muted); margin-right: 12px; }
