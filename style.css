@@ -231,7 +231,7 @@ tbody tr:hover { background:var(--paper-2); transition: background 0.15s ease; }
 /* ---------- Budget bars ---------- */
 .budget-list { 
   display: grid; 
-  grid-template-columns: repeat(3, 1fr); 
+  grid-template-columns: repeat(2, 1fr); 
   gap: 14px; 
 }
 
