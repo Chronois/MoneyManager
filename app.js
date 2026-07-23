@@ -1316,7 +1316,7 @@ function renderBudgets() {
               cIcon = catIcon(k);
           }
 
-          return `<div class="budget-row">
+          return `<div class="budget-row" data-budgetkey="${esc(k)}" draggable="true">
             <div class="budget-top" style="align-items: center;">
               <span class="cat-label">${cIcon} ${esc(label)}</span>
               <div style="display:flex; align-items:center;">
@@ -1337,6 +1337,49 @@ function renderBudgets() {
   document.getElementById('btnAddBudget').addEventListener('click', () => openBudgetModal());
   el.querySelectorAll('[data-editbudget]').forEach(b => b.addEventListener('click', () => openBudgetModal(b.dataset.editbudget)));
   el.querySelectorAll('[data-delbudget]').forEach(b => b.addEventListener('click', () => deleteBudget(b.dataset.delbudget)));
+
+  /* --- DRAG AND DROP BUDGETS --- */
+  const budgetRows = el.querySelectorAll('.budget-row');
+  let dragBudgetSrcKey = null;
+
+  budgetRows.forEach(row => {
+    row.addEventListener('dragstart', (e) => {
+      if (e.target.closest('.row-actions button')) return; 
+      dragBudgetSrcKey = row.dataset.budgetkey;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => row.classList.add('dragging'), 0);
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      budgetRows.forEach(c => c.classList.remove('drag-over'));
+      dragBudgetSrcKey = null;
+    });
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (dragBudgetSrcKey && dragBudgetSrcKey !== row.dataset.budgetkey) {
+         row.classList.add('drag-over');
+      }
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', (e) => {
+      e.stopPropagation();
+      const targetKey = row.dataset.budgetkey;
+      if (dragBudgetSrcKey && dragBudgetSrcKey !== targetKey) {
+         const keys = Object.keys(state.budgets);
+         const srcIdx = keys.indexOf(dragBudgetSrcKey);
+         const tgtIdx = keys.indexOf(targetKey);
+         
+         keys.splice(srcIdx, 1);
+         keys.splice(tgtIdx, 0, dragBudgetSrcKey);
+
+         const newBudgets = {};
+         keys.forEach(k => newBudgets[k] = state.budgets[k]);
+         state.budgets = newBudgets;
+
+         saveState(); renderBudgets();
+      }
+    });
+  });
 }
 
 function openBudgetModal(key = null) {
@@ -1427,6 +1470,7 @@ function deleteBudget(key) {
   toast('Budget deleted');
 }
 
+
 function renderCategories(){
   const el = document.getElementById('view-categories');
 
@@ -1511,6 +1555,37 @@ function renderCategories(){
   let dragCatIdx = null;
   let dragSub = { cIdx: null, sIdx: null };
 
+  const handleSubcategoryMove = (sourceIdx, targetIdx, subIdx, draggedItem) => {
+    const sourceCat = state.categories[sourceIdx];
+    const targetCat = state.categories[targetIdx];
+    
+    // Mencegah duplikasi nama di target
+    if (targetCat.subcategories.includes(draggedItem)) {
+      sourceCat.subcategories.splice(subIdx, 0, draggedItem); // Rollback
+      toast('Failed: Subcategory already exists in target category');
+      return false;
+    }
+    
+    // Pindahkan histori budget
+    const oldCatName = sourceCat.category;
+    const newCatName = targetCat.category;
+    const oldKey = oldCatName + '|' + draggedItem;
+    const newKey = newCatName + '|' + draggedItem;
+    if (state.budgets && state.budgets[oldKey] !== undefined) {
+        state.budgets[newKey] = state.budgets[oldKey];
+        delete state.budgets[oldKey];
+    }
+    
+    // Update histori transaksi
+    state.transactions.forEach(t => {
+        if (t.category === oldCatName && t.subcategory === draggedItem) {
+            t.category = newCatName;
+        }
+    });
+    
+    return true; // Sukses dipindah rumah
+  };
+
   const catSections = el.querySelectorAll('.cat-section');
   catSections.forEach(sec => {
     sec.addEventListener('dragstart', e => {
@@ -1526,7 +1601,11 @@ function renderCategories(){
     });
     sec.addEventListener('dragover', e => {
       e.preventDefault();
-      if (dragCatIdx !== null && Number(sec.dataset.catidx) !== dragCatIdx) {
+      const targetIdx = Number(sec.dataset.catidx);
+      // Izinkan dragover jika ini category baru, ATAU ada subcategory yang melintas
+      if (dragCatIdx !== null && dragCatIdx !== targetIdx) {
+        sec.classList.add('drag-over');
+      } else if (dragSub.cIdx !== null && dragSub.cIdx !== targetIdx) {
         sec.classList.add('drag-over');
       }
     });
@@ -1534,7 +1613,18 @@ function renderCategories(){
     sec.addEventListener('drop', e => {
       e.stopPropagation();
       const targetIdx = Number(sec.dataset.catidx);
-      if (dragCatIdx !== null && dragCatIdx !== targetIdx) {
+      
+      // Kasus A: Jika menjatuhkan Subcategory ke ruang kosong pada Category lain
+      if (dragSub.cIdx !== null) {
+        if (dragSub.cIdx !== targetIdx) {
+          const draggedSubItem = state.categories[dragSub.cIdx].subcategories.splice(dragSub.sIdx, 1)[0];
+          const success = handleSubcategoryMove(dragSub.cIdx, targetIdx, dragSub.sIdx, draggedSubItem);
+          if(success) state.categories[targetIdx].subcategories.push(draggedSubItem);
+          saveState(); renderCategories();
+        }
+      } 
+      // Kasus B: Jika sekadar mengubah urutan Category
+      else if (dragCatIdx !== null && dragCatIdx !== targetIdx) {
         const dragged = state.categories.splice(dragCatIdx, 1)[0];
         state.categories.splice(targetIdx, 0, dragged);
         saveState(); renderCategories();
@@ -1560,7 +1650,9 @@ function renderCategories(){
       e.preventDefault(); e.stopPropagation();
       const tCIdx = Number(chip.dataset.catidx);
       const tSIdx = Number(chip.dataset.subidx);
-      if (dragSub.cIdx !== null && dragSub.cIdx === tCIdx && dragSub.sIdx !== tSIdx) {
+      
+      // Izinkan indikator jika pindah urutan ATAU pindah lintas kategori
+      if (dragSub.cIdx !== null && (dragSub.cIdx !== tCIdx || dragSub.sIdx !== tSIdx)) {
         chip.classList.add('drag-over');
       }
     });
@@ -1572,16 +1664,26 @@ function renderCategories(){
       e.stopPropagation();
       const tCIdx = Number(chip.dataset.catidx);
       const tSIdx = Number(chip.dataset.subidx);
-      if (dragSub.cIdx !== null && dragSub.cIdx === tCIdx && dragSub.sIdx !== tSIdx) {
-        const cat = state.categories[tCIdx];
-        const draggedSubItem = cat.subcategories.splice(dragSub.sIdx, 1)[0];
-        cat.subcategories.splice(tSIdx, 0, draggedSubItem);
+      
+      // Kasus C: Jika menjatuhkan Subcategory untuk menyela/menggeser Subcategory lain
+      if (dragSub.cIdx !== null && (dragSub.cIdx !== tCIdx || dragSub.sIdx !== tSIdx)) {
+        const draggedSubItem = state.categories[dragSub.cIdx].subcategories.splice(dragSub.sIdx, 1)[0];
+        
+        if (dragSub.cIdx !== tCIdx) {
+          const success = handleSubcategoryMove(dragSub.cIdx, tCIdx, dragSub.sIdx, draggedSubItem);
+          if(success) {
+            state.categories[tCIdx].subcategories.splice(tSIdx, 0, draggedSubItem);
+          }
+        } else {
+          // Hanya pindah urutan di dalam rumah yang sama
+          state.categories[tCIdx].subcategories.splice(tSIdx, 0, draggedSubItem);
+        }
+        
         saveState(); renderCategories();
       }
     });
   });
 }
-
 function setEmojiPicker(btnId, inputId, emoji) {
   document.getElementById(inputId).value = emoji;
   document.getElementById(btnId).textContent = emoji;
