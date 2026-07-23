@@ -59,12 +59,12 @@ const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 const CURRENCIES = {
-  IDR: { rate: 1, locale: 'id-ID' },
-  USD: { rate: 18075, locale: 'en-US' },
-  EUR: { rate: 20625, locale: 'de-DE' },
-  JPY: { rate: 111, locale: 'ja-JP' },
-  KRW: { rate: 12, locale: 'ko-KR' },
-  CNY: { rate: 2666, locale: 'zh-CN' }
+  IDR: { rate: 1, locale: 'id-ID', symbol: 'Rp' },
+  USD: { rate: 18075, locale: 'en-US', symbol: '$' },
+  EUR: { rate: 20625, locale: 'de-DE', symbol: '€' },
+  JPY: { rate: 111, locale: 'ja-JP', symbol: '¥' },
+  KRW: { rate: 12, locale: 'ko-KR', symbol: '₩' },
+  CNY: { rate: 2666, locale: 'zh-CN', symbol: '¥' }
 };
 
 /* ============ DYNAMIC CURRENCY API ============ */
@@ -219,15 +219,24 @@ onAuthStateChanged(auth, async (user) => {
 /* ============ HELPERS ============ */
 function fmtCurrency(n){
   n = Number(n) || 0;
+  const isNegative = n < 0;
+  const absVal = Math.abs(n);
+  
   const curr = state.currency || 'IDR';
   const config = CURRENCIES[curr] || CURRENCIES['IDR'];
-  const converted = n / config.rate;
-  return new Intl.NumberFormat(config.locale, {
-    style: 'currency',
-    currency: curr,
-    minimumFractionDigits: (curr === 'IDR' || curr === 'JPY' || curr === 'KRW') ? 0 : 2,
-    maximumFractionDigits: (curr === 'IDR' || curr === 'JPY' || curr === 'KRW') ? 0 : 2
+  const converted = absVal / config.rate;
+  
+  const isZeroFraction = (curr === 'IDR' || curr === 'JPY' || curr === 'KRW');
+  
+  const numberString = new Intl.NumberFormat(config.locale, {
+    style: 'decimal',
+    minimumFractionDigits: isZeroFraction ? 0 : 2,
+    maximumFractionDigits: isZeroFraction ? 0 : 2
   }).format(converted);
+
+  const sign = isNegative ? '-' : '';
+  
+  return `${sign}${config.symbol}${numberString}`;
 }
 
 function fmtDateShort(d){
