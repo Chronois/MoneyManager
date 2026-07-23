@@ -476,3 +476,17 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
 }
 
 :focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+
+/* ---------- Perbaikan Teks Terpotong & Layout Filter ---------- */
+.cat-chip.hover-swap > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Akan menambahkan "..." jika teks terlalu panjang */
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .filters-container { flex-direction: column !important; padding: 16px !important; gap: 12px; }
+  .filter-col { width: 100% !important; padding: 0 !important; }
+  .filter-col.note-col { flex: none !important; }
+}
