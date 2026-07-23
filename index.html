@@ -131,9 +131,17 @@
               <div class="date-popover" id="datePopover"></div>
             </div>
           </div>
-          <div class="field" style="flex: 1; max-width: 120px;">
+          <div class="field" style="flex: 1; max-width: 130px;">
             <label>Time</label>
-            <input type="time" class="input" id="txnTime" style="padding: 7px 11px;" required>
+            <div class="date-picker-wrap">
+              <button type="button" class="date-picker-btn" id="btnTxnTime" style="padding: 7px 11px;">
+                <span id="lblTxnTime" style="font-family: var(--font-mono); font-weight: 600;">00:00</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </button>
+              <input type="hidden" id="txnTime">
+              <!-- Kotak Popover Custom untuk Waktu -->
+              <div class="date-popover" id="timePopover" style="width: 150px; padding: 0; flex-direction: row; height: 220px; overflow: hidden; gap: 0;"></div>
+            </div>
           </div>
         </div>
         <div class="form-row">
