@@ -1338,6 +1338,10 @@ function renderBudgets() {
               <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
             </div>
           </div>`;
+        }).join('') : emptyHtml('No budgets yet. Click "Add Budget" to start.')}
+      </div>
+    </div>
+  `;
   
   document.getElementById('btnAddBudget').addEventListener('click', () => openBudgetModal());
   el.querySelectorAll('[data-editbudget]').forEach(b => b.addEventListener('click', () => openBudgetModal(b.dataset.editbudget)));
