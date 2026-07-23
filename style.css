@@ -541,3 +541,10 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
   .filter-col { width: 100% !important; padding: 0 !important; }
   .filter-col.note-col { flex: none !important; }
 }
+
+/* ---------- Time Picker ---------- */
+.time-col { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 6px; scrollbar-width: none; }
+.time-col::-webkit-scrollbar { display: none; }
+.time-item { padding: 8px 0; text-align: center; border-radius: 6px; cursor: pointer; color: var(--ink); font-family: var(--font-mono); font-size: 13px; background: transparent; border: none; transition: .15s ease; }
+.time-item:hover { background: var(--paper-2); color: var(--primary-dark); }
+.time-item.active { background: var(--primary); color: #fff; font-weight: 700; }
