@@ -33,7 +33,7 @@ const SEED = {
     {"category": "Food & Beverages", "icon": "🍽️", "type": "expense", "subcategories": ["🍽️ Main Meal", "🥛 Drink", "🥯 Snack", "🍌 Fruits", "🍅 Vegetables", "👨‍🍳 Cooking ingredients", "🛵 Dining Out"]},
     {"category": "Transportation", "icon": "🚗", "type": "expense", "subcategories": ["🏍️ Motorcycle", "🚕 Car", "🚌 Bus", "🚐 Travel", "⛽ Gasoline", "🅿️ Parking", "💳 E-Money Card"]},
     {"category": "Lifestyle", "icon": "🎯", "type": "both", "subcategories": ["📈 Trend", "💸 Game", "🧾 Fees & Charges", "🔁 Subscription"]},
-    {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet"]},
+    {"category": "Daily Necessities", "icon": "🧺", "type": "expense", "subcategories": ["🧾 Household Contribution", "🛁 Toiletries", "🧼 Cleaning Supplies", "🪙 Electricity Token", "🌐 Internet", "🔌 Electronics"]},
     {"category": "Clothes", "icon": "👕", "type": "expense", "subcategories": ["👕 Shirt", "👖 Pants", "🧥 Jacket", "🥼 Functional Clothing"]},
     {"category": "Accessory", "icon": "💍", "type": "expense", "subcategories": ["🧢 Hat", "⌚ Watch", "🗝️ Keychain"]},
     {"category": "Beauty", "icon": "💄", "type": "expense", "subcategories": ["🧴 Skincare", "✂️ Haircut"]},
@@ -1111,6 +1111,15 @@ function openTxnModal(id, isDuplicate = false){
   dpViewMonth.txn = m;
   renderDatePickerPopover('datePopover', 'txnDate', 'lblTxnDate', 'txn');
 
+  // Generate Waktu (Jam:Menit) secara *Real-Time*
+  const now = new Date();
+  const currentHours = String(now.getHours()).padStart(2, '0');
+  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+  const currentTime = `${currentHours}:${currentMinutes}`;
+  
+  // Jika sedang edit, ambil waktu lama. Jika baru/duplikat, pakai waktu saat ini.
+  document.getElementById('txnTime').value = (t && t.time && !isDuplicate) ? t.time : currentTime;
+
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
   document.getElementById('txnNote').value = t ? (t.note||'') : '';
@@ -1145,6 +1154,7 @@ function closeTxnModal(){ document.getElementById('txnModalOverlay').classList.r
 
 function saveTxnForm() {
   const date = document.getElementById('txnDate').value;
+  const time = document.getElementById('txnTime').value || "00:00"; // Tangkap nilai waktu
   const account = document.getElementById('txnAccount').value;
   const note = document.getElementById('txnNote').value.trim();
   
@@ -1159,6 +1169,7 @@ function saveTxnForm() {
   let obj = {
     id: editingTxnId || uid(),
     date: date,
+    time: time, // Simpan waktu ke dalam data backend
     account: account,
     note: note
   };
