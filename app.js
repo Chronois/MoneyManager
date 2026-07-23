@@ -2063,27 +2063,27 @@ function init(){
   document.getElementById('btnTxnSave').addEventListener('click', saveTxnForm);
   document.getElementById('btnTxnCancel').addEventListener('click', closeTxnModal);
   document.getElementById('btnTxnClose').addEventListener('click', closeTxnModal);
-  document.getElementById('txnModalOverlay').addEventListener('click', e=>{ if(e.target.id==='txnModalOverlay') closeTxnModal(); });
+  // document.getElementById('txnModalOverlay').addEventListener('click', e=>{ if(e.target.id==='txnModalOverlay') closeTxnModal(); });
 
   document.getElementById('btnAcctSave').addEventListener('click', saveAcctForm);
   document.getElementById('btnAcctCancel').addEventListener('click', closeAcctModal);
   document.getElementById('btnAcctClose').addEventListener('click', closeAcctModal);
-  document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
+  // document.getElementById('acctModalOverlay').addEventListener('click', e=>{ if(e.target.id==='acctModalOverlay') closeAcctModal(); });
 
   document.getElementById('btnBudgetSave').addEventListener('click', saveBudgetForm);
   document.getElementById('btnBudgetCancel').addEventListener('click', closeBudgetModal);
   document.getElementById('btnBudgetClose').addEventListener('click', closeBudgetModal);
-  document.getElementById('budgetModalOverlay').addEventListener('click', e=>{ if(e.target.id==='budgetModalOverlay') closeBudgetModal(); });
+  // document.getElementById('budgetModalOverlay').addEventListener('click', e=>{ if(e.target.id==='budgetModalOverlay') closeBudgetModal(); });
 
   document.getElementById('btnCatSave').addEventListener('click', saveCatForm);
   document.getElementById('btnCatCancel').addEventListener('click', closeCatModal);
   document.getElementById('btnCatClose').addEventListener('click', closeCatModal);
-  document.getElementById('catModalOverlay').addEventListener('click', e=>{ if(e.target.id==='catModalOverlay') closeCatModal(); });
+  // document.getElementById('catModalOverlay').addEventListener('click', e=>{ if(e.target.id==='catModalOverlay') closeCatModal(); });
 
   document.getElementById('btnSubSave').addEventListener('click', saveSubForm);
   document.getElementById('btnSubCancel').addEventListener('click', closeSubModal);
   document.getElementById('btnSubClose').addEventListener('click', closeSubModal);
-  document.getElementById('subModalOverlay').addEventListener('click', e=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
+  // document.getElementById('subModalOverlay').addEventListener('click', e=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
 
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape'){ 
