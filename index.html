@@ -120,7 +120,7 @@
         </div>
 
         <div class="form-row">
-          <div class="field">
+          <div class="field" style="flex: 2;">
             <label>Date</label>
             <div class="date-picker-wrap">
               <button type="button" class="date-picker-btn" id="btnTxnDate">
@@ -131,6 +131,12 @@
               <div class="date-popover" id="datePopover"></div>
             </div>
           </div>
+          <div class="field" style="flex: 1; max-width: 120px;">
+            <label>Time</label>
+            <input type="time" class="input" id="txnTime" style="padding: 7px 11px;" required>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="field"><label>Account</label><select class="input" id="txnAccount"></select></div>
         </div>
         <div class="form-row" id="rowCategory">
