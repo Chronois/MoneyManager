@@ -370,48 +370,81 @@ function renderDatePickerPopover(popoverId, inputId, labelId, targetPrefix, onCh
   });
 }
 
-/* ============ CUSTOM TIME PICKER LOGIC ============ */
+/* ============ CUSTOM TIME PICKER LOGIC (INFINITE LOOP) ============ */
 function renderTimePickerPopover(popoverId, inputId, labelId) {
   const popover = document.getElementById(popoverId);
   if(!popover) return;
   
   let selectedTime = document.getElementById(inputId).value || "00:00";
-  // Cegah error jika format waktu lama menggunakan titik (.)
   selectedTime = selectedTime.replace('.', ':');
   let [selH, selM] = selectedTime.split(':');
   
-  // Perlindungan ekstra jika waktu gagal dibaca
   if (!selH || selH === "undefined") selH = "00";
   if (!selM || selM === "undefined") selM = "00";
-  
-  let hHtml = '';
-  for(let i=0; i<24; i++) {
-    let val = String(i).padStart(2, '0');
-    let active = (val === selH) ? 'active' : '';
-    hHtml += `<button type="button" class="time-item ${active}" data-type="h" data-val="${val}">${val}</button>`;
+
+  // Jika sudah di-render, kita hanya perlu update warna "active" tanpa merusak momentum scroll
+  if (popover.dataset.rendered === "true") {
+    popover.querySelectorAll('.time-item').forEach(b => {
+      b.classList.remove('active');
+      if (b.dataset.type === 'h' && b.dataset.val === selH) b.classList.add('active');
+      if (b.dataset.type === 'm' && b.dataset.val === selM) b.classList.add('active');
+    });
+    return;
   }
   
-  let mHtml = '';
-  for(let i=0; i<60; i++) {
-    let val = String(i).padStart(2, '0');
-    let active = (val === selM) ? 'active' : '';
-    mHtml += `<button type="button" class="time-item ${active}" data-type="m" data-val="${val}">${val}</button>`;
-  }
+  const renderLoopItems = (max, selectedValue, type) => {
+    let html = '';
+    // Membuat 3 SET duplikat (Atas, Tengah, Bawah) untuk ilusi loop
+    for (let set = 0; set < 3; set++) {
+      for (let i = 0; i < max; i++) {
+        let val = String(i).padStart(2, '0');
+        let isCenterSet = (set === 1);
+        let activeClass = (val === selectedValue) ? 'active' : '';
+        let centerClass = (isCenterSet && val === selectedValue) ? 'center-target' : '';
+        html += `<button type="button" class="time-item ${activeClass} ${centerClass}" data-type="${type}" data-val="${val}">${val}</button>`;
+      }
+    }
+    return html;
+  };
   
   popover.innerHTML = `
-    <div class="time-col" style="border-right: 1px solid var(--border-soft);" id="colHours">${hHtml}</div>
-    <div class="time-col" id="colMinutes">${mHtml}</div>
+    <div class="time-col" style="border-right: 1px solid var(--border-soft);" id="colHours">${renderLoopItems(24, selH, 'h')}</div>
+    <div class="time-col" id="colMinutes">${renderLoopItems(60, selM, 'm')}</div>
   `;
   
-  // Mengarahkan scrollbar langsung ke waktu yang sedang aktif
+  const colHours = popover.querySelector('#colHours');
+  const colMinutes = popover.querySelector('#colMinutes');
+  
+  // Logika agar saat di-scroll ke mentok, posisinya teleport kembali ke tengah (Loop)
+  const setupInfiniteScroll = (col, maxItems) => {
+    col.addEventListener('scroll', () => {
+      if (!col.firstElementChild) return;
+      const itemHeight = col.firstElementChild.offsetHeight;
+      const oneSetHeight = maxItems * itemHeight;
+      
+      // Teleport dari Set 1 (Atas) ke Set 2 (Tengah)
+      if (col.scrollTop < itemHeight * 4) {
+        col.scrollTop += oneSetHeight;
+      } 
+      // Teleport dari Set 3 (Bawah) ke Set 2 (Tengah)
+      else if (col.scrollTop > (oneSetHeight * 2) - (itemHeight * 4)) {
+        col.scrollTop -= oneSetHeight;
+      }
+    });
+  };
+  
   setTimeout(() => {
-    const activeH = popover.querySelector('#colHours .active');
-    const activeM = popover.querySelector('#colMinutes .active');
-    if(activeH) activeH.scrollIntoView({ block: 'center' });
-    if(activeM) activeM.scrollIntoView({ block: 'center' });
+    setupInfiniteScroll(colHours, 24);
+    setupInfiniteScroll(colMinutes, 60);
+    
+    // Pusatkan otomatis ke pilihan waktu saat pop-up baru dibuka
+    const activeH = colHours.querySelector('.center-target');
+    const activeM = colMinutes.querySelector('.center-target');
+    // Behavior instant agar tidak ada animasi saat pertama kali dibuka
+    if(activeH) activeH.scrollIntoView({ block: 'center', behavior: 'instant' });
+    if(activeM) activeM.scrollIntoView({ block: 'center', behavior: 'instant' });
   }, 10);
   
-  // Event ketika jam / menit ditekan
   popover.querySelectorAll('.time-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -425,9 +458,13 @@ function renderTimePickerPopover(popoverId, inputId, labelId) {
       document.getElementById(inputId).value = newTime;
       document.getElementById(labelId).textContent = newTime;
       
+      // Panggil lagi untuk sekadar update warna
       renderTimePickerPopover(popoverId, inputId, labelId);
     });
   });
+
+  // Kunci agar tidak di-render ulang seluruhnya saat angka di-klik
+  popover.dataset.rendered = "true";
 }
 
 /* ============ CUSTOM MONTH PICKER LOGIC ============ */
@@ -2249,10 +2286,12 @@ function init(){
     timePopover.classList.toggle('show');
     
     if (timePopover.classList.contains('show')) {
+      // Paksa render ulang dari awal agar posisinya terkalibrasi ke jam saat ini
+      timePopover.dataset.rendered = "false";
       renderTimePickerPopover('timePopover', 'txnTime', 'lblTxnTime');
     }
   });
-
+   
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFileInput').click());
   document.getElementById('importFileInput').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
