@@ -514,6 +514,11 @@ html[data-theme="dark"] em-emoji-picker { --rgb-background: 30, 37, 32; --rgb-in
   .filters-container { padding: 14px !important; }
   .filters-container > div { flex-basis: 100% !important; }
   .budget-list { grid-template-columns: 1fr; }
+
+  /* Perbesar UI Time Picker untuk sentuhan jari */
+  #timePopover { width: 180px !important; height: 260px !important; }
+  .time-item { font-size: 15px !important; padding: 13px 0 !important; }
+  #lblTxnTime { font-size: 15px !important; width: 52px !important; }
 }
 
 @media (max-width: 380px) {
