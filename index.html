@@ -134,13 +134,15 @@
           <div class="field" style="flex: 1; max-width: 130px;">
             <label>Time</label>
             <div class="date-picker-wrap">
-              <button type="button" class="date-picker-btn" id="btnTxnTime" style="padding: 7px 11px;">
-                <span id="lblTxnTime" style="font-family: var(--font-mono); font-weight: 600;">00:00</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              </button>
+              <div class="date-picker-btn" style="padding: 7px 11px; display: flex; justify-content: space-between; align-items: center; cursor: text;">
+                <input type="text" id="lblTxnTime" style="border:none; background:transparent; font-family: var(--font-mono); font-weight: 600; font-size: 14px; width: 45px; outline: none; color: var(--ink); padding: 0; text-align: center;" placeholder="00:00" maxlength="5">
+                <button type="button" id="btnTxnTime" style="background:transparent; border:none; padding:0; display:flex; align-items:center; color:var(--ink-faint); cursor:pointer;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </button>
+              </div>
               <input type="hidden" id="txnTime">
-              <!-- Kotak Popover Custom untuk Waktu -->
-              <div class="date-popover" id="timePopover" style="width: 150px; padding: 0; flex-direction: row; height: 220px; overflow: hidden; gap: 0;"></div>
+              <!-- Kotak Popover Custom untuk Waktu (Digeser agar tidak keluar layar) -->
+              <div class="date-popover" id="timePopover" style="width: 150px; padding: 0; flex-direction: row; height: 220px; overflow: hidden; gap: 0; right: 0; left: auto;"></div>
             </div>
           </div>
         </div>
