@@ -457,7 +457,7 @@ function renderTimePickerPopover(popoverId, inputId, labelId) {
       
       let newTime = `${selH}:${selM}`;
       document.getElementById(inputId).value = newTime;
-      document.getElementById(labelId).textContent = newTime;
+      document.getElementById(labelId).value = newTime; // Updated
       
       // Panggil lagi untuk sekadar update warna
       renderTimePickerPopover(popoverId, inputId, labelId);
@@ -933,7 +933,6 @@ function renderSubcategoryBarBlock(monthTx){
 /* ============ TRANSACTIONS ============ */
 function renderTransactions(){
   const { enriched } = computeLedger();
-  // Hilangkan reverse() karena akan di-sort secara manual
   let list = [...enriched]; 
 
   if(filters.type) {
@@ -952,7 +951,6 @@ function renderTransactions(){
     list = list.filter(t=> (t.note||'').toLowerCase().includes(q) || (t.subcategory||'').toLowerCase().includes(q) || (t.transferTo||'').toLowerCase().includes(q));
   }
 
-  // --- LOGIKA SORTING BARU ---
   list.sort((a, b) => {
     let valA, valB;
     const amtA = a.transferTo ? a.expense : (a.income > 0 ? a.income : a.expense);
@@ -978,13 +976,11 @@ function renderTransactions(){
     if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
   });
-  // ---------------------------
 
   const totalPages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
   txnPage = Math.min(txnPage, totalPages-1);
   const pageList = list.slice(txnPage*PAGE_SIZE, txnPage*PAGE_SIZE+PAGE_SIZE);
 
-  // Helper pembuat Icon Panah
   const getSortIcon = (col) => {
     if (sortConfig.column === col) {
       return `<span class="sort-icon active ${sortConfig.direction === 'desc' ? 'desc' : ''}">▲</span>`;
@@ -1037,7 +1033,6 @@ function renderTransactions(){
           </div>
         </div>
 
-        <!-- Kolom Category diperlebar menjadi 220px -->
         <div class="filter-col" style="width: 220px; padding: 0 14px; flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center;">Category</label>
           <div class="date-picker-wrap">
@@ -1107,19 +1102,16 @@ function renderTransactions(){
     </div>
   `;
    
-  // Trigger Sorting ketika header ditekan
   el.querySelectorAll('.sortable-th').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.sort;
       if (sortConfig.column === col) {
-        // Balik arah sort jika kolom yang sama diklik lagi
         sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
       } else {
-        // Kolom baru, default ke desc untuk date/amount, sisanya asc
         sortConfig.column = col;
         sortConfig.direction = (col === 'date' || col === 'amount') ? 'desc' : 'asc';
       }
-      txnPage = 0; // Reset ke halaman 1 setiap kali di-sort
+      txnPage = 0;
       renderTransactions();
     });
   });
@@ -1264,9 +1256,9 @@ function openTxnModal(id, isDuplicate = false){
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHours}:${currentMinutes}`;
   
-  const finalTime = (t && t.time && !isDuplicate) ? t.time : currentTime;
+  const finalTime = (t && t.time) ? t.time : currentTime;
   document.getElementById('txnTime').value = finalTime;
-  document.getElementById('lblTxnTime').textContent = finalTime;
+  document.getElementById('lblTxnTime').value = finalTime;
 
   document.getElementById('txnAccount').innerHTML = state.accounts.map(a=>`<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
   document.getElementById('txnAccount').value = t ? t.account : (state.accounts[0] ? state.accounts[0].name : '');
@@ -2388,6 +2380,34 @@ function init(){
       document.querySelectorAll('.month-popover').forEach(p => p.classList.remove('show'));
       document.querySelectorAll('.date-popover').forEach(p => p.classList.remove('show'));
       document.querySelectorAll('.select-popover').forEach(p => p.classList.remove('show'));
+    }
+  });
+
+  document.getElementById('lblTxnTime').addEventListener('input', function(e) {
+    // Hanya izinkan angka
+    let val = this.value.replace(/[^0-9]/g, ''); 
+    // Tambahkan titik dua (:) otomatis
+    if (val.length > 2) val = val.slice(0, 2) + ':' + val.slice(2, 4);
+    
+    this.value = val;
+    
+    // Jika ketikan sudah format "XX:XX", update data dan UI
+    if (val.length === 5) {
+      let [h, m] = val.split(':');
+      // Validasi jam/menit (mencegah input 99:99)
+      if (parseInt(h) > 23) h = '23';
+      if (parseInt(m) > 59) m = '59';
+      val = `${h}:${m}`;
+      this.value = val;
+      
+      document.getElementById('txnTime').value = val;
+      
+      // Update putaran roda popover jika sedang terbuka
+      const timePopover = document.getElementById('timePopover');
+      if (timePopover.classList.contains('show')) {
+        timePopover.dataset.rendered = "false";
+        renderTimePickerPopover('timePopover', 'txnTime', 'lblTxnTime');
+      }
     }
   });
 }
